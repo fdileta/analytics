@@ -63,6 +63,7 @@ WITH source AS (
         {{  sfdc_source_buckets('leadsource') }}
         stagename                      AS stage_name,
         revenue_type__c                AS order_type,
+        order_type_live__c             AS order_type_live,
 
         -- opportunity information
         acv_2__c                       AS acv,
