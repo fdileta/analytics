@@ -4,5 +4,5 @@ Base counts along with day names for accounts, used in Periscope queries to work
 {% enddocs %}
 {% docs zuora_subscriptions_new_updated %}
 Base counts along with day names for subscriptions, used in Periscope queries to work out daily averages and report on Zuora data
-
+ 
 {% enddocs %}
