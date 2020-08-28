@@ -12,9 +12,6 @@ from gitlabdata.orchestration_utils import (
 )
 from sqlalchemy.engine.base import Engine
 
-from dateutil.parser import parse as date_parse
-
-
 from utils import (
     check_if_schema_changed,
     chunk_and_upload,
@@ -109,8 +106,12 @@ def load_incremental(
       This block of code raises an Exception whenever replication is far enough behind that data will be missed.
     """
     if table_dict["export_schema"] == "gitlab_com":
-        last_execution_date = date_parse(os.environ["LAST_EXECUTION_DATE"])
-        execution_date = date_parse(os.environ["EXECUTION_DATE"])
+        last_execution_date = datetime.datetime.strptime(
+            os.environ["LAST_EXECUTION_DATE"], "%Y-%m-%dT%H:%M:%S%z"
+        )
+        execution_date = datetime.datetime.strptime(
+            os.environ["EXECUTION_DATE"], "%Y-%m-%dT%H:%M:%S%z"
+        )
 
         hours_difference = (execution_date - last_execution_date).seconds / 3600
 
@@ -237,9 +238,9 @@ def validate_ids(
     raw_query = table_dict["import_query"]
     additional_filtering = table_dict.get("additional_filtering", "")
     primary_key = table_dict["export_table_primary_key"]
-    if "{EXECUTION_DATE}" not in raw_query:
-        logging.info(f"Table {table} does not need id validation.")
-        return False
+#     if "{EXECUTION_DATE}" not in raw_query:
+#         logging.info(f"Table {table} does not need id validation.")
+#         return False
     if "_TEMP" == table_name[-5:] or target_engine.has_table(f"{table_name}_TEMP"):
         logging.info(
             f"Table {table} needs to be backfilled due to schema change, aborting validation."
