@@ -85,7 +85,6 @@ tables:
       , created_at
       , updated_at
       FROM label_links
-      LIMIT 10
     export_schema: 'gitlab_com'
     export_table: 'label_links'
     export_table_primary_key: id
