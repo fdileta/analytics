@@ -120,7 +120,7 @@ def manifest_reader(file_path: str) -> Dict[str, Dict]:
 
     return manifest_dict
 
-def read_sql_tmpfile(query, db_engine, chunksize=100_000):
+def read_sql_tmpfile(query, db_engine):
     with tempfile.TemporaryFile() as tmpfile:
         copy_sql = f"COPY ({query}) TO STDOUT WITH CSV HEADER"
         logging.info(f" running COPY ({query}) TO STDOUT WITH CSV HEADER")
@@ -128,7 +128,7 @@ def read_sql_tmpfile(query, db_engine, chunksize=100_000):
         cur = conn.cursor()
         cur.copy_expert(copy_sql, tmpfile)
         tmpfile.seek(0)
-        df = pd.read_csv(tmpfile, chunksize=chunksize)
+        df = pd.read_csv(tmpfile)
         return df
 
 def query_results_generator(
@@ -187,39 +187,33 @@ def chunk_and_upload(
     """
 
     rows_uploaded = 0
-    results_generator = read_sql_tmpfile(query, source_engine)
+    chunk_df = read_sql_tmpfile(query, source_engine)
+    logging.info(chunk_df.head(5))
+    logging.info(len(chunk_df))
 
-    # Source engine shouldn't be needed anymore, returns a df of a csv
-
-
+    idx = 1
     upload_file_name = f"{target_table}_CHUNK.tsv.gz"
 
     backfilled_rows = 0
 
-    for idx, chunk_df in enumerate(results_generator):
-        # If the table doesn't exist, it needs to send the first chunk to the dataframe_uploader
-        if backfill:
-            rows_to_seed = 10000
-            seed_table(
-                advanced_metadata,
-                chunk_df,
-                target_engine,
-                target_table,
-                rows_to_seed=rows_to_seed,
-            )
-            backfilled_rows += chunk_df[:rows_to_seed].shape[0]
-            chunk_df = chunk_df.iloc[rows_to_seed:]
-        row_count = chunk_df.shape[0]
-        rows_uploaded += row_count
-        if not backfill or row_count > 0:
-            upload_to_gcs(
-                advanced_metadata, chunk_df, upload_file_name + "." + str(idx)
-            )
-        backfill = False
-    if rows_uploaded > 0:
-        trigger_snowflake_upload(
+    #rows_to_seed = 10000
+    #seed_table(
+    #        advanced_metadata,
+    #        chunk_df,
+    #        target_engine,
+    #        target_table,
+    #        rows_to_seed=rows_to_seed,
+    #)
+    logging.info("Uploading to GCS")
+    upload_to_gcs(
+            advanced_metadata, chunk_df, upload_file_name + "." + str(idx)
+    )
+    logging.info("Uploaded to GCS")
+    logging.info("Uploading to SF")
+    trigger_snowflake_upload(
             target_engine, target_table, upload_file_name + "[.]\\\\d*", purge=True
-        )
+    )
+    logging.info("Uploaded to ssf")
     logging.info(
         f"Uploaded {rows_uploaded + backfilled_rows} total rows to table {target_table}."
     )
