@@ -200,13 +200,20 @@ def chunk_and_upload(
     backfilled_rows = 0
 
     rows_to_seed = 0
-    seed_table(
-            advanced_metadata,
-            chunk_df,
-            target_engine,
-            target_table,
-            rows_to_seed=rows_to_seed,
-    )
+
+    if backfill:
+        rows_to_seed = 0
+        seed_table(
+                advanced_metadata,
+                chunk_df,
+                target_engine,
+                target_table,
+                rows_to_seed=rows_to_seed,
+        )
+        chunk_df = chunk_df.iloc[rows_to_seed:]
+    row_count = chunk_df.shape[0]
+    rows_uploaded += row_count
+
     logging.info("Uploading to GCS")
     upload_to_gcs(
             advanced_metadata, chunk_df, upload_file_name + "." + str(idx)
