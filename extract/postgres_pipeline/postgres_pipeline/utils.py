@@ -199,10 +199,9 @@ def chunk_and_upload(
 
     backfilled_rows = 0
 
-    rows_to_seed = 0
 
     if backfill:
-        rows_to_seed = 0
+        rows_to_seed = 1000
         seed_table(
                 advanced_metadata,
                 chunk_df,
