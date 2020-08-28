@@ -192,7 +192,6 @@ def chunk_and_upload(
     logging.info(len(chunk_df))
 
     idx = 1
-
     upload_file_name = f"{target_table}_CHUNK.tsv.gz"
 
     backfilled_rows = 0
@@ -205,14 +204,16 @@ def chunk_and_upload(
     #        target_table,
     #        rows_to_seed=rows_to_seed,
     #)
-
+    logging.info("Uploading to GCS")
     upload_to_gcs(
             advanced_metadata, chunk_df, upload_file_name + "." + str(idx)
     )
-
+    logging.info("Uploaded to GCS")
+    logging.info("Uploading to SF")
     trigger_snowflake_upload(
             target_engine, target_table, upload_file_name + "[.]\\\\d*", purge=True
     )
+    logging.info("Uploaded to ssf")
     logging.info(
             f"Uploaded {rows_uploaded + backfilled_rows} total rows to table {target_table}."
     )
