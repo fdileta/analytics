@@ -131,7 +131,7 @@ def read_sql_tmpfile(query, db_engine):
         cur = conn.cursor()
         cur.copy_expert(copy_sql, tmpfile)
         tmpfile.seek(0)
-        df = pd.read_csv(tmpfile)
+        df = pd.read_csv(tmpfile, na_filter=False)
         return df
 
 def query_results_generator(
