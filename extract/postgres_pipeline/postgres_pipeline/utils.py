@@ -47,6 +47,7 @@ def upload_to_gcs(
     bucket = get_gcs_bucket(keyfile, bucket_name)
     logging.info(bucket)
     # Write out the TSV and upload it
+    upload_df = upload_df.fillna('')
     enriched_df = dataframe_enricher(advanced_metadata, upload_df)
     logging.info(enriched_df.head(5))
     enriched_df.to_csv(
