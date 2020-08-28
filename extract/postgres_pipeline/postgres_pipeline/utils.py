@@ -47,7 +47,7 @@ def upload_to_gcs(
     bucket = get_gcs_bucket(keyfile, bucket_name)
     logging.info(bucket)
     # Write out the TSV and upload it
-    upload_df = upload_df.head(5)
+
     enriched_df = dataframe_enricher(advanced_metadata, upload_df)
     logging.info(enriched_df.head(5))
     enriched_df.to_csv(
@@ -200,17 +200,17 @@ def chunk_and_upload(
     backfilled_rows = 0
 
 
-    if backfill:
-        rows_to_seed = 1000
-        seed_table(
-                advanced_metadata,
-                chunk_df,
-                target_engine,
-                target_table,
-                rows_to_seed=rows_to_seed,
-        )
-        chunk_df = chunk_df.iloc[rows_to_seed:]
-    row_count = chunk_df.shape[0]
+    # if backfill:
+    #     rows_to_seed = 1000
+    #     seed_table(
+    #             advanced_metadata,
+    #             chunk_df,
+    #             target_engine,
+    #             target_table,
+    #             rows_to_seed=rows_to_seed,
+    #     )
+    #     chunk_df = chunk_df.iloc[rows_to_seed:]
+    # row_count = chunk_df.shape[0]
     rows_uploaded += row_count
 
     logging.info("Uploading to GCS")
