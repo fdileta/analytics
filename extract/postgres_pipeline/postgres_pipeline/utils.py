@@ -211,7 +211,7 @@ def chunk_and_upload(
     #     )
     #     chunk_df = chunk_df.iloc[rows_to_seed:]
     # row_count = chunk_df.shape[0]
-    rows_uploaded += row_count
+    rows_uploaded += 10
 
     logging.info("Uploading to GCS")
     upload_to_gcs(
