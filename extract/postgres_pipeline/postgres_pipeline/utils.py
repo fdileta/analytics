@@ -120,7 +120,7 @@ def manifest_reader(file_path: str) -> Dict[str, Dict]:
 
     return manifest_dict
 
-def read_sql_tmpfile(query, db_engine):
+def read_sql_tmpfile(query, db_engine, chunksize=100_000):
     with tempfile.TemporaryFile() as tmpfile:
         copy_sql = f"COPY ({query}) TO STDOUT WITH CSV HEADER"
         logging.info(f" running COPY ({query}) TO STDOUT WITH CSV HEADER")
@@ -128,7 +128,7 @@ def read_sql_tmpfile(query, db_engine):
         cur = conn.cursor()
         cur.copy_expert(copy_sql, tmpfile)
         tmpfile.seek(0)
-        df = pd.read_csv(tmpfile, chunksize=100_000)
+        df = pd.read_csv(tmpfile, chunksize=chunksize)
         return df
 
 def query_results_generator(
@@ -190,7 +190,7 @@ def chunk_and_upload(
     results_generator = read_sql_tmpfile(query, source_engine)
 
     # Source engine shouldn't be needed anymore, returns a df of a csv
-    source_engine.dispose()
+
 
     upload_file_name = f"{target_table}_CHUNK.tsv.gz"
 
@@ -224,7 +224,7 @@ def chunk_and_upload(
         f"Uploaded {rows_uploaded + backfilled_rows} total rows to table {target_table}."
     )
     target_engine.dispose()
-
+    source_engine.dispose()
 
 
 
