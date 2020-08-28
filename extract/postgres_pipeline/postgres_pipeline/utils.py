@@ -191,9 +191,7 @@ def chunk_and_upload(
     logging.info(chunk_df.head(5))
     logging.info(len(chunk_df))
 
-    validation_query = 'SELECT count(*) FROM label_links'
-    validation_df = read_sql_tmpfile(validation_query, source_engine)
-    logging.info(validation_df.head(5))
+    idx = 1
 
     upload_file_name = f"{target_table}_CHUNK.tsv.gz"
 
@@ -209,11 +207,11 @@ def chunk_and_upload(
     #)
 
     upload_to_gcs(
-            advanced_metadata, chunk_df, upload_file_name
+            advanced_metadata, chunk_df, upload_file_name + "." + str(idx)
     )
 
     trigger_snowflake_upload(
-            target_engine, target_table, upload_file_name, purge=True
+            target_engine, target_table, upload_file_name + "[.]\\\\d*", purge=True
     )
     logging.info(
             f"Uploaded {rows_uploaded + backfilled_rows} total rows to table {target_table}."
