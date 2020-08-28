@@ -189,6 +189,9 @@ def chunk_and_upload(
     rows_uploaded = 0
     results_generator = read_sql_tmpfile(query, source_engine)
 
+    # Source engine shouldn't be needed anymore, returns a df of a csv
+    source_engine.dispose()
+
     upload_file_name = f"{target_table}_CHUNK.tsv.gz"
 
     backfilled_rows = 0
@@ -221,7 +224,7 @@ def chunk_and_upload(
         f"Uploaded {rows_uploaded + backfilled_rows} total rows to table {target_table}."
     )
     target_engine.dispose()
-    source_engine.dispose()
+
 
 
 
