@@ -131,7 +131,9 @@ def read_sql_tmpfile(query, db_engine):
         cur = conn.cursor()
         cur.copy_expert(copy_sql, tmpfile)
         tmpfile.seek(0)
-        df = pd.read_csv(tmpfile, na_filter=False)
+        logging.info("Reading csv")
+        df = pd.read_csv(tmpfile)
+        logging.info("CSV read")
         return df
 
 def query_results_generator(
@@ -191,9 +193,9 @@ def chunk_and_upload(
 
     rows_uploaded = 0
     chunk_df = read_sql_tmpfile(query, source_engine)
-    logging.info(chunk_df.head(5))
-    logging.info(len(chunk_df))
-
+    # logging.info(chunk_df.head(5))
+    # logging.info(len(chunk_df))
+    chunk_df = chunk_df.fillna('')
     idx = 1
     upload_file_name = f"{target_table}_CHUNK.tsv.gz"
 
