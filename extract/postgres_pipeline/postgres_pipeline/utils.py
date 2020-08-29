@@ -122,7 +122,7 @@ def manifest_reader(file_path: str) -> Dict[str, Dict]:
     return manifest_dict
 
 def query_results_generator_csv(
-            query: str, engine: Engine, tmp_file: TemporaryFile,  chunksize: int = 1_000_000
+            query: str, engine: Engine, tmp_file: TemporaryFile,
     ) -> pd.DataFrame:
     """
         Works much faster than the standard pandas read sql by using Postgres commands and a tempfile
@@ -135,7 +135,7 @@ def query_results_generator_csv(
         cur = conn.cursor()
         cur.copy_expert(copy_sql, tmp_file)
         tmp_file.seek(0)
-        csv_df_iterator = pd.read_csv(tmp_file, chunksize)
+        csv_df_iterator = pd.read_csv(tmp_file, 1_000_000)
     except Exception as e:
         logging.exception(e)
         sys.exit(1)
