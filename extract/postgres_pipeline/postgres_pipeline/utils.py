@@ -200,7 +200,7 @@ def chunk_and_upload(
 
     with tempfile.TemporaryFile() as tmpfile:
         iter_csv = query_results_generator_csv(query, source_engine, tmpfile)
-        for idx in enumerate(iter_csv):
+        for idx, chunk_df in enumerate(iter_csv):
 
             # if backfill:
             #     # Seed 1 row, CSV upload works much quicker, just need the metadata.
@@ -217,21 +217,17 @@ def chunk_and_upload(
             #     backfill = False
 
             upload_file_name = f"{target_table}_CHUNK.tsv.gz"
-            logging.info(upload_file_name)
-            logging.info("a")
+
             upload_to_gcs(
                     advanced_metadata, chunk_df, upload_file_name + "." + str(idx)
             )
-            logging.info("b")
             trigger_snowflake_upload(
                     target_engine, target_table, upload_file_name + "[.]\\\\d*", purge=True
             )
-            logging.info("c")
-            rows_uploaded += 10
+            rows_uploaded += len(chunk_df)
             logging.info(
                     f"Uploaded {rows_uploaded} total rows to table {target_table}."
             )
-            logging.info("d")
 
 
     target_engine.dispose()
