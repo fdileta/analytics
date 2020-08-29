@@ -41,13 +41,15 @@ def upload_to_gcs(
     """
     Write a dataframe to local storage and then upload it to a GCS bucket.
     """
-    logging.info(f"Uploading {upload_file_name} to GCS")
+
     keyfile = yaml.load(os.environ["GCP_SERVICE_CREDS"], Loader=yaml.FullLoader)
     bucket_name = "postgres_pipeline"
     bucket = get_gcs_bucket(keyfile, bucket_name)
+    logging.info(bucket)
     # Write out the TSV and upload it
 
     enriched_df = dataframe_enricher(advanced_metadata, upload_df)
+    logging.info(enriched_df.head(5))
     enriched_df.to_csv(
         upload_file_name,
         compression="gzip",
@@ -56,9 +58,10 @@ def upload_to_gcs(
         quoting=csv.QUOTE_NONE,
         sep="\t",
     )
+    logging.info("Written successfully")
     blob = bucket.blob(upload_file_name)
     blob.upload_from_filename(upload_file_name)
-    logging.info(f"{upload_file_name} uploaded")
+
     return True
 
 
