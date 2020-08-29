@@ -132,7 +132,6 @@ def read_sql_tmpfile(query, db_engine, tmp_file):
     tmp_file.seek(0)
     logging.info("Reading csv")
     df = pd.read_csv(tmp_file, chunksize=1_000_000, parse_dates=True)
-    logging.info(df.info(verbose=True))
     logging.info("CSV read")
     return df
 
@@ -196,7 +195,7 @@ def chunk_and_upload(
     with tempfile.TemporaryFile() as tmpfile:
         iter_csv = read_sql_tmpfile(query, source_engine, tmpfile)
         for idx, chunk_df in enumerate(iter_csv):
-            logging.info(chunk_df.info())
+            logging.info(chunk_df.head(5))
             if backfill:
                 rows_to_seed = 10000
                 seed_table(
