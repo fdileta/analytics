@@ -195,6 +195,21 @@ def chunk_and_upload(
     with tempfile.TemporaryFile() as tmpfile:
         iter_csv = read_sql_tmpfile(query, source_engine, tmpfile)
         for idx, chunk_df in enumerate(iter_csv):
+            if backfill:
+                # Seed 1 row, CSV upload works much quicker, just need the metadata.
+                rows_to_seed = 1
+                seed_table(
+                        advanced_metadata,
+                        chunk_df,
+                        target_engine,
+                        target_table,
+                        rows_to_seed=rows_to_seed,
+                )
+                chunk_df = chunk_df.iloc[rows_to_seed:]
+                rows_uploaded += rows_to_seed
+                backfill = False
+
+
             upload_file_name = f"{target_table}_CHUNK.tsv.gz"
 
             backfilled_rows = 0
