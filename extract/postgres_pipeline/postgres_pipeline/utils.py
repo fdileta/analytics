@@ -7,7 +7,6 @@ import tempfile
 
 from time import time
 from typing import Dict, List, Generator, Any, Tuple
-from tempfile import TemporaryFile
 
 from gitlabdata.orchestration_utils import (
     dataframe_uploader,
@@ -121,25 +120,17 @@ def manifest_reader(file_path: str) -> Dict[str, Dict]:
 
     return manifest_dict
 
-def query_results_generator_csv(
-            query: str, engine: Engine, tmp_file: TemporaryFile,  chunksize: int = 1_000_000
-    ) -> pd.DataFrame:
-    """
-        Works much faster than the standard pandas read sql by using Postgres commands and a tempfile
-        to generate a csv file, this is then read by pandas to keep the return types consistent.
-    """
-    try:
-        copy_sql = f"COPY ({query}) TO STDOUT WITH CSV HEADER"
-        logging.info(f" running COPY ({query}) TO STDOUT WITH CSV HEADER")
-        conn = engine.raw_connection()
-        cur = conn.cursor()
-        cur.copy_expert(copy_sql, tmp_file)
-        tmp_file.seek(0)
-        csv_df_iterator = pd.read_csv(tmp_file, chunksize)
-    except Exception as e:
-        logging.exception(e)
-        sys.exit(1)
-    return csv_df_iterator
+def read_sql_tmpfile(query, db_engine, tmp_file):
+    copy_sql = f"COPY ({query}) TO STDOUT WITH CSV HEADER"
+    logging.info(f" running COPY ({query}) TO STDOUT WITH CSV HEADER")
+    conn = db_engine.raw_connection()
+    cur = conn.cursor()
+    cur.copy_expert(copy_sql, tmp_file)
+    tmp_file.seek(0)
+    logging.info("Reading csv")
+    df = pd.read_csv(tmp_file, chunksize=1000_000)
+    logging.info("CSV read")
+    return df
 
 def query_results_generator(
     query: str, engine: Engine, chunksize: int = 100_000
@@ -199,36 +190,44 @@ def chunk_and_upload(
     rows_uploaded = 0
 
     with tempfile.TemporaryFile() as tmpfile:
-        iter_csv = query_results_generator_csv(query, source_engine, tmpfile)
+        iter_csv = read_sql_tmpfile(query, source_engine, tmpfile)
         for idx, chunk_df in enumerate(iter_csv):
-
-            if backfill:
-                # Seed 1 row, CSV upload works much quicker, just need the metadata.
-                rows_to_seed = 1
-                seed_table(
-                        advanced_metadata,
-                        chunk_df,
-                        target_engine,
-                        target_table,
-                        rows_to_seed=rows_to_seed,
-                )
-                chunk_df = chunk_df.iloc[rows_to_seed:]
-                rows_uploaded += rows_to_seed
-                backfill = False
-
             upload_file_name = f"{target_table}_CHUNK.tsv.gz"
 
+            backfilled_rows = 0
+            rows_uploaded += len(chunk_df)
+
+            logging.info("Uploading to GCS")
             upload_to_gcs(
                     advanced_metadata, chunk_df, upload_file_name + "." + str(idx)
             )
+            logging.info("Uploaded to GCS")
+            logging.info("Uploading to SF")
             trigger_snowflake_upload(
                     target_engine, target_table, upload_file_name + "[.]\\\\d*", purge=True
             )
-            rows_uploaded += len(chunk_df)
+            logging.info("Uploaded to ssf")
             logging.info(
-                    f"Uploaded {rows_uploaded} total rows to table {target_table}."
+                    f"Uploaded {rows_uploaded + backfilled_rows} total rows to table {target_table}."
             )
 
+    # logging.info(chunk_df.head(5))
+    # logging.info(len(chunk_df))
+
+    idx = 1
+
+
+    # if backfill:
+    #     rows_to_seed = 1000
+    #     seed_table(
+    #             advanced_metadata,
+    #             chunk_df,
+    #             target_engine,
+    #             target_table,
+    #             rows_to_seed=rows_to_seed,
+    #     )
+    #     chunk_df = chunk_df.iloc[rows_to_seed:]
+    # row_count = chunk_df.shape[0]
 
     target_engine.dispose()
     source_engine.dispose()
