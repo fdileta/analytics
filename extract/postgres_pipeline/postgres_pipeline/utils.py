@@ -131,7 +131,7 @@ def read_sql_tmpfile(query, db_engine, tmp_file):
     cur.copy_expert(copy_sql, tmp_file)
     tmp_file.seek(0)
     logging.info("Reading csv")
-    df = pd.read_csv(tmp_file, chunksize=100_000)
+    df = pd.read_csv(tmp_file, chunksize=1000_000)
     logging.info("CSV read")
     return df
 
@@ -198,7 +198,7 @@ def chunk_and_upload(
             upload_file_name = f"{target_table}_CHUNK.tsv.gz"
 
             backfilled_rows = 0
-            rows_uploaded += 10
+            rows_uploaded += len(chunk_df)
 
             logging.info("Uploading to GCS")
             upload_to_gcs(
