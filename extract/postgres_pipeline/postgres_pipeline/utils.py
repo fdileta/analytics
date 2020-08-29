@@ -131,7 +131,8 @@ def read_sql_tmpfile(query, db_engine, tmp_file):
     cur.copy_expert(copy_sql, tmp_file)
     tmp_file.seek(0)
     logging.info("Reading csv")
-    df = pd.read_csv(tmp_file, chunksize=1_000_000, low_memory=False)
+    df = pd.read_csv(tmp_file, chunksize=1_000_000, parse_dates=True)
+    logging.info(df.info(verbose=True))
     logging.info("CSV read")
     return df
 
@@ -195,6 +196,7 @@ def chunk_and_upload(
     with tempfile.TemporaryFile() as tmpfile:
         iter_csv = read_sql_tmpfile(query, source_engine, tmpfile)
         for idx, chunk_df in enumerate(iter_csv):
+            logging.info(chunk_df.info())
             if backfill:
                 rows_to_seed = 10000
                 seed_table(
@@ -207,7 +209,6 @@ def chunk_and_upload(
                 chunk_df = chunk_df.iloc[rows_to_seed:]
                 rows_uploaded += rows_to_seed
                 backfill = False
-
 
             upload_file_name = f"{target_table}_CHUNK.tsv.gz"
 
@@ -227,24 +228,6 @@ def chunk_and_upload(
             logging.info(
                     f"Uploaded {rows_uploaded + backfilled_rows} total rows to table {target_table}."
             )
-
-    # logging.info(chunk_df.head(5))
-    # logging.info(len(chunk_df))
-
-    idx = 1
-
-
-    # if backfill:
-    #     rows_to_seed = 1000
-    #     seed_table(
-    #             advanced_metadata,
-    #             chunk_df,
-    #             target_engine,
-    #             target_table,
-    #             rows_to_seed=rows_to_seed,
-    #     )
-    #     chunk_df = chunk_df.iloc[rows_to_seed:]
-    # row_count = chunk_df.shape[0]
 
     target_engine.dispose()
     source_engine.dispose()
