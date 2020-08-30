@@ -196,6 +196,7 @@ def chunk_and_upload(
         iter_csv = read_sql_tmpfile(query, source_engine, tmpfile)
         for idx, chunk_df in enumerate(iter_csv):
             logging.info(chunk_df.head(5))
+            logging.info(chunk_df.info())
             if backfill:
                 rows_to_seed = 10000
                 seed_table(
