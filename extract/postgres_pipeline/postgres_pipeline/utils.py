@@ -193,7 +193,7 @@ def chunk_and_upload(
     rows_uploaded = 0
 
     type_df = query_results_generator(query, source_engine)
-    logging.info(type_df.next().info())
+    logging.info(type_df.__next__().info())
 
     with tempfile.TemporaryFile() as tmpfile:
         iter_csv = read_sql_tmpfile(query, source_engine, tmpfile)
