@@ -210,33 +210,22 @@ def chunk_and_upload(
 
     rows_uploaded = 0
 
-    type_df = query_results_generator(query, source_engine)
-    logging.info(type_df.__next__().info())
-
-    new_type_df = df_data_type_reader(query, source_engine)
-    logging.info(new_type_df.info())
-
     with tempfile.TemporaryFile() as tmpfile:
         iter_csv = read_sql_tmpfile(query, source_engine, tmpfile)
         for idx, chunk_df in enumerate(iter_csv):
-            logging.info(chunk_df.head(5))
-            logging.info(chunk_df.info())
             if backfill:
-                rows_to_seed = 10000
+                type_df = query_results_generator(query, source_engine)
                 seed_table(
                         advanced_metadata,
-                        chunk_df,
+                        type_df,
                         target_engine,
                         target_table,
-                        rows_to_seed=rows_to_seed,
+                        rows_to_seed=1,
                 )
-                chunk_df = chunk_df.iloc[rows_to_seed:]
-                rows_uploaded += rows_to_seed
                 backfill = False
 
             upload_file_name = f"{target_table}_CHUNK.tsv.gz"
 
-            backfilled_rows = 0
             rows_uploaded += len(chunk_df)
 
             logging.info("Uploading to GCS")
@@ -250,7 +239,7 @@ def chunk_and_upload(
             )
             logging.info("Uploaded to ssf")
             logging.info(
-                    f"Uploaded {rows_uploaded + backfilled_rows} total rows to table {target_table}."
+                    f"Uploaded {rows_uploaded} total rows to table {target_table}."
             )
 
     target_engine.dispose()
