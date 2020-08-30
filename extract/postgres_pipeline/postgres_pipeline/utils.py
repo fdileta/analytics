@@ -151,6 +151,23 @@ def query_results_generator(
         sys.exit(1)
     return query_df_iterator
 
+def df_data_type_reader(
+    query: str, engine: Engine
+) -> pd.DataFrame:
+    """
+    Bit of a silly fix for a data type issue when creating csvs rather than using the pd read sql
+    Need the pd read sql meta data to create the table with the correct types, this is a much cheaper
+    option than reading in the whole csv.
+    """
+
+    try:
+        query = query + ' LIMIT 1'
+        csv_data_type_df = pd.read_sql(sql=query, con=engine)
+        csv_data_type_df.drop(csv_data_type_df.iloc[0:0], inplace=True)
+    except Exception as e:
+        logging.exception(e)
+        sys.exit(1)
+    return csv_data_type_df
 
 def seed_table(
     advanced_metadata: bool,
@@ -194,6 +211,9 @@ def chunk_and_upload(
 
     type_df = query_results_generator(query, source_engine)
     logging.info(type_df.__next__().info())
+
+    new_type_df = df_data_type_reader(query, source_engine)
+    logging.info(new_type_df.info())
 
     with tempfile.TemporaryFile() as tmpfile:
         iter_csv = read_sql_tmpfile(query, source_engine, tmpfile)
