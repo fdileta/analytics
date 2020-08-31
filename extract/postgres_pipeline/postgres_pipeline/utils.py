@@ -123,7 +123,7 @@ def manifest_reader(file_path: str) -> Dict[str, Dict]:
 
     return manifest_dict
 
-def read_sql_tmpfile(query, db_engine, tmp_file):
+def read_sql_tmpfile(query, db_engine, tmp_file, dataframe):
     copy_sql = f"COPY ({query}) TO STDOUT WITH CSV HEADER"
     logging.info(f" running COPY ({query}) TO STDOUT WITH CSV HEADER")
     conn = db_engine.raw_connection()
@@ -131,9 +131,9 @@ def read_sql_tmpfile(query, db_engine, tmp_file):
     cur.copy_expert(copy_sql, tmp_file)
     tmp_file.seek(0)
     logging.info("Reading csv")
-    df = pd.read_csv(tmp_file, chunksize=1_000_000, parse_dates=True, low_memory=False)
+    dataframe = dataframe.append(pd.read_csv(tmp_file, chunksize=1_000_000, parse_dates=True, low_memory=False))
     logging.info("CSV read")
-    return df
+    return dataframe
 
 def query_results_generator(
     query: str, engine: Engine, chunksize: int = 100_000
@@ -211,10 +211,10 @@ def chunk_and_upload(
     rows_uploaded = 0
 
     with tempfile.TemporaryFile() as tmpfile:
-        iter_csv = read_sql_tmpfile(query, source_engine, tmpfile)
+        type_df = query_results_generator(query, source_engine)
+        iter_csv = read_sql_tmpfile(query, source_engine, tmpfile, type_df)
         for idx, chunk_df in enumerate(iter_csv):
             if backfill:
-                type_df = query_results_generator(query, source_engine)
                 seed_table(
                         advanced_metadata,
                         type_df,
@@ -232,7 +232,6 @@ def chunk_and_upload(
             upload_to_gcs(
                     advanced_metadata, chunk_df, upload_file_name + "." + str(idx)
             )
-            logging.info("Uploaded to GCS")
             logging.info("Uploading to SF")
             trigger_snowflake_upload(
                     target_engine, target_table, upload_file_name + "[.]\\\\d*", purge=True
