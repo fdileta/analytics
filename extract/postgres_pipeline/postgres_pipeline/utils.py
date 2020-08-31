@@ -162,10 +162,7 @@ def df_data_type_reader(
 
     try:
         query = query + ' LIMIT 100000'
-        logging.info(query)
         csv_data_type_df = pd.read_sql(sql=query, con=engine)
-        logging.info(csv_data_type_df)
-        logging.info(type(csv_data_type_df))
     except Exception as e:
         logging.exception(e)
         sys.exit(1)
@@ -210,46 +207,38 @@ def chunk_and_upload(
     """
 
     rows_uploaded = 0
-    type_df = df_data_type_reader(query, source_engine)
-    logging.info(type_df.info())
+    results_generator = query_results_generator(query, source_engine)
+    upload_file_name = f"{target_table}_CHUNK.tsv.gz"
 
-    with tempfile.TemporaryFile() as tmpfile:
+    backfilled_rows = 0
 
-        iter_csv = read_sql_tmpfile(query, source_engine, tmpfile)
-
-        for idx, chunk_df in enumerate(iter_csv):
-            type_df = type_df.drop(type_df.index)
-
-            logging.info(type_df.info())
-
-            type_df = type_df.append(chunk_df)
-            if backfill:
-                seed_table(
-                        advanced_metadata,
-                        type_df,
-                        target_engine,
-                        target_table,
-                        rows_to_seed=1,
-                )
-                backfill = False
-
-            upload_file_name = f"{target_table}_CHUNK.tsv.gz"
-
-            rows_uploaded += len(chunk_df)
-
-            logging.info("Uploading to GCS")
+    for idx, chunk_df in enumerate(results_generator):
+        # If the table doesn't exist, it needs to send the first chunk to the dataframe_uploader
+        if backfill:
+            rows_to_seed = 10000
+            seed_table(
+                    advanced_metadata,
+                    chunk_df,
+                    target_engine,
+                    target_table,
+                    rows_to_seed=rows_to_seed,
+            )
+            backfilled_rows += chunk_df[:rows_to_seed].shape[0]
+            chunk_df = chunk_df.iloc[rows_to_seed:]
+        row_count = chunk_df.shape[0]
+        rows_uploaded += row_count
+        if not backfill or row_count > 0:
             upload_to_gcs(
-                    advanced_metadata, type_df, upload_file_name + "." + str(idx)
+                    advanced_metadata, chunk_df, upload_file_name + "." + str(idx)
             )
-            logging.info("Uploading to SF")
-            trigger_snowflake_upload(
-                    target_engine, target_table, upload_file_name + "[.]\\\\d*", purge=True
-            )
-            logging.info("Uploaded to ssf")
-            logging.info(
-                    f"Uploaded {rows_uploaded} total rows to table {target_table}."
-            )
-
+        backfill = False
+    if rows_uploaded > 0:
+        trigger_snowflake_upload(
+                target_engine, target_table, upload_file_name + "[.]\\\\d*", purge=True
+        )
+    logging.info(
+            f"Uploaded {rows_uploaded + backfilled_rows} total rows to table {target_table}."
+    )
     target_engine.dispose()
     source_engine.dispose()
 
