@@ -214,12 +214,11 @@ def chunk_and_upload(
     with tempfile.TemporaryFile() as tmpfile:
 
         type_df = df_data_type_reader(query, source_engine)
-        logging.info(type(type_df))
-        logging.info(type_df)
 
         iter_csv = read_sql_tmpfile(query, source_engine, tmpfile, type_df)
 
         for idx, chunk_df in enumerate(iter_csv):
+            type_df = type_df.append(chunk_df)
             if backfill:
                 seed_table(
                         advanced_metadata,
@@ -236,7 +235,7 @@ def chunk_and_upload(
 
             logging.info("Uploading to GCS")
             upload_to_gcs(
-                    advanced_metadata, chunk_df, upload_file_name + "." + str(idx)
+                    advanced_metadata, type_df, upload_file_name + "." + str(idx)
             )
             logging.info("Uploading to SF")
             trigger_snowflake_upload(
