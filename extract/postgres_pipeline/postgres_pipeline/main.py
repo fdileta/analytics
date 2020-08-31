@@ -165,9 +165,9 @@ def sync_incremental_ids(
     #     return False
     # If temp isn't in the name, we don't need to full sync.
     # If a temp table exists, we know the sync didn't complete successfully
-    if "_TEMP" != table_name[-5:] and not target_engine.has_table(f"{table_name}_TEMP"):
-        logging.info(f"Table {table} doesn't need a full sync.")
-        return False
+    #if "_TEMP" != table_name[-5:] and not target_engine.has_table(f"{table_name}_TEMP"):
+    #    logging.info(f"Table {table} doesn't need a full sync.")
+    #    return False
 
     load_ids(
         additional_filtering,
@@ -179,7 +179,6 @@ def sync_incremental_ids(
         target_engine,
     )
     return True
-
 
 def load_scd(
     source_engine: Engine,
@@ -195,6 +194,8 @@ def load_scd(
     raw_query = table_dict["import_query"]
     additional_filter = table_dict.get("additional_filtering", "")
     advanced_metadata = table_dict.get("advanced_metadata", False)
+    csv_data_types = table_dict.get("dtypes")
+    logging.info(csv_data_types)
     if "{EXECUTION_DATE}" in raw_query:
         logging.info(f"Table {table} does not need SCD processing.")
         return False
@@ -212,10 +213,9 @@ def load_scd(
     query = f"{raw_query} {additional_filter}"
     logging.info(query)
     chunk_and_upload(
-        query, source_engine, target_engine, table_name, advanced_metadata, backfill
+        query, source_engine, target_engine, table_name, advanced_metadata, backfill, csv_data_types
     )
     return True
-
 
 def validate_ids(
     source_engine: Engine,

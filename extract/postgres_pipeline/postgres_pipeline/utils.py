@@ -177,6 +177,7 @@ def seed_table(
     engine: Engine,
     table: str,
     rows_to_seed: int = 10000,
+    data_types : dict = None,
 ) -> bool:
     """
     Load a set number of rows to Snowflake through pandas to create the table
@@ -184,10 +185,17 @@ def seed_table(
     """
 
     logging.info(f"Seeding {rows_to_seed} rows directly into Snowflake...")
-    dataframe_uploader(
-        df.iloc[:rows_to_seed], engine, table, advanced_metadata=advanced_metadata
-    )
-    return False
+    if dataframe_enricher(advanced_metadata, df.iloc[:rows_to_seed]).to_sql(
+            name=table,
+            con=engine,
+            index=False,
+            if_exists="append",
+            chunksize=10000,
+            dtype=data_types,
+    ):
+        return True
+    else:
+        return False
 
 
 def chunk_and_upload(
