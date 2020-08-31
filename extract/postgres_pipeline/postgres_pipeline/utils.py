@@ -144,7 +144,7 @@ def query_results_generator(
     """
 
     try:
-        query_df_iterator = pd.read_sql(sql=query, con=engine, chunksize=chunksize)
+        query_df_iterator = pd.read_sql(sql=query, con=engine, chunksize=chunksize).__next__()
 
     except Exception as e:
         logging.exception(e)
