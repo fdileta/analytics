@@ -123,7 +123,7 @@ def manifest_reader(file_path: str) -> Dict[str, Dict]:
 
     return manifest_dict
 
-def read_sql_tmpfile(query, db_engine, tmp_file, dataframe):
+def read_sql_tmpfile(query, db_engine, tmp_file):
     copy_sql = f"COPY ({query}) TO STDOUT WITH CSV HEADER"
     logging.info(f" running COPY ({query}) TO STDOUT WITH CSV HEADER")
     conn = db_engine.raw_connection()
@@ -131,9 +131,9 @@ def read_sql_tmpfile(query, db_engine, tmp_file, dataframe):
     cur.copy_expert(copy_sql, tmp_file)
     tmp_file.seek(0)
     logging.info("Reading csv")
-    dataframe = dataframe.append(pd.read_csv(tmp_file, chunksize=1_000_000, parse_dates=True, low_memory=False))
+    df = pd.read_csv(tmp_file, chunksize=1_000_000, parse_dates=True, low_memory=False)
     logging.info("CSV read")
-    return dataframe
+    return df
 
 def query_results_generator(
     query: str, engine: Engine, chunksize: int = 100_000
@@ -210,14 +210,16 @@ def chunk_and_upload(
     """
 
     rows_uploaded = 0
-
+    type_df = df_data_type_reader(query, source_engine)
     with tempfile.TemporaryFile() as tmpfile:
 
-        type_df = df_data_type_reader(query, source_engine)
+        
 
-        iter_csv = read_sql_tmpfile(query, source_engine, tmpfile, type_df)
+        iter_csv = read_sql_tmpfile(query, source_engine, tmpfile)
 
         for idx, chunk_df in enumerate(iter_csv):
+            type_df = type_df.drop(type_df.index)
+            
             type_df = type_df.append(chunk_df)
             if backfill:
                 seed_table(
