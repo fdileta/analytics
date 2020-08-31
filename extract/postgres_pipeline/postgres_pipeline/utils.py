@@ -123,7 +123,7 @@ def manifest_reader(file_path: str) -> Dict[str, Dict]:
 
     return manifest_dict
 
-def read_sql_tmpfile(query, db_engine, tmp_file, csv_data_types, parse_dates):
+def read_sql_tmpfile(query, db_engine, tmp_file):
     copy_sql = f"COPY ({query}) TO STDOUT WITH CSV HEADER"
     logging.info(f" running COPY ({query}) TO STDOUT WITH CSV HEADER")
     conn = db_engine.raw_connection()
@@ -131,7 +131,7 @@ def read_sql_tmpfile(query, db_engine, tmp_file, csv_data_types, parse_dates):
     cur.copy_expert(copy_sql, tmp_file)
     tmp_file.seek(0)
     logging.info("Reading csv")
-    df = pd.read_csv(tmp_file, chunksize=1_000_000, dtype=csv_data_types, parse_dates=parse_dates)
+    df = pd.read_csv(tmp_file, chunksize=1_000_000, parse_dates=True, low_memory=False)
     logging.info("CSV read")
     return df
 
@@ -197,8 +197,6 @@ def chunk_and_upload(
     target_table: str,
     advanced_metadata: bool = False,
     backfill: bool = False,
-    csv_data_types: dict = None,
-    parse_dates: list = None, 
 ) -> None:
     """
     Call the functions that upload the dataframes as TSVs in GCS and then trigger Snowflake
@@ -212,16 +210,23 @@ def chunk_and_upload(
     """
 
     rows_uploaded = 0
+    type_df = df_data_type_reader(query, source_engine)
+    logging.info(type_df.info())
 
     with tempfile.TemporaryFile() as tmpfile:
 
-        iter_csv = read_sql_tmpfile(query, source_engine, tmpfile, csv_data_types, parse_dates)
+        iter_csv = read_sql_tmpfile(query, source_engine, tmpfile)
 
         for idx, chunk_df in enumerate(iter_csv):
+            type_df = type_df.drop(type_df.index)
+
+            logging.info(type_df.info())
+
+            type_df = type_df.append(chunk_df)
             if backfill:
                 seed_table(
                         advanced_metadata,
-                        chunk_df,
+                        type_df,
                         target_engine,
                         target_table,
                         rows_to_seed=1,
@@ -234,7 +239,7 @@ def chunk_and_upload(
 
             logging.info("Uploading to GCS")
             upload_to_gcs(
-                    advanced_metadata, chunk_df, upload_file_name + "." + str(idx)
+                    advanced_metadata, type_df, upload_file_name + "." + str(idx)
             )
             logging.info("Uploading to SF")
             trigger_snowflake_upload(
