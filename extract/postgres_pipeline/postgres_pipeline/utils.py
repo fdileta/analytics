@@ -213,6 +213,7 @@ def chunk_and_upload(
 
     with tempfile.TemporaryFile() as tmpfile:
         type_df = query_results_generator(query, source_engine)
+        logging.info(type(type_df))
         iter_csv = read_sql_tmpfile(query, source_engine, tmpfile, type_df)
         for idx, chunk_df in enumerate(iter_csv):
             if backfill:
