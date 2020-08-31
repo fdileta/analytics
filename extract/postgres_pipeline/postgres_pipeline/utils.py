@@ -211,15 +211,17 @@ def chunk_and_upload(
 
     rows_uploaded = 0
     type_df = df_data_type_reader(query, source_engine)
-    with tempfile.TemporaryFile() as tmpfile:
+    logging.info(type_df.info())
 
-        
+    with tempfile.TemporaryFile() as tmpfile:
 
         iter_csv = read_sql_tmpfile(query, source_engine, tmpfile)
 
         for idx, chunk_df in enumerate(iter_csv):
             type_df = type_df.drop(type_df.index)
-            
+
+            logging.info(type_df.info())
+
             type_df = type_df.append(chunk_df)
             if backfill:
                 seed_table(
