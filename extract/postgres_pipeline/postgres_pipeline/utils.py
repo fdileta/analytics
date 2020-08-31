@@ -161,7 +161,7 @@ def df_data_type_reader(
     """
 
     try:
-        query = query + ' LIMIT 10000'
+        query = query + ' LIMIT 100000'
         logging.info(query)
         csv_data_type_df = pd.read_sql(sql=query, con=engine)
         logging.info(csv_data_type_df)
