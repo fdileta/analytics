@@ -163,7 +163,7 @@ def df_data_type_reader(
     try:
         query = query + ' LIMIT 1'
         logging.info(query)
-        csv_data_type_df = pd.read_sql(sql=query, con=engine).__next__()
+        csv_data_type_df = pd.read_sql(sql=query, con=engine)
         logging.info(csv_data_type_df)
         logging.info(type(csv_data_type_df))
     except Exception as e:
