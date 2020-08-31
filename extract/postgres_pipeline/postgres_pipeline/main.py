@@ -195,6 +195,9 @@ def load_scd(
     raw_query = table_dict["import_query"]
     additional_filter = table_dict.get("additional_filtering", "")
     advanced_metadata = table_dict.get("advanced_metadata", False)
+    csv_data_types = table_dict.get("dtypes")
+    dates = table_dict.get("parse_dates")
+    logging.info(csv_data_types)
     if "{EXECUTION_DATE}" in raw_query:
         logging.info(f"Table {table} does not need SCD processing.")
         return False
@@ -212,7 +215,7 @@ def load_scd(
     query = f"{raw_query} {additional_filter}"
     logging.info(query)
     chunk_and_upload(
-        query, source_engine, target_engine, table_name, advanced_metadata, backfill
+        query, source_engine, target_engine, table_name, advanced_metadata, backfill, csv_data_types, dates
     )
     return True
 

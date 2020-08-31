@@ -35,7 +35,7 @@ tables:
       , duplicated_to_id
       , promoted_to_epic_id
       FROM issues
-      WHERE updated_at BETWEEN '{EXECUTION_DATE}'::timestamp - interval '{HOURS} hours'
+      WHERE updated_at BETWEEN '{EXECUTION_DATE}'::timestamp - floaterval '{HOURS} hours'
         AND '{EXECUTION_DATE}'::timestamp
     additional_filtering: AND created_at NOT IN ( '0001-01-01 00:00:00+00', '1000-01-01 00:00:00+00', '10000-01-01 00:00:00+00')
     export_schema: 'gitlab_com'
@@ -54,7 +54,7 @@ tables:
       , type
       , group_id
       FROM labels
-      WHERE updated_at BETWEEN '{EXECUTION_DATE}'::timestamp - interval '{HOURS} hours'
+      WHERE updated_at BETWEEN '{EXECUTION_DATE}'::timestamp - floaterval '{HOURS} hours'
         AND '{EXECUTION_DATE}'::timestamp
     export_schema: 'gitlab_com'
     export_table: 'labels'
@@ -70,7 +70,7 @@ tables:
       , created_at
       , updated_at
       FROM issue_metrics
-      WHERE updated_at BETWEEN '{EXECUTION_DATE}'::timestamp - interval '{HOURS} hours'
+      WHERE updated_at BETWEEN '{EXECUTION_DATE}'::timestamp - floaterval '{HOURS} hours'
         AND '{EXECUTION_DATE}'::timestamp
     export_schema: 'gitlab_com'
     export_table: 'issue_metrics'
@@ -109,6 +109,8 @@ tables:
     export_table: 'gitlab_subscriptions'
     export_table_primary_key: id
     advanced_metadata: true
+    dtypes: {'id': 'float', 'namespace_id': 'float','hosted_plan_id': 'float', 'max_seats_used': 'float', 'seats': 'float', 'trial': 'string'}
+    parse_dates: ['created_at', 'updated_at', 'start_date', 'end_date', 'trial_starts_on', 'trial_ends_on']
   namespaces:
     import_db: GITLAB_DB
     import_query: >
@@ -139,7 +141,7 @@ tables:
       , project_creation_level
       , auto_devops_enabled
       FROM namespaces
-      WHERE updated_at BETWEEN '{EXECUTION_DATE}'::timestamp - interval '{HOURS} hours'
+      WHERE updated_at BETWEEN '{EXECUTION_DATE}'::timestamp - floaterval '{HOURS} hours'
         AND '{EXECUTION_DATE}'::timestamp
     export_schema: 'gitlab_com'
     export_table: 'namespaces'
@@ -191,7 +193,7 @@ tables:
       , lfs_enabled
       , only_allow_merge_if_all_discussions_are_resolved
       , repository_size_limit
-      , printing_merge_request_link_enabled
+      , prfloating_merge_request_link_enabled
       , auto_cancel_pending_pipelines
       , service_desk_enabled
       , delete_error
@@ -205,7 +207,7 @@ tables:
       , mirror_overwrites_diverged_branches
       , external_authorization_classification_label
       FROM projects
-      WHERE updated_at BETWEEN '{EXECUTION_DATE}'::timestamp - interval '{HOURS} hours'
+      WHERE updated_at BETWEEN '{EXECUTION_DATE}'::timestamp - floaterval '{HOURS} hours'
         AND '{EXECUTION_DATE}'::timestamp
     export_schema: 'gitlab_com'
     export_table: 'projects'
