@@ -366,7 +366,7 @@ def main(file_path: str, load_type: str, load_only_table: str = None) -> None:
             source_table = table_dict["import_schema"] + "." + source_table
 
         # Check if the schema has changed or the table is new
-        schema_changed = True
+        schema_changed = False
         if schema_changed:
             real_table_name = table_name
             table_name = f"{table_name}_TEMP"
