@@ -205,6 +205,7 @@ def chunk_and_upload(
     target_table: str,
     advanced_metadata: bool = False,
     backfill: bool = False,
+    data_types: dict = None,
 ) -> None:
     """
     Call the functions that upload the dataframes as TSVs in GCS and then trigger Snowflake
@@ -238,6 +239,7 @@ def chunk_and_upload(
                         target_engine,
                         target_table,
                         rows_to_seed=1,
+                        data_types=data_types
                 )
                 backfill = False
 
