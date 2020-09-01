@@ -189,7 +189,7 @@ def seed_table(
             name=table,
             con=engine,
             index=False,
-            if_exists="append",
+            if_exists="replace",
             chunksize=10000,
             dtype=data_types,
     ):
