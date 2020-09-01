@@ -366,7 +366,14 @@ def main(file_path: str, load_type: str, load_only_table: str = None) -> None:
             source_table = table_dict["import_schema"] + "." + source_table
 
         # Check if the schema has changed or the table is new
-        schema_changed = False
+        schema_changed = check_if_schema_changed(
+            raw_query,
+            postgres_engine,
+            source_table,
+            table_dict["export_table_primary_key"],
+            snowflake_engine,
+            table_name,
+        )
         if schema_changed:
             real_table_name = table_name
             table_name = f"{table_name}_TEMP"
