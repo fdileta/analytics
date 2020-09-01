@@ -193,7 +193,7 @@ tables:
       , lfs_enabled
       , only_allow_merge_if_all_discussions_are_resolved
       , repository_size_limit
-      , prfloating_merge_request_link_enabled
+      , printing_merge_request_link_enabled
       , auto_cancel_pending_pipelines
       , service_desk_enabled
       , delete_error

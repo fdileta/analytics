@@ -219,6 +219,7 @@ def chunk_and_upload(
     """
 
     rows_uploaded = 0
+    get_db_metadata
     type_df = df_data_type_reader(query, source_engine)
     logging.info(type_df.info())
 
@@ -395,6 +396,17 @@ def id_query_generator(
         logging.info(f"ID Range: {id_pair}")
         yield id_range_query
 
+def get_db_metadata(
+    source_engine: Engine,
+    source_table: str,
+    table_index: str,
+    target_engine: Engine,
+    target_table: str,):
+    query = f"SELECT * FROM information_schema.columns " \
+            f"WHERE table_name = '{source_table}'"
+    df = pd.read_sql(sql=query, con=source_engine)
+    logging.info(df)
+    return df 
 
 def get_engines(connection_dict: Dict[str, str]) -> Tuple[Engine, Engine]:
     """
