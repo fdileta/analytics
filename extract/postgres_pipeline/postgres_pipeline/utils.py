@@ -405,8 +405,8 @@ def get_db_metadata(
     query = f"SELECT * FROM information_schema.columns " \
             f"WHERE table_name = '{source_table}'"
     df = pd.read_sql(sql=query, con=source_engine)
-    logging.info(df)
-    return df 
+    logging.info(df.info())
+    return df
 
 def get_engines(connection_dict: Dict[str, str]) -> Tuple[Engine, Engine]:
     """
