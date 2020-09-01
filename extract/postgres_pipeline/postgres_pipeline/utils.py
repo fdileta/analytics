@@ -22,6 +22,10 @@ from google.oauth2 import service_account
 from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
 
+pd.set_option('display.max_rows', None)
+pd.set_option('display.max_columns', None)
+pd.set_option('display.width', None)
+pd.set_option('display.max_colwidth', None)
 SCHEMA = "tap_postgres"
 
 
