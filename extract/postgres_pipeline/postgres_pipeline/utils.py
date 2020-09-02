@@ -92,6 +92,7 @@ def trigger_snowflake_upload(
             type = csv
             field_delimiter = '\\\\t'
             skip_header = 1
+            error_on_column_count_mismatch=false
         );
     """
     results = query_executor(engine, upload_query)
