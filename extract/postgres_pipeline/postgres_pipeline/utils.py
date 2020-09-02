@@ -34,24 +34,35 @@ pd.set_option('display.max_colwidth', 100)
 #    'namespace_id': Integer(), 'hosted_plan_id': Integer(), 'max_seats_used': Integer(),
 #    'seats': Integer(), 'trial': Text(), '_uploaded_at': Float(), '_task_instance': Text()}
 sql_dtypes = {
-    'id': Integer(),'created_at': DateTime(),'updated_at': DateTime(),
-    'name': Text(), 'path': Text(), 'owner_id': Integer(), 'type': Text(), 'avatar': Text(),
-    'membership_lock': Text(), 'visibility_level': Integer(), 'request_access_enabled': Text(),
-    'ldap_sync_status': Text(),
-    'ldap_sync_error': Text(),
-    'ldap_sync_last_update_at': Text(),
-    'ldap_sync_last_successful_update_at': Text(),
-    'ldap_sync_last_sync_at': Text(),
-    'lfs_enabled': Text(),
-    'parent_id': Float(),
-    'shared_runners_minutes_limit': Float(),
-    'extra_shared_runners_minutes_limit': Float(),
-    'repository_size_limit': Float(),
-    'require_two_factor_authentication': Text(),
-    'two_factor_grace_period': Integer(),
-    'project_creation_level': Float(),
-    'auto_devops_enabled': Text(),
-    '_uploaded_at': Float() }
+
+    'ID'                 : Integer(),
+    'IID'                : Integer(),
+    'TITLE'              : Text(),
+    'AUTHOR_ID'          : Integer(),
+    'PROJECT_ID'         : Integer(),
+    'CREATED_AT'         : Text(),
+    'UPDATED_AT'         : Text(),
+    'CONFIDENTIAL'       : Text(),
+    'DESCRIPTION'        : Text(),
+    'MILESTONE_ID'       : Float(),
+    'UPDATED_BY_ID'      : Float(),
+    'WEIGHT'             : Float(),
+    'DUE_DATE'           : Float(),
+    'MOVED_TO_ID'        : Float(),
+    'LOCK_VERSION'       : Integer(),
+    'TIME_ESTIMATE'      : Float(),
+    'LAST_EDITED_AT'     : Float(),
+    'LAST_EDITED_BY_ID'  : Float(),
+    'DISCUSSION_LOCKED'  : Float(),
+    'CLOSED_AT'          : Float(),
+    'CLOSED_BY_ID'       : Float(),
+    'RELATIVE_POSITION'  : Float(),
+    'SERVICE_DESK_REPLY_TO':    Float(),
+    'STATE_ID'           : Integer(),
+    'DUPLICATED_TO_ID'   : Float(),
+    'PROMOTED_TO_EPIC_ID': Float(),
+    '_UPLOADED_AT'       : Float()
+}
 SCHEMA = "tap_postgres"
 
 
