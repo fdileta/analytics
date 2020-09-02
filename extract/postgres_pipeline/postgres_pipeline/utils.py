@@ -142,7 +142,7 @@ def read_sql_tmpfile(query, db_engine, tmp_file):
     cur.copy_expert(copy_sql, tmp_file)
     tmp_file.seek(0)
     logging.info("Reading csv")
-    df = pd.read_csv(tmp_file, chunksize=1_000_000, parse_dates=True, low_memory=False)
+    df = pd.read_csv(tmp_file, chunksize=1_000_000, low_memory=False, quotechar="'")
     logging.info("CSV read")
     return df
 
