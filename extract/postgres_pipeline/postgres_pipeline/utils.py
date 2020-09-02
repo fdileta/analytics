@@ -201,7 +201,7 @@ def seed_table(
             name=table.lower(),
             con=engine,
             index=False,
-            if_exists="replace",
+            if_exists="append",
             chunksize=10000,
         # dtype=sql_dtypes,
     ):
@@ -255,11 +255,11 @@ def chunk_and_upload(
 
             upload_file_name = f"{target_table}_CHUNK.tsv.gz"
 
-            rows_uploaded += len(chunk_df)
+            rows_uploaded += len(type_df)
 
             logging.info("Uploading to GCS")
             upload_to_gcs(
-                    advanced_metadata, type_df, upload_file_name + "." + str(idx)
+                    advanced_metadata, chunk_df, upload_file_name + "." + str(idx)
             )
             logging.info("Uploading to SF")
             trigger_snowflake_upload(
