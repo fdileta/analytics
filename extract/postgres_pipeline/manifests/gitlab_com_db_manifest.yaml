@@ -109,7 +109,7 @@ tables:
     export_table: 'gitlab_subscriptions'
     export_table_primary_key: id
     advanced_metadata: true
-    dtypes: {'id': Integer()}
+    dtypes: {'id': BigInteger()}
   namespaces:
     import_db: GITLAB_DB
     import_query: >
