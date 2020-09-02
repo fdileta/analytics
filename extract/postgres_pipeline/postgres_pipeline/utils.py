@@ -32,7 +32,7 @@ sql_dtypes = {
     'id': Integer(),'created_at': DateTime(),'updated_at': DateTime(),'start_date': DateTime(),
     'end_date': DateTime(),'trial_starts_on': DateTime(), 'trial_ends_on': DateTime(),
     'namespace_id': Integer(), 'hosted_plan_id': Integer(), 'max_seats_used': Integer(),
-    'seats': Integer()}
+    'seats': Integer(), 'trial': Boolean()}
 SCHEMA = "tap_postgres"
 
 
