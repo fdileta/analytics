@@ -55,6 +55,7 @@ SELECT
   sfdc_account.record_type_id                   AS record_type_id,
   sfdc_account.federal_account                  AS federal_account,
   sfdc_account.gitlab_com_user,
+  sfdc_account.owner_id                         AS account_owner_id,
   sfdc_account.account_owner,
   sfdc_account.account_owner_team,
   sfdc_account.account_type,

@@ -28,6 +28,12 @@ models:
             - not_null
       - name: is_last_segment_version
         description: "A rate plan charge can have multiple versions within a charge segment, similar to how a subscription can have multiple versions. The is_last_segment_version flag identifies the last version of a rate plan charge that was invoiced to the customer."
+  - name: email_xf
+    columns:
+      - name: primary_key
+        tests:
+          - not_null
+          - unique
   - name: usage_ping_mart
     description: '{{ doc("usage_ping_mart") }}'
     columns:

@@ -26,6 +26,8 @@ SELECT
   zuora_account.sfdc_account_code,
   zuora_account.currency        AS account_currency,
   zuora_contact.country         AS sold_to_country,
+  COALESCE(zuora_account.sold_to_contact_id, zuora_account.bill_to_contact_id)
+                                AS billing_contact_id,
   zuora_account.is_deleted,
   zuora_account.account_id IN (
                                 SELECT
