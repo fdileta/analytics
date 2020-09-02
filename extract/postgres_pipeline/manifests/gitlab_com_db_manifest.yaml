@@ -109,8 +109,7 @@ tables:
     export_table: 'gitlab_subscriptions'
     export_table_primary_key: id
     advanced_metadata: true
-    dtypes: {'id': 'int','created_at': 'datetime64','updated_at': 'datetime64','start_date': 'datetime64', 'end_date': 'datetime64',
-      'trial_starts_on': 'datetime64', 'trial_ends_on': 'datetime64', 'namespace_id': 'int','hosted_plan_id': 'int', 'max_seats_used': 'int', 'seats': 'int'}
+    dtypes: {'id': Integer()}
   namespaces:
     import_db: GITLAB_DB
     import_query: >

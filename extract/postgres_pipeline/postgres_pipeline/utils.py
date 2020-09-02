@@ -21,6 +21,7 @@ from google.cloud.storage.bucket import Bucket
 from google.oauth2 import service_account
 from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
+from sqlalchemy.types import Integer
 
 pd.set_option('display.max_rows', 100)
 pd.set_option('display.max_columns', 100)
