@@ -67,7 +67,7 @@ def upload_to_gcs(
         escapechar="\\",
         index=False,
         quoting=csv.QUOTE_NONE,
-        sep="\t",
+        sep=",",
     )
     logging.info("Written successfully")
     blob = bucket.blob(upload_file_name)
@@ -92,7 +92,7 @@ def trigger_snowflake_upload(
         force = TRUE
         file_format = (
             type = csv
-            field_delimiter = '\\\\t'
+            field_delimiter = ','
             skip_header = 1
         );
     """
@@ -142,7 +142,7 @@ def read_sql_tmpfile(query, db_engine, tmp_file):
     cur.copy_expert(copy_sql, tmp_file)
     tmp_file.seek(0)
     logging.info("Reading csv")
-    df = pd.read_csv(tmp_file, chunksize=1_000_000, low_memory=False, quotechar="'")
+    df = pd.read_csv(tmp_file, chunksize=1_000_000, low_memory=False)
     logging.info("CSV read")
     return df
 
