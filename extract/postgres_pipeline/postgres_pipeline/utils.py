@@ -29,10 +29,10 @@ pd.set_option('display.width', 100)
 pd.set_option('display.max_colwidth', 100)
 
 sql_dtypes = {
-    'id': Text(),'created_at': Text(),'updated_at': Text(),'start_date': Text(),
-    'end_date': Text(),'trial_starts_on': Text(), 'trial_ends_on': Text(),
-    'namespace_id': Text(), 'hosted_plan_id': Text(), 'max_seats_used': Text(),
-    'seats': Text(), 'trial': Text(), '_uploaded_at': Text(), '_task_instance': Text()}
+    'id': Integer(),'created_at': DateTime(),'updated_at': DateTime(),'start_date': DateTime(),
+    'end_date': DateTime(),'trial_starts_on': DateTime(), 'trial_ends_on': DateTime(),
+    'namespace_id': Integer(), 'hosted_plan_id': Integer(), 'max_seats_used': Integer(),
+    'seats': Integer(), 'trial': Text(), '_uploaded_at': Float(), '_task_instance': Text()}
 SCHEMA = "tap_postgres"
 
 
@@ -194,7 +194,7 @@ def seed_table(
     enriched_df = dataframe_enricher(advanced_metadata, df.iloc[:rows_to_seed])
     logging.info(enriched_df.info())
     logging.info(enriched_df.dtypes)
-    if enriched_df.to_sql(
+    if df.to_sql(
             name=table.lower(),
             con=engine,
             index=False,
