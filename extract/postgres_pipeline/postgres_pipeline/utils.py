@@ -203,7 +203,7 @@ def seed_table(
             index=False,
             if_exists="replace",
             chunksize=10000,
-            dtype=sql_dtypes,
+        # dtype=sql_dtypes,
     ):
         return True
     else:
