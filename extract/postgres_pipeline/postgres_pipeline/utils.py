@@ -90,11 +90,11 @@ def trigger_snowflake_upload(
         pattern = '{upload_file_name}'
         {purge_opt}
         force = TRUE
+        on_error = CONTINUE
         file_format = (
             type = csv
             field_delimiter = ','
             skip_header = 1
-            on_error = 'continue'
         );
     """
     results = query_executor(engine, upload_query)
