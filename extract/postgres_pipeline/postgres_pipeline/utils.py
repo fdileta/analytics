@@ -56,11 +56,9 @@ def upload_to_gcs(
     keyfile = yaml.load(os.environ["GCP_SERVICE_CREDS"], Loader=yaml.FullLoader)
     bucket_name = "postgres_pipeline"
     bucket = get_gcs_bucket(keyfile, bucket_name)
-    logging.info(bucket)
     # Write out the TSV and upload it
 
     enriched_df = dataframe_enricher(advanced_metadata, upload_df)
-    logging.info(enriched_df.head(5))
     enriched_df.to_csv(
         upload_file_name,
         compression="gzip",
@@ -90,7 +88,6 @@ def trigger_snowflake_upload(
         pattern = '{upload_file_name}'
         {purge_opt}
         force = TRUE
-        on_error = CONTINUE
         file_format = (
             type = csv
             field_delimiter = ','
@@ -254,7 +251,6 @@ def chunk_and_upload(
                 backfill = False
 
             upload_file_name = f"{target_table}_CHUNK.tsv.gz"
-            logging.info(str(idx))
             rows_uploaded += len(type_df)
 
             logging.info("Uploading to GCS")
