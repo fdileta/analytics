@@ -32,7 +32,7 @@ sql_dtypes = {
     'id': Integer(),'created_at': DateTime(),'updated_at': DateTime(),'start_date': DateTime(),
     'end_date': DateTime(),'trial_starts_on': DateTime(), 'trial_ends_on': DateTime(),
     'namespace_id': Integer(), 'hosted_plan_id': Integer(), 'max_seats_used': Integer(),
-    'seats': Integer(), 'trial': Boolean()}
+    'seats': Integer(), 'trial': Text()}
 SCHEMA = "tap_postgres"
 
 
@@ -193,6 +193,7 @@ def seed_table(
     """
 
     logging.info(f"Seeding {rows_to_seed} rows directly into Snowflake...")
+    logging.info(dataframe_enricher(advanced_metadata, df.iloc[:rows_to_seed]))
     if dataframe_enricher(advanced_metadata, df.iloc[:rows_to_seed]).to_sql(
             name=table.lower(),
             con=engine,
