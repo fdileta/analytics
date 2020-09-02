@@ -27,6 +27,12 @@ pd.set_option('display.max_rows', 100)
 pd.set_option('display.max_columns', 100)
 pd.set_option('display.width', 100)
 pd.set_option('display.max_colwidth', 100)
+
+sql_dtypes = {
+    "id": BigInteger()
+}
+
+
 SCHEMA = "tap_postgres"
 
 
@@ -193,7 +199,7 @@ def seed_table(
             index=False,
             if_exists="replace",
             chunksize=10000,
-            dtype=data_types,
+            dtype=sql_dtypes,
     ):
         return True
     else:
