@@ -196,7 +196,6 @@ def load_scd(
     additional_filter = table_dict.get("additional_filtering", "")
     advanced_metadata = table_dict.get("advanced_metadata", False)
     csv_data_types = table_dict.get("dtypes")
-    logging.info(csv_data_types)
     if "{EXECUTION_DATE}" in raw_query:
         logging.info(f"Table {table} does not need SCD processing.")
         return False

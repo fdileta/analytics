@@ -166,10 +166,7 @@ def df_data_type_reader(
 
     try:
         query = query + ' LIMIT 100000'
-        logging.info(query)
         csv_data_type_df = pd.read_sql(sql=query, con=engine)
-        logging.info(csv_data_type_df)
-        logging.info(type(csv_data_type_df))
     except Exception as e:
         logging.exception(e)
         sys.exit(1)
@@ -189,7 +186,6 @@ def seed_table(
     """
 
     logging.info(f"Seeding {rows_to_seed} rows directly into Snowflake...")
-    logging.info(table)
     if dataframe_enricher(advanced_metadata, df.iloc[:rows_to_seed]).to_sql(
             name=table.lower(),
             con=engine,
@@ -224,9 +220,7 @@ def chunk_and_upload(
     """
 
     rows_uploaded = 0
-    get_db_metadata
     type_df = df_data_type_reader(query, source_engine)
-    logging.info(type_df.info())
 
     with tempfile.TemporaryFile() as tmpfile:
 
@@ -235,7 +229,6 @@ def chunk_and_upload(
         for idx, chunk_df in enumerate(iter_csv):
             type_df = type_df.drop(type_df.index)
 
-            logging.info(type_df.info())
 
             type_df = type_df.append(chunk_df)
             if backfill:
