@@ -65,8 +65,7 @@ def upload_to_gcs(
         escapechar="\\",
         index=False,
         quoting=csv.QUOTE_NONE,
-        sep=",",
-        line_terminator='\n'
+        sep="\t",
     )
     logging.info("Written successfully")
     blob = bucket.blob(upload_file_name)
@@ -91,7 +90,7 @@ def trigger_snowflake_upload(
         force = TRUE
         file_format = (
             type = csv
-            field_delimiter = ','
+            field_delimiter = '\\\\t'
             skip_header = 1
         );
     """
