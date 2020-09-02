@@ -192,8 +192,7 @@ def seed_table(
 
     logging.info(f"Seeding {rows_to_seed} rows directly into Snowflake...")
     enriched_df = dataframe_enricher(advanced_metadata, df.iloc[:rows_to_seed])
-    logging.info(enriched_df.info())
-    logging.info(enriched_df.dtypes)
+
     if df.to_sql(
             name=table.lower(),
             con=engine,
@@ -241,7 +240,7 @@ def chunk_and_upload(
             if backfill:
                 seed_table(
                         advanced_metadata,
-                        chunk_df,
+                        chunk_df.iloc[:1],
                         target_engine,
                         target_table,
                         rows_to_seed=1,
