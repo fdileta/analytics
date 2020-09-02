@@ -189,8 +189,9 @@ def seed_table(
     """
 
     logging.info(f"Seeding {rows_to_seed} rows directly into Snowflake...")
+    logging.info(table)
     if dataframe_enricher(advanced_metadata, df.iloc[:rows_to_seed]).to_sql(
-            name=table,
+            name=table.lower(),
             con=engine,
             index=False,
             if_exists="replace",
