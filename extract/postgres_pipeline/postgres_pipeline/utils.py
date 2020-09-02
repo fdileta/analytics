@@ -28,11 +28,30 @@ pd.set_option('display.max_columns', 100)
 pd.set_option('display.width', 100)
 pd.set_option('display.max_colwidth', 100)
 
+#sql_dtypes = {
+#    'id': Integer(),'created_at': DateTime(),'updated_at': DateTime(),'start_date': DateTime(),
+#    'end_date': DateTime(),'trial_starts_on': DateTime(), 'trial_ends_on': DateTime(),
+#    'namespace_id': Integer(), 'hosted_plan_id': Integer(), 'max_seats_used': Integer(),
+#    'seats': Integer(), 'trial': Text(), '_uploaded_at': Float(), '_task_instance': Text()}
 sql_dtypes = {
-    'id': Integer(),'created_at': DateTime(),'updated_at': DateTime(),'start_date': DateTime(),
-    'end_date': DateTime(),'trial_starts_on': DateTime(), 'trial_ends_on': DateTime(),
-    'namespace_id': Integer(), 'hosted_plan_id': Integer(), 'max_seats_used': Integer(),
-    'seats': Integer(), 'trial': Text(), '_uploaded_at': Float(), '_task_instance': Text()}
+    'id': Integer(),'created_at': DateTime(),'updated_at': DateTime(),
+    'name': Text(), 'path': Text(), 'owner_id': Integer(), 'type': Text(), 'avatar': Text(),
+    'membership_lock': Boolean(), 'visibility_level': Integer(), 'request_access_enabled': Boolean(),
+    'ldap_sync_status': Text(),
+    'ldap_sync_error': Text(),
+    'ldap_sync_last_update_at': Text(),
+    'ldap_sync_last_successful_update_at': Text(),
+    'ldap_sync_last_sync_at': Text(),
+    'lfs_enabled': Boolean(),
+    'parent_id': Float(),
+    'shared_runners_minutes_limit': Float(),
+    'extra_shared_runners_minutes_limit': Float(),
+    'repository_size_limit': Float(),
+    'require_two_factor_authentication': Boolean(),
+    'two_factor_grace_period': Integer(),
+    'project_creation_level': Float(),
+    'auto_devops_enabled': Text(),
+    '_uploaded_at': Float() }
 SCHEMA = "tap_postgres"
 
 
