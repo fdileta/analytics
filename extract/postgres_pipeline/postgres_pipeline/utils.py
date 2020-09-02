@@ -21,7 +21,7 @@ from google.cloud.storage.bucket import Bucket
 from google.oauth2 import service_account
 from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
-from sqlalchemy.types import BigInteger, Integer, Text, Float, Boolean, Date, DateTime
+from sqlalchemy.types import BigInteger, Integer, Text, Float, Text, Date, DateTime
 
 pd.set_option('display.max_rows', 100)
 pd.set_option('display.max_columns', 100)
@@ -36,18 +36,18 @@ pd.set_option('display.max_colwidth', 100)
 sql_dtypes = {
     'id': Integer(),'created_at': DateTime(),'updated_at': DateTime(),
     'name': Text(), 'path': Text(), 'owner_id': Integer(), 'type': Text(), 'avatar': Text(),
-    'membership_lock': Boolean(), 'visibility_level': Integer(), 'request_access_enabled': Boolean(),
+    'membership_lock': Text(), 'visibility_level': Integer(), 'request_access_enabled': Text(),
     'ldap_sync_status': Text(),
     'ldap_sync_error': Text(),
     'ldap_sync_last_update_at': Text(),
     'ldap_sync_last_successful_update_at': Text(),
     'ldap_sync_last_sync_at': Text(),
-    'lfs_enabled': Boolean(),
+    'lfs_enabled': Text(),
     'parent_id': Float(),
     'shared_runners_minutes_limit': Float(),
     'extra_shared_runners_minutes_limit': Float(),
     'repository_size_limit': Float(),
-    'require_two_factor_authentication': Boolean(),
+    'require_two_factor_authentication': Text(),
     'two_factor_grace_period': Integer(),
     'project_creation_level': Float(),
     'auto_devops_enabled': Text(),
