@@ -254,12 +254,12 @@ def chunk_and_upload(
                 backfill = False
 
             upload_file_name = f"{target_table}_CHUNK.tsv.gz"
-
+            logging.info(str(idx))
             rows_uploaded += len(type_df)
 
             logging.info("Uploading to GCS")
             upload_to_gcs(
-                    advanced_metadata, chunk_df, upload_file_name + "." + str(idx)
+                    advanced_metadata, type_df, upload_file_name + "." + str(idx)
             )
             logging.info("Uploading to SF")
             trigger_snowflake_upload(
