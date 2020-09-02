@@ -66,6 +66,7 @@ def upload_to_gcs(
         index=False,
         quoting=csv.QUOTE_NONE,
         sep=",",
+        line_terminator='\n'
     )
     logging.info("Written successfully")
     blob = bucket.blob(upload_file_name)
