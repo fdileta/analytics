@@ -592,6 +592,7 @@ roles:
             schemas:
                 read:
                     - raw.bamboohr
+                    - bamboohr_comp
             tables:
                 read:
                     - raw.bamboohr.*
