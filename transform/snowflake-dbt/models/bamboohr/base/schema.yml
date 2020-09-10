@@ -106,6 +106,7 @@ models:
       - name: cost_center
       - name: gitlab_username
       - name: jobtitle_speciality
+      - name: pay_frequency
       - name: sales_geo_differential
       - name: effective_date
         description: The date the role is effective until a change occurs. 

@@ -21,7 +21,7 @@ WITH source AS (
       data_by_row['startDate']::DATE           AS effective_date,
       data_by_row['type']::VARCHAR             AS compensation_type,
       data_by_row['reason']::VARCHAR           AS compensation_change_reason,
-      data_by_row['paidPer']::VARCHAR          AS pay_rate,         
+      data_by_row['paidPer']::VARCHAR          AS pay_rate,   
       data_by_row['rate']['value']::FLOAT      AS compensation_value,
       data_by_row['rate']['currency']::VARCHAR AS compensation_currency,
       uploaded_at 
