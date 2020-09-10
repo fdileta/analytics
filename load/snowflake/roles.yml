@@ -580,7 +580,8 @@ roles:
             tables:
                 read:
                     - analytics.analytics.*
-                    - analytics.analytics_sensitive.*
+                    - analytics.analytics_sensitive.bamboohr_custom_bonus
+                    - analytics.analytics_sensitive.bamboohr_directory
 
     - bamboohr_raw:
         warehouses:
@@ -592,10 +593,11 @@ roles:
             schemas:
                 read:
                     - raw.bamboohr
-                    - bamboohr_comp
+                    - analytics.analytics_sensitive
             tables:
                 read:
                     - raw.bamboohr.*
+                    - analytics.analytics_sensitive.bamboohr_*
 
 
     - boneyard:
