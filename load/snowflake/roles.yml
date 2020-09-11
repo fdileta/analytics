@@ -587,7 +587,7 @@ roles:
                     - analytics.analytics_sensitive.bamboohr_id_employee_number_mapping
                     - analytics.analytics_sensitive.bamboohr_job_info
                     - analytics.analytics_sensitive.bamboohr_job_role
-                    - analytics.analytics_sensitive.bambohr_locality
+                    - analytics.analytics_sensitive.bamboohr_locality
                     - analytics.analytics_sensitive.employee_*
 
     - bamboohr_raw:
