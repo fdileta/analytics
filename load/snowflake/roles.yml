@@ -584,6 +584,8 @@ roles:
                     - analytics.analytics_sensitive.bamboohr_directory
                     - analytics.analytics_sensitive.bamboohr_emergency_contacts
                     - analytics.analytics_sensitive.bamboohr_employment_status
+                    - analytics.analytics_sensitive.bamboohr_employment_status_xf
+                    - analytics.analytics_sensitive.bamboohr_headcount_intermediate
                     - analytics.analytics_sensitive.bamboohr_id_employee_number_mapping
                     - analytics.analytics_sensitive.bamboohr_job_info
                     - analytics.analytics_sensitive.bamboohr_job_role
