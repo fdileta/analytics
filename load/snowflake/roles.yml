@@ -599,13 +599,16 @@ roles:
             databases:
                 read:
                     - raw
+                    - analytics
             schemas:
                 read:
                     - raw.bamboohr
+                    - analytics.analytics
                     - analytics.analytics_sensitive
             tables:
                 read:
                     - raw.bamboohr.*
+                    - analytics.analytics.*
                     - analytics.analytics_sensitive.bamboohr_*
                     - analytics.analytics_sensitive.employee_*
 
