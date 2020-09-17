@@ -408,6 +408,12 @@ models:
           - unique
       - name: date_id
         description: The identifier of date month in dim_dates
+        tags:
+          - tdf
+          - mrr
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: "date_id REGEXP '[0-9]{8}'"
       - name: subscription_id
         description: The identifier of subscription in dim_subscriptions table
         tests:
@@ -420,6 +426,12 @@ models:
         description: Zuora account id
       - name:  crm_id
         description: customer crm_id
+        tags:
+          - tdf
+          - mrr
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: "crm_id REGEXP '[0-9a-zA-Z]{18}'"
       - name: mrr
         description: Monthly Recurring Revenue value for given month
       - name: arr
