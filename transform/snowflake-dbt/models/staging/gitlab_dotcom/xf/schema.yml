@@ -428,6 +428,10 @@ models:
       - name: namespace_name
         tests:
           - not_null
+          - not_null_with_offset:
+              offset_column: namespace_created_at
+              offset_value: 2
+              offset_period: 'day'
       - name: namespace_path
         tests:
           - not_null

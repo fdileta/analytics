@@ -14,6 +14,22 @@ This macro is a custom schema test to be used as a column test in a schema.yml f
 ```
 {% enddocs %}
 
+{% docs test_not_null_with_offset %}
+See [dbt's documentation](https://docs.getdbt.com/docs/custom-schema-tests) on custom schema tests, which are implemented as macros.
+
+This macro is a custom schema test to be used as a column test in a schema.yml file. You should define a offset_period (day, week, month), a offset value n, timestamp column (ex created_at). The test checks on the subset of data satisfying the condition (timestamp_column < TODAY - n period) that the tested column does not contain any null value.
+
+Example:
+```
+      - name: namespace_name
+        tests:
+          - not_null
+          - not_null_with_offset:
+              offset_column: namespace_created_at
+              offset_value: 2
+              offset_period: 'day'
+```
+{% enddocs %}
 
 {% docs test_unique_where_currently_valid %}
 See [dbt's documentation](https://docs.getdbt.com/docs/custom-schema-tests) on custom schema tests, which are implemented as macros.
