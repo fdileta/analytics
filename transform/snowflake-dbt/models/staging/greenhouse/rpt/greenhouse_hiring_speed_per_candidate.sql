@@ -9,7 +9,7 @@ WITH offers AS (
     SELECT *
     FROM {{ source('greenhouse', 'candidates') }}
    
-),hires AS ( 
+), hires AS ( 
   
     SELECT * 
     FROM {{ ref ('greenhouse_hires') }}
@@ -31,6 +31,8 @@ WITH offers AS (
       offers.job_name                           AS vacancy,
       offers.time_to_offer,
       offers.source_name                        AS source,
+      offers.is_outbound,
+      offers.source_type,
       application_date,
       offer_sent_date                           AS offer_sent,
       offer_resolved_date                       AS offer_accept,
