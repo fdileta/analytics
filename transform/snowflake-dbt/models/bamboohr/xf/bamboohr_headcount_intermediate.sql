@@ -91,10 +91,10 @@ WITH dates AS (
 
     SELECT
       employees.date_actual,
-      employees.department,
-      division_mapped_current                                                  AS division,
-      job_role_modified                                                        AS job_role,
-      COALESCE(job_grade,'NA')                                                 AS job_grade,
+      employees.department_modified                                            AS department,
+      employees.division_mapped_current                                        AS division,
+      employees.job_role_modified                                              AS job_role,
+      COALESCE(employees.job_grade,'NA')                                       AS job_grade,
       mapping_enhanced.eeoc_field_name,                                                       
       mapping_enhanced.eeoc_value,                                          
       IFF(dates.start_date = date_actual,1,0)                                   AS headcount_start,
