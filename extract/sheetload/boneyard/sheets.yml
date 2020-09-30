@@ -1,0 +1,22 @@
+sheets:
+  - name: frontend_interview_metrics
+    owner: '@ClemMakesApps'
+    tabs:
+      - interviews
+      - rubric_max_points
+  - name: gitlab_product_mrs_size
+    owner: '@kwiebers'
+    tabs:
+      - gitlab_product_mrs_size
+  - name: test_sheet
+    owner: '@taylormurphy'
+    tabs:
+      - test_sheet
+  - name: trial_pageviews
+    owner: '@rkohnke'
+    tabs:
+      - trial_pageviews
+  - name: us_cities_latitude_longitude
+    owner: '@rkohnke'
+    tabs:
+      - us_cities_latitude_longitude

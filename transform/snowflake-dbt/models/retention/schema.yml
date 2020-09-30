@@ -1,13 +1,21 @@
 version: 2
 
 models:
+  - name: arr_changes_sfdc_account_monthly
+    columns:
+        - name: primary_key
+          tests:
+              - not_null
+              - unique
+
   - name: current_arr_segmentation_all_levels
     description: '{{ doc("current_arr_segmentation_all_levels") }}'
     columns:
         - name: id
           description: "Subcription Slug, SFDC Account ID, or SFDC Ultimate Parent Account ID"
           tests:
-              - not_null
+              - not_null:
+                  severity: warn
         - name: level_
           description: "Subcription, SFDC Account, or SFDC Ultimate Parent Account"
           tests:
@@ -17,7 +25,8 @@ models:
         - name: arr
           description: "Annual Recurring Revenue (MRR * 12) for most recent month for which this is MRR that is not in the future."
           tests:
-              - not_null
+              - not_null:
+                  severity: warn
         - name: arr_segmentation
           description: "ARR Segmentation"
           tests:
@@ -82,6 +91,8 @@ models:
           tests:
               - not_null
         - name: product_category
+          tests:
+              - not_null
         - name: unit_of_measure
         - name: quantity
         - name: sfdc_account_id
@@ -89,19 +100,10 @@ models:
               - not_null:
                   severity: warn
         - name: sfdc_account_name
-          tests:
-              - not_null:
-                  severity: warn
         - name: ultimate_parent_account_id
           description: '{{ doc("sfdc_accounts_xf_col_ultimate_parent_account_id") }}'
-          tests:
-              - not_null:
-                  severity: warn
         - name: ultimate_parent_account_name
           description: '{{ doc("sfdc_accounts_xf_col_ultimate_parent_account_name") }}'
-          tests:
-              - not_null:
-                  severity: warn
         - name: zuora_account_cohort_month
           tests:
               - not_null
@@ -200,11 +202,6 @@ models:
         - name: retention_month
           tests:
             - not_null
-        - name: churn_type
-          tests:
-            - not_null
-            - accepted_values:
-                    values: ['Seat Expansion', 'Discount/Price Change', 'Product Change', 'Product Change/Seat Change Mix','Downgraded','Cancelled', 'Unknown']
         - name: retention_reason
           tests:
             - not_null

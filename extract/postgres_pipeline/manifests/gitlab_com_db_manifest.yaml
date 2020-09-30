@@ -5,6 +5,33 @@ connection_info:
   database: GITLAB_COM_DB_NAME
   port: PG_PORT
 tables:
+  award_emoji:
+    import_db: GITLAB_DB
+    import_query: >
+      SELECT id
+      , name
+      , user_id
+      , awardable_id
+      , awardable_type
+      FROM award_emoji
+    export_schema: 'gitlab_com'
+    export_table: 'award_emoji'
+    export_table_primary_key: id
+  columns:
+    import_db: GITLAB_DB
+    import_schema: information_schema
+    import_query: >
+      SELECT CONCAT(table_name, '_', column_name, table_schema) AS column_id
+      , column_name
+      , data_type
+      , ordinal_position
+      , table_name
+      , table_schema
+      FROM information_schema.columns
+    export_schema: 'gitlab_com'
+    export_table: 'columns'
+    export_table_primary_key: CONCAT(table_name, '_', column_name, table_schema)
+    advanced_metadata: true
   # resource_label_events:
   #   import_db: GITLAB_DB
   #   import_query: >
@@ -43,49 +70,72 @@ tables:
       , description
       , state_id
       , closed_at
+      , parent_id
+      , relative_position
+      , start_date_sourcing_epic_id
+      , external_key
+      , confidential
       FROM epics
       WHERE updated_at BETWEEN '{EXECUTION_DATE}'::timestamp - interval '{HOURS} hours'
         AND '{EXECUTION_DATE}'::timestamp
     export_schema: 'gitlab_com'
     export_table: 'epics'
     export_table_primary_key: id
-  oauth_access_tokens:
+
+  alert_management_alert_assignees:
     import_db: GITLAB_DB
     import_query: >
-      SELECT id
-      , resource_owner_id
-      , application_id
-      , expires_in
-      , revoked_at
-      , created_at
-      , scopes
-      FROM oauth_access_tokens
-    export_schema: 'gitlab_com'
-    export_table: 'oauth_access_tokens'
+        SELECT id
+        , user_id
+        , alert_id
+        FROM alert_management_alert_assignees
+    export_schema: 'gitlab_dotcom'
+    export_table: 'alert_management_alert_assignees'
     export_table_primary_key: id
-  members:
+
+  alert_management_alerts:
     import_db: GITLAB_DB
     import_query: >
-      SELECT id
-      , access_level
-      , source_id
-      , source_type
-      , user_id
-      , notification_level
-      , type
-      , created_at
-      , created_by_id
-      , invite_email
-      , invite_accepted_at
-      , requested_at
-      , CASE WHEN expires_at > '2262-01-01' THEN '2262-01-01' ELSE expires_at END AS expires_at
-      , ldap
-      , override
-      FROM members
-    export_schema: 'gitlab_com'
-    export_table: 'members'
+        SELECT id
+        , created_at
+        , updated_at
+        , started_at
+        , ended_at
+        , events
+        , iid
+        , severity
+        , status
+        , issue_id
+        , project_id
+        , title
+        , description
+        , service
+        , monitoring_tool
+        , hosts
+        , payload
+        FROM alert_management_alerts
+        WHERE updated_at BETWEEN '{EXECUTION_DATE}'::timestamp - interval '{HOURS} hours'
+          AND '{EXECUTION_DATE}'::timestamp
+    export_schema: 'gitlab_dotcom'
+    export_table: 'alert_management_alerts'
     export_table_primary_key: id
-    advanced_metadata: true
+
+  alerts_service_data:
+    import_db: GITLAB_DB
+    import_query: >
+        SELECT id
+        , service_id
+        , created_at
+        , updated_at
+        , encrypted_token
+        , encrypted_token_iv
+        FROM alerts_service_data
+        WHERE updated_at BETWEEN '{EXECUTION_DATE}'::timestamp - interval '{HOURS} hours'
+          AND '{EXECUTION_DATE}'::timestamp
+    export_schema: 'gitlab_dotcom'
+    export_table: 'alerts_service_data'
+    export_table_primary_key: id
+
   approvals:
     import_db: GITLAB_DB
     import_query: >
@@ -230,6 +280,23 @@ tables:
     export_schema: 'gitlab_com'
     export_table: 'approver_groups'
     export_table_primary_key: id
+  approval_merge_request_rules:
+    import_db: GITLAB_DB
+    import_query: >
+      SELECT id
+      , created_at
+      , updated_at
+      , merge_request_id
+      , approvals_required
+      , name
+      , rule_type
+      , report_type
+      FROM approval_merge_request_rules
+      WHERE updated_at BETWEEN '{EXECUTION_DATE}'::timestamp - interval '{HOURS} hours'
+        AND '{EXECUTION_DATE}'::timestamp
+    export_schema: 'gitlab_com'
+    export_table: 'approval_merge_request_rules'
+    export_table_primary_key: id
   audit_events:
     import_db: GITLAB_DB
     import_query: >
@@ -240,9 +307,8 @@ tables:
       , entity_type
       , details
       , created_at
-      , updated_at
       FROM audit_events
-      WHERE updated_at BETWEEN '{EXECUTION_DATE}'::timestamp - interval '{HOURS} hours'
+      WHERE created_at BETWEEN '{EXECUTION_DATE}'::timestamp - interval '{HOURS} hours'
         AND '{EXECUTION_DATE}'::timestamp
     export_schema: 'gitlab_com'
     export_table: 'audit_events'
@@ -282,6 +348,19 @@ tables:
         AND '{EXECUTION_DATE}'::timestamp
     export_schema: 'gitlab_com'
     export_table: 'boards'
+    export_table_primary_key: id
+  ci_platform_metrics:
+    import_db: GITLAB_DB
+    import_query: >
+      SELECT id
+      , recorded_at
+      , platform_target
+      , count
+      FROM ci_platform_metrics
+      WHERE recorded_at BETWEEN '{EXECUTION_DATE}'::timestamp - interval '{HOURS} hours'
+      AND '{EXECUTION_DATE}'::timestamp
+    export_schema: 'gitlab_com'
+    export_table: ci_platform_metrics
     export_table_primary_key: id
   ci_stages:
     import_db: GITLAB_DB
@@ -436,6 +515,39 @@ tables:
           AND '{EXECUTION_DATE}'::timestamp
     export_schema: 'gitlab_com'
     export_table: 'clusters_applications_cert_managers'
+    export_table_primary_key: id
+  clusters_applications_crossplane:
+    import_db: GITLAB_DB
+    import_query: >
+      SELECT id
+      , cluster_id
+      , status
+      , version
+      , stack
+      , created_at
+      , updated_at
+      , status_reason
+      FROM clusters_applications_crossplane
+      WHERE updated_at BETWEEN '{EXECUTION_DATE}'::timestamp - interval '{HOURS} hours'
+          AND '{EXECUTION_DATE}'::timestamp
+    export_schema: 'gitlab_com'
+    export_table: 'clusters_applications_crossplane'
+    export_table_primary_key: id
+  clusters_applications_elastic_stacks:
+    import_db: GITLAB_DB
+    import_query: >
+      SELECT id
+      , cluster_id
+      , status
+      , version
+      , created_at
+      , updated_at
+      , status_reason
+      FROM clusters_applications_elastic_stacks
+      WHERE updated_at BETWEEN '{EXECUTION_DATE}'::timestamp - interval '{HOURS} hours'
+          AND '{EXECUTION_DATE}'::timestamp
+    export_schema: 'gitlab_com'
+    export_table: 'clusters_applications_elastic_stacks'
     export_table_primary_key: id
   clusters_applications_helm:
     import_db: GITLAB_DB
@@ -630,6 +742,35 @@ tables:
     export_schema: 'gitlab_com'
     export_table: 'design_management_versions'
     export_table_primary_key: CONCAT(sha,'_', issue_id)
+  elasticsearch_indexed_namespaces:
+    # want to treat this more as an SCD since rows are deleted and want to display current state
+    # see https://gitlab.com/gitlab-data/analytics/-/issues/5463#note_387839921
+    import_db: GITLAB_DB
+    import_query: >
+      SELECT created_at
+      , updated_at
+      , namespace_id
+      FROM elasticsearch_indexed_namespaces
+    export_schema: 'gitlab_com'
+    export_table: 'elasticsearch_indexed_namespaces'
+    export_table_primary_key: namespace_id
+    advanced_metadata: true
+  emails:
+    import_db: GITLAB_DB
+    import_query: >
+      SELECT id
+      , user_id
+      , email
+      , created_at
+      , updated_at
+      , confirmed_at
+      , confirmation_sent_at
+      FROM emails
+      WHERE updated_at BETWEEN '{EXECUTION_DATE}'::timestamp - interval '{HOURS} hours'
+          AND '{EXECUTION_DATE}'::timestamp
+    export_schema: 'gitlab_com'
+    export_table: 'emails'
+    export_table_primary_key: id
   environments:
     import_db: GITLAB_DB
     import_query: >
@@ -672,6 +813,30 @@ tables:
         AND '{EXECUTION_DATE}'::timestamp
     export_schema: 'gitlab_com'
     export_table: 'epic_metrics'
+    export_table_primary_key: id
+  experiment_users:
+    import_db: GITLAB_DB
+    import_query: >
+      SELECT id
+      , experiment_id
+      , user_id
+      , group_type
+      , created_at
+      , updated_at
+      FROM experiment_users
+      WHERE updated_at BETWEEN '{EXECUTION_DATE}'::timestamp - interval '{HOURS} hours'
+        AND '{EXECUTION_DATE}'::timestamp
+    export_schema: 'gitlab_com'
+    export_table: 'experiment_users'
+    export_table_primary_key: id
+  experiments:
+    import_db: GITLAB_DB
+    import_query: >
+      SELECT id
+      , name
+      FROM experiments
+    export_schema: 'gitlab_com'
+    export_table: 'experiments'
     export_table_primary_key: id
   gitlab_subscription_histories:
     import_db: GITLAB_DB
@@ -742,11 +907,11 @@ tables:
       , updated_at
       , confidential
       , description
+      , issue_type
       , milestone_id
-      , state
       , updated_by_id
       , weight
-      , due_date
+      , CASE WHEN due_date < '1970-01-01' THEN NULL ELSE due_date END AS due_date
       , moved_to_id
       , lock_version
       , time_estimate
@@ -910,6 +1075,51 @@ tables:
     export_schema: 'gitlab_com'
     export_table: 'licenses'
     export_table_primary_key: id
+  lists:
+    import_db: GITLAB_DB
+    import_query: >
+      SELECT id
+      , board_id
+      , label_id
+      , list_type
+      , position
+      , created_at
+      , updated_at
+      , user_id
+      , milestone_id
+      , max_issue_count
+      , max_issue_weight
+      , limit_metric
+      FROM lists
+      WHERE updated_at BETWEEN '{EXECUTION_DATE}'::timestamp - interval '{HOURS} hours'
+        AND '{EXECUTION_DATE}'::timestamp
+    export_schema: 'gitlab_com'
+    export_table: 'lists'
+    export_table_primary_key: id
+  members:
+    import_db: GITLAB_DB
+    import_query: >
+        SELECT id
+        , access_level
+        , source_id
+        , source_type
+        , user_id
+        , notification_level
+        , type
+        , created_at
+        , created_by_id
+        , invite_email
+        , invite_accepted_at
+        , invite_token
+        , requested_at
+        , CASE WHEN expires_at > '2262-01-01' THEN '2262-01-01' ELSE expires_at END AS expires_at
+        , ldap
+        , override
+        FROM members
+    export_schema: 'gitlab_com'
+    export_table: 'members'
+    export_table_primary_key: id
+    advanced_metadata: true
   merge_requests:
     import_db: GITLAB_DB
     import_query: >
@@ -924,7 +1134,6 @@ tables:
       , created_at
       , updated_at
       , milestone_id
-      , state
       , state_id
       , merge_status
       , target_project_id
@@ -983,6 +1192,16 @@ tables:
       , merged_by_id
       , latest_closed_by_id
       , latest_closed_at
+      , first_comment_at
+      , first_commit_at
+      , last_commit_at
+      , diff_size
+      , modified_paths_size
+      , commits_count
+      , first_approved_at
+      , first_reassigned_at
+      , added_lines
+      , removed_lines
       FROM merge_request_metrics
       WHERE updated_at BETWEEN '{EXECUTION_DATE}'::timestamp - interval '{HOURS} hours'
         AND '{EXECUTION_DATE}'::timestamp
@@ -1057,12 +1276,13 @@ tables:
       , lfs_enabled
       , parent_id
       , shared_runners_minutes_limit
+      , extra_shared_runners_minutes_limit
       , repository_size_limit
       , require_two_factor_authentication
       , two_factor_grace_period
-      , plan_id
       , project_creation_level
       , auto_devops_enabled
+      , push_rule_id
       FROM namespaces
       WHERE updated_at BETWEEN '{EXECUTION_DATE}'::timestamp - interval '{HOURS} hours'
         AND '{EXECUTION_DATE}'::timestamp
@@ -1147,84 +1367,19 @@ tables:
     export_schema: 'gitlab_com'
     export_table: 'notification_settings'
     export_table_primary_key: id
-  packages_build_infos:
+  oauth_access_tokens:
     import_db: GITLAB_DB
     import_query: >
-      SELECT id
-      , package_id
-      , pipeline_id
-      FROM packages_build_infos
+        SELECT id
+        , resource_owner_id
+        , application_id
+        , expires_in
+        , revoked_at
+        , created_at
+        , scopes
+        FROM oauth_access_tokens
     export_schema: 'gitlab_com'
-    export_table: 'packages_build_infos'
-    export_table_primary_key: id
-  packages_dependencies:
-    import_db: GITLAB_DB
-    import_query: >
-      SELECT id
-      , name
-      , version_pattern
-      FROM packages_dependencies
-    export_schema: 'gitlab_com'
-    export_table: 'packages_dependencies'
-    export_table_primary_key: id
-  packages_dependency_links:
-    import_db: GITLAB_DB
-    import_query: >
-      SELECT id
-      , package_id
-      , dependency_id
-      , dependency_type
-      FROM packages_dependency_links
-    export_schema: 'gitlab_com'
-    export_table: 'packages_dependency_links'
-    export_table_primary_key: id
-  packages_package_files:
-    import_db: GITLAB_DB
-    import_query: >
-      SELECT id
-      , package_id
-      , created_at
-      , updated_at
-      , size
-      , file_type
-      , file_store
-      , file_name
-      , file
-      FROM packages_package_files
-      WHERE updated_at BETWEEN '{EXECUTION_DATE}'::timestamp - interval '{HOURS} hours'
-        AND '{EXECUTION_DATE}'::timestamp
-    export_schema: 'gitlab_com'
-    export_table: 'packages_package_files'
-    export_table_primary_key: id
-  packages_packages:
-    import_db: GITLAB_DB
-    import_query: >
-      SELECT id
-      , project_id
-      , created_at
-      , updated_at
-      , name
-      , version
-      , package_type
-      FROM packages_packages
-      WHERE updated_at BETWEEN '{EXECUTION_DATE}'::timestamp - interval '{HOURS} hours'
-        AND '{EXECUTION_DATE}'::timestamp
-    export_schema: 'gitlab_com'
-    export_table: 'packages_packages'
-    export_table_primary_key: id
-  packages_tags:
-    import_db: GITLAB_DB
-    import_query: >
-      SELECT id
-      , package_id
-      , name
-      , created_at
-      , updated_at
-      FROM packages_tags
-      WHERE updated_at BETWEEN '{EXECUTION_DATE}'::timestamp - interval '{HOURS} hours'
-        AND '{EXECUTION_DATE}'::timestamp
-    export_schema: 'gitlab_com'
-    export_table: 'packages_tags'
+    export_table: 'oauth_access_tokens'
     export_table_primary_key: id
   pages_domains:
     import_db: GITLAB_DB
@@ -1375,6 +1530,8 @@ tables:
       , build_artifacts_size
       , shared_runners_seconds
       , shared_runners_seconds_last_reset
+      , packages_size
+      , wiki_size
       FROM project_statistics
     export_schema: 'gitlab_com'
     export_table: 'project_statistics'
@@ -1445,6 +1602,176 @@ tables:
     export_schema: 'gitlab_com'
     export_table: 'projects'
     export_table_primary_key: id
+  protected_branches:
+    import_db: GITLAB_DB
+    import_query: >
+      SELECT id
+      , project_id
+      , name
+      , created_at
+      , updated_at
+      , code_owner_approval_required
+      FROM protected_branches
+      WHERE updated_at BETWEEN '{EXECUTION_DATE}'::timestamp - interval '{HOURS} hours'
+        AND '{EXECUTION_DATE}'::timestamp
+    export_schema: 'gitlab_com'
+    export_table: 'protected_branches'
+    export_table_primary_key: id
+  prometheus_alerts:
+    import_db: GITLAB_DB
+    import_query: >
+      SELECT id
+      , created_at
+      , updated_at
+      , environment_id
+      , project_id
+      FROM prometheus_alerts
+      WHERE updated_at BETWEEN '{EXECUTION_DATE}'::timestamp - interval '{HOURS} hours'
+        AND '{EXECUTION_DATE}'::timestamp
+    export_schema: 'gitlab_com'
+    export_table: 'prometheus_alerts'
+    export_table_primary_key: id
+  push_rules:
+    import_db: GITLAB_DB
+    import_query: >
+      SELECT id
+      , force_push_regex
+      , delete_branch_regex
+      , commit_message_regex
+      , deny_delete_tag
+      , project_id
+      , created_at
+      , updated_at
+      , author_email_regex
+      , member_check
+      , file_name_regex
+      , is_sample
+      , max_file_size
+      , prevent_secrets
+      , branch_name_regex
+      , reject_unsigned_commits
+      , commit_committer_check
+      , regexp_uses_re2
+      , commit_message_negative_regex
+      FROM push_rules
+      WHERE updated_at BETWEEN '{EXECUTION_DATE}'::timestamp - interval '{HOURS} hours'
+        AND '{EXECUTION_DATE}'::timestamp
+    export_schema: 'gitlab_com'
+    export_table: 'push_rules'
+    export_table_primary_key: id
+  resource_label_events:
+    import_db: GITLAB_DB
+    import_query: >
+      SELECT id
+      , action
+      , issue_id
+      , merge_request_id
+      , epic_id
+      , label_id
+      , user_id
+      , created_at
+      , cached_markdown_version
+      , reference
+      , reference_html
+      FROM resource_label_events
+      WHERE created_at BETWEEN '{EXECUTION_DATE}'::timestamp - interval '{HOURS} hours'
+        AND '{EXECUTION_DATE}'::timestamp
+    export_schema: 'gitlab_com'
+    export_table: 'resource_label_events'
+    export_table_primary_key: id
+    advanced_metadata: true
+  resource_milestone_events:
+    import_db: GITLAB_DB
+    import_query: >
+      SELECT id
+      , user_id
+      , issue_id
+      , merge_request_id
+      , milestone_id
+      , action
+      , state
+      , created_at
+      FROM resource_milestone_events
+      WHERE created_at BETWEEN '{EXECUTION_DATE}'::timestamp - interval '{HOURS} hours'
+        AND '{EXECUTION_DATE}'::timestamp
+    export_schema: 'gitlab_com'
+    export_table: 'resource_milestone_events'
+    export_table_primary_key: id
+#  resource_state_events:
+#    import_db: GITLAB_DB
+#    import_query: >
+#      SELECT id
+#      , user_id
+#      , issue_id
+#      , merge_request_id
+#      , state
+#      , created_at
+#      FROM resource_state_events
+#      WHERE created_at BETWEEN '{EXECUTION_DATE}'::timestamp - interval '{HOURS} hours'
+#        AND '{EXECUTION_DATE}'::timestamp
+#    export_schema: 'gitlab_com'
+#    export_table: 'resource_state_events'
+#    export_table_primary_key: id
+  resource_weight_events:
+    import_db: GITLAB_DB
+    import_query: >
+      SELECT id
+      , user_id
+      , issue_id
+      , weight
+      , created_at
+      FROM resource_weight_events
+      WHERE created_at BETWEEN '{EXECUTION_DATE}'::timestamp - interval '{HOURS} hours'
+        AND '{EXECUTION_DATE}'::timestamp
+    export_schema: 'gitlab_com'
+    export_table: 'resource_weight_events'
+    export_table_primary_key: id
+  requirements:
+    import_db: GITLAB_DB
+    import_query: >
+      SELECT id
+      , created_at
+      , updated_at
+      , project_id
+      , author_id
+      , iid
+      , state
+      FROM requirements
+      WHERE created_at BETWEEN '{EXECUTION_DATE}'::timestamp - interval '{HOURS} hours'
+        AND '{EXECUTION_DATE}'::timestamp
+    export_schema: 'gitlab_com'
+    export_table: 'requirements'
+    export_table_primary_key: id
+  requirements_management_test_reports:
+    import_db: GITLAB_DB
+    import_query: >
+      SELECT id
+      , created_at
+      , requirement_id
+      , author_id
+      , state
+      , build_id
+      FROM requirements_management_test_reports
+      WHERE created_at BETWEEN '{EXECUTION_DATE}'::timestamp - interval '{HOURS} hours'
+        AND '{EXECUTION_DATE}'::timestamp
+    export_schema: 'gitlab_com'
+    export_table: 'requirements_management_test_reports'
+    export_table_primary_key: id
+  saml_providers:
+    import_db: GITLAB_DB
+    import_query: >
+      SELECT id
+      , group_id
+      , enabled
+      , certificate_fingerprint
+      , sso_url
+      , enforced_sso
+      , enforced_group_managed_accounts
+      , prohibited_outer_forks
+      FROM saml_providers
+    export_schema: 'gitlab_com'
+    export_table: 'saml_providers'
+    export_table_primary_key: id
   snippets:
     import_db: GITLAB_DB
     import_query: >
@@ -1481,6 +1808,22 @@ tables:
     export_schema: 'gitlab_com'
     export_table: 'subscriptions'
     export_table_primary_key: id
+  system_note_metadata:
+    import_db: GITLAB_DB
+    import_query: >
+      SELECT id
+      , note_id
+      , commit_count
+      , action
+      , created_at
+      , updated_at
+      , description_version_id
+      FROM system_note_metadata
+      WHERE updated_at BETWEEN '{EXECUTION_DATE}'::timestamp - interval '{HOURS} hours'
+        AND '{EXECUTION_DATE}'::timestamp
+    export_schema: 'gitlab_com'
+    export_table: 'system_note_metadata'
+    export_table_primary_key: id
   programming_languages:
     import_db: GITLAB_DB
     import_query: >
@@ -1510,11 +1853,13 @@ tables:
     import_query: >
       SELECT project_id
       , programming_language_id
+      , share
       , CONCAT(project_id, '_', programming_language_id) AS project_programming_language_id
       FROM repository_languages
     export_schema: 'gitlab_com'
     export_table: 'repository_languages'
     export_table_primary_key: CONCAT(project_id, '_', programming_language_id)
+    advanced_metadata: true
   releases:
     import_db: GITLAB_DB
     import_query: >
@@ -1552,7 +1897,6 @@ tables:
     import_query: >
       SELECT id
       , type
-      , title
       , project_id
       , created_at
       , updated_at
@@ -1578,6 +1922,20 @@ tables:
         AND '{EXECUTION_DATE}'::timestamp
     export_schema: 'gitlab_com'
     export_table: 'services'
+    export_table_primary_key: id
+  terraform_states:
+    import_db: GITLAB_DB
+    import_query: >
+      SELECT id
+      , project_id
+      , created_at
+      , updated_at
+      , file_store
+      FROM terraform_states
+      WHERE updated_at BETWEEN '{EXECUTION_DATE}'::timestamp - interval '{HOURS} hours'
+        AND '{EXECUTION_DATE}'::timestamp
+    export_schema: 'gitlab_com'
+    export_table: 'terraform_states'
     export_table_primary_key: id
   timelogs:
     import_db: GITLAB_DB
@@ -1666,10 +2024,12 @@ tables:
       , auditor
       , require_two_factor_authentication_from_group
       , two_factor_grace_period
-      , ghost
       , last_activity_on
       , notified_of_own_activity
       , preferred_language
+      , email_opted_in
+      , email_opted_in_source_id
+      , email_opted_in_at
       , theme_id
       , accepted_term_id
       , private_profile
@@ -1677,9 +2037,11 @@ tables:
       , include_private_contributions
       , group_view
       , managing_group_id
-      , bot_type
       , "role"
       , username
+      , first_name
+      , last_name
+      , user_type
       FROM users
       WHERE updated_at BETWEEN '{EXECUTION_DATE}'::timestamp - interval '{HOURS} hours'
         AND '{EXECUTION_DATE}'::timestamp
@@ -1711,12 +2073,80 @@ tables:
       , render_whitespace_in_code
       , tab_width
       , feature_filter_type
+      , experience_level
       FROM user_preferences
       WHERE updated_at BETWEEN '{EXECUTION_DATE}'::timestamp - interval '{HOURS} hours'
         AND '{EXECUTION_DATE}'::timestamp
     export_schema: 'gitlab_com'
     export_table: 'user_preferences'
     export_table_primary_key: user_id
+  vulnerabilities:
+    import_db: GITLAB_DB
+    import_query: >
+      SELECT id
+      , created_at
+      , updated_at
+      FROM vulnerabilities
+      WHERE updated_at BETWEEN '{EXECUTION_DATE}'::timestamp - interval '{HOURS} hours'
+        AND '{EXECUTION_DATE}'::timestamp
+    export_schema: 'gitlab_com'
+    export_table: 'vulnerabilities'
+    export_table_primary_key: id
+  vulnerability_feedback:
+    import_db: GITLAB_DB
+    import_query: >
+      SELECT id
+      , created_at
+      , updated_at
+      , feedback_type
+      , category
+      , project_id
+      , author_id
+      , pipeline_id
+      , issue_id
+      , project_fingerprint
+      , merge_request_id
+      , comment_author_id
+      , comment
+      , comment_timestamp
+      FROM vulnerability_feedback
+      WHERE updated_at BETWEEN '{EXECUTION_DATE}'::timestamp - interval '{HOURS} hours'
+        AND '{EXECUTION_DATE}'::timestamp
+    export_schema: 'gitlab_com'
+    export_table: 'vulnerability_feedback'
+    export_table_primary_key: id
+  vulnerability_identifiers:
+    import_db: GITLAB_DB
+    import_query: >
+      SELECT id
+      , created_at
+      , updated_at
+      , project_id
+      , external_type
+      , external_id
+      , name
+      , url
+      FROM vulnerability_identifiers
+      WHERE updated_at BETWEEN '{EXECUTION_DATE}'::timestamp - interval '{HOURS} hours'
+        AND '{EXECUTION_DATE}'::timestamp
+    export_schema: 'gitlab_com'
+    export_table: 'vulnerability_identifiers'
+    export_table_primary_key: id
+  vulnerability_issue_links:
+    import_db: GITLAB_DB
+    import_query: >
+      SELECT id
+      , vulnerability_id
+      , issue_id
+      , link_type
+      , created_at
+      , updated_at
+      FROM vulnerability_issue_links
+      WHERE updated_at BETWEEN '{EXECUTION_DATE}'::timestamp - interval '{HOURS} hours'
+        AND '{EXECUTION_DATE}'::timestamp
+    export_schema: 'gitlab_com'
+    export_table: 'vulnerability_issue_links'
+    export_table_primary_key: id
   vulnerability_occurrences:
     import_db: GITLAB_DB
     import_query: >
@@ -1738,28 +2168,71 @@ tables:
     export_schema: 'gitlab_com'
     export_table: 'vulnerability_occurrences'
     export_table_primary_key: 'id'
-  web_hook_logs:
+  vulnerability_occurrence_identifiers:
     import_db: GITLAB_DB
     import_query: >
       SELECT id
-      , web_hook_id
-      , trigger
-      , url
-      , request_headers
-      , request_data
-      , response_headers
-      , response_body
-      , response_status
-      , execution_duration
-      , internal_error_message
       , created_at
       , updated_at
-      FROM web_hook_logs
+      , occurrence_id
+      , identifier_id
+      FROM vulnerability_occurrence_identifiers
       WHERE updated_at BETWEEN '{EXECUTION_DATE}'::timestamp - interval '{HOURS} hours'
         AND '{EXECUTION_DATE}'::timestamp
-    export_schema: 'gitlab_dotcom'
-    export_table: web_hook_logs
+    export_schema: 'gitlab_com'
+    export_table: 'vulnerability_occurrence_identifiers'
     export_table_primary_key: id
+  vulnerability_occurrence_pipelines:
+    import_db: GITLAB_DB
+    import_query: >
+      SELECT id
+      , created_at
+      , updated_at
+      , occurrence_id
+      , pipeline_id
+      FROM vulnerability_occurrence_pipelines
+      WHERE updated_at BETWEEN '{EXECUTION_DATE}'::timestamp - interval '{HOURS} hours'
+        AND '{EXECUTION_DATE}'::timestamp
+    export_schema: 'gitlab_com'
+    export_table: 'vulnerability_occurrence_pipelines'
+    export_table_primary_key: id
+  vulnerability_scanners:
+    import_db: GITLAB_DB
+    import_query: >
+      SELECT id
+      , created_at
+      , updated_at
+      , project_id
+      , external_id
+      , name
+      FROM vulnerability_scanners
+      WHERE updated_at BETWEEN '{EXECUTION_DATE}'::timestamp - interval '{HOURS} hours'
+        AND '{EXECUTION_DATE}'::timestamp
+    export_schema: 'gitlab_com'
+    export_table: 'vulnerability_scanners'
+    export_table_primary_key: id
+#   web_hook_logs:  # breaking extract 04-23-2020
+#     import_db: GITLAB_DB
+#     import_query: >
+#       SELECT id
+#       , web_hook_id
+#       , trigger
+#       , url
+#       , request_headers
+#       , request_data
+#       , response_headers
+#       , response_body
+#       , response_status
+#       , execution_duration
+#       , internal_error_message
+#       , created_at
+#       , updated_at
+#       FROM web_hook_logs
+#       WHERE updated_at BETWEEN '{EXECUTION_DATE}'::timestamp - interval '{HOURS} hours'
+#         AND '{EXECUTION_DATE}'::timestamp
+#     export_schema: 'gitlab_dotcom'
+#     export_table: web_hook_logs
+#     export_table_primary_key: id
   web_hooks:
     import_db: GITLAB_DB
     import_query: >
@@ -1877,6 +2350,8 @@ tables:
       , ip_address
       , maximum_timeout
       , runner_type
+      , public_projects_minutes_cost_factor
+      , private_projects_minutes_cost_factor
       FROM ci_runners
       WHERE updated_at BETWEEN '{EXECUTION_DATE}'::timestamp - interval '{HOURS} hours'
         AND '{EXECUTION_DATE}'::timestamp

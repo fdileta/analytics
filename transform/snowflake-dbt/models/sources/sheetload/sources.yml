@@ -1,0 +1,66 @@
+version: 2
+
+sources:
+  - name: sheetload
+    database: '{{ env_var("SNOWFLAKE_LOAD_DATABASE") }}'
+    schema: sheetload
+    loaded_at_field: DATEADD(sec, _updated_at, '1970-01-01')
+    loader: Python [Sheetload](https://gitlab.com/gitlab-data/analytics/tree/master/extract/sheetload)
+    description: script that loads sheets from Google Sheets into Snowflake
+
+    quoting:
+      database: true
+      schema: false
+      identifier: false
+
+    tables:
+      - name: abm_account_baselines
+      - name: abuse_mitigation
+      - name: ally_certificate
+      - name: ar_aging_details
+      - name: calendar
+      - name: clari_export_forecast_net_iacv
+      - name: communication_certificate
+      - name: company_call_attendance
+      - name: compensation_certificate
+      - name: data_team_capacity
+      - name: days_sales_outstanding
+      - name: days_to_close
+      - name: dev_section_metrics
+      - name: employee_location_factor
+      - name: engineering_speciality_prior_to_capture
+      - name: gitlab_slack_stats
+      - name: google_referrals
+      - name: headcount
+      - name: hire_forecast
+      - name: hire_plan
+      - name: hire_replan
+      - name: ic_collaboration_competency
+      - name: ic_dib_comptency
+      - name: ic_efficiency_competency
+      - name: ic_iteration_competency
+      - name: ic_results_competency
+      - name: ic_transparency_competency
+      - name: infrastructure_missing_employees
+      - name: job_roles_prior_to_2020_02
+      - name: kpi_status
+      - name: linkedin_recruiter
+      - name: location_factor_targets
+      - name: manual_downgrade_dotcom_tracking
+      - name: marketing_core_users_from_docs_gitlab_com
+      - name: marketing_kpi_benchmarks
+      - name: marketing_pipe_to_spend_headcount
+      - name: maxmind_countries
+      - name: maxmind_ranges
+      - name: osat
+      - name: planned_values
+      - name: procurement_cost_savings
+      - name: product_maturity_historical
+      - name: release_blog_posts
+      - name: rep_quotas_full_fy2020
+      - name: rep_quotas_full_ps_fy2020
+      - name: scalable_employment_values
+      - name: social_marketing_metrics
+      - name: values_certificate
+      - name: yc_companies
+

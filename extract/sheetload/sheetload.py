@@ -2,11 +2,11 @@ import sys
 import re
 from io import StringIO
 import json
-from logging import error, info, basicConfig, getLogger
+import time
+from logging import error, info, basicConfig, getLogger, warning
 from os import environ as env
-from time import time
-from typing import Dict, Tuple
-from yaml import load
+from typing import Dict, Tuple, List
+from yaml import load, safe_load, YAMLError
 
 import boto3
 import gspread
@@ -17,67 +17,22 @@ from gitlabdata.orchestration_utils import (
     snowflake_engine_factory,
     query_executor,
 )
+from google_sheets_client import GoogleSheetsClient
 from google.cloud import storage
 from google.oauth2 import service_account
+from gspread.exceptions import APIError
+from gspread import Client
 from oauth2client.service_account import ServiceAccountCredentials
+from sheetload_dataframe_utils import dw_uploader
 from sqlalchemy.engine.base import Engine
-
-
-def table_has_changed(data: pd.DataFrame, engine: Engine, table: str) -> bool:
-    """
-    Check if the table has changed before uploading.
-    """
-
-    if engine.has_table(table):
-        existing_table = pd.read_sql_table(table, engine)
-        if "_updated_at" in existing_table.columns and existing_table.drop(
-            "_updated_at", axis=1
-        ).equals(data):
-            info(f'Table "{table}" has not changed. Aborting upload.')
-            return False
-    return True
-
-
-def dw_uploader(
-    engine: Engine,
-    table: str,
-    data: pd.DataFrame,
-    schema: str = "sheetload",
-    chunk: int = 0,
-    truncate: bool = False,
-) -> bool:
-    """
-    Use a DB engine to upload a dataframe.
-    """
-
-    # Clean the column names and add metadata, generate the dtypes
-    data.columns = [
-        str(column_name).replace(" ", "_").replace("/", "_")
-        for column_name in data.columns
-    ]
-
-    # If the data isn't chunked, or this is the first iteration, drop table
-    if not chunk and not truncate:
-        table_changed = table_has_changed(data, engine, table)
-        if not table_changed:
-            return False
-        drop_query = f"DROP TABLE IF EXISTS {schema}.{table} CASCADE"
-        query_executor(engine, drop_query)
-
-    # Add the _updated_at metadata and set some vars if chunked
-    data["_updated_at"] = time()
-    if_exists = "append" if chunk else "replace"
-    data.to_sql(
-        name=table, con=engine, index=False, if_exists=if_exists, chunksize=15000
-    )
-    info(f"Successfully loaded {data.shape[0]} rows into {table}")
-    return True
+from qualtrics_sheetload import qualtrics_loader
 
 
 def sheet_loader(
     sheet_file: str,
+    table_name: str = None,
     schema: str = "sheetload",
-    database="RAW",
+    database: str = "RAW",
     gapi_keyfile: str = None,
     conn_dict: Dict[str, str] = None,
 ) -> None:
@@ -92,13 +47,28 @@ def sheet_loader(
     Column names can not contain parentheses. Spaces and slashes will be
     replaced with underscores.
 
-    Sheets is a newline delimited txt fileseparated spaces.
+    sheet_file: path to yaml file with sheet configurations
 
-    python sheetload.py sheets <file_name>
+    table_name: Optional, name of the tab to be loaded -- matches the table_name as well as part of the document name
+      -- For example for the test sheet this should be "test_sheet" as that is the name of the tab to be loaded from the document.
+      -- Also should match the second half of the sheet name -- for example `sheetload.test_sheet`.
+      -- Also the name of the final table in Snowflake.  The test sheet turns into a RAW.SHEETLOAD.test_sheet table.
+
+    python sheetload.py sheets <sheet_file>
     """
 
     with open(sheet_file, "r") as file:
-        sheets = file.read().splitlines()
+        try:
+            stream = safe_load(file)
+        except YAMLError as exc:
+            print(exc)
+
+        sheets = [
+            (sheet["name"], tab)
+            for sheet in stream["sheets"]
+            for tab in sheet["tabs"]
+            if (table_name is None or tab == table_name)
+        ]
 
     if database != "RAW":
         engine = snowflake_engine_factory(conn_dict or env, "ANALYTICS_LOADER", schema)
@@ -114,27 +84,18 @@ def sheet_loader(
     info(engine)
 
     # Get the credentials for sheets and the database engine
-    scope = [
-        "https://spreadsheets.google.com/feeds",
-        "https://www.googleapis.com/auth/drive",
-    ]
-    keyfile = load(gapi_keyfile or env["GCP_SERVICE_CREDS"])
-    google_creds = gspread.authorize(
-        ServiceAccountCredentials.from_json_keyfile_dict(keyfile, scope)
-    )
 
-    for sheet_info in sheets:
-        # Sheet here refers to the name of the sheet file, table is the actual sheet name
-        info(f"Processing sheet: {sheet_info}")
-        sheet_file, table = sheet_info.split(".")
-        sheet = (
-            google_creds.open(schema + "." + sheet_file)
-            .worksheet(table)
-            .get_all_values()
+    google_sheet_client = GoogleSheetsClient()
+
+    for sheet_name, tab in sheets:
+
+        info(f"Processing sheet: {sheet_name}")
+
+        dataframe = google_sheet_client.load_google_sheet(
+            gapi_keyfile, schema + "." + sheet_name, tab
         )
-        sheet_df = pd.DataFrame(sheet[1:], columns=sheet[0])
-        dw_uploader(engine, table, sheet_df, schema)
-        info(f"Finished processing for table: {sheet_info}")
+        dw_uploader(engine, tab, dataframe, schema)
+        info(f"Finished processing for table: {tab}")
 
     query = f"""grant select on all tables in schema "{database}".{schema} to role transformer"""
     query_executor(engine, query)
@@ -210,11 +171,11 @@ def gcs_loader(
 
 def count_records_in_s3_csv(bucket: str, s3_file_key: str, s3_client) -> int:
     """
-        This function is used to count the number of records found in a CSV on S3 with path
-        s3://bucket/s3_file_key .  The number of records is returned.
+    This function is used to count the number of records found in a CSV on S3 with path
+    s3://bucket/s3_file_key .  The number of records is returned.
 
-        This function uses an AWS feature known as "s3 select" which can perform queries
-        directly on s3 objects.  This function assumes that the CSVs it is querying have header rows at the top.
+    This function uses an AWS feature known as "s3 select" which can perform queries
+    directly on s3 objects.  This function assumes that the CSVs it is querying have header rows at the top.
     """
 
     query_result = s3_client.select_object_content(
@@ -238,12 +199,12 @@ def check_s3_csv_count_integrity(
     bucket, file_key, s3_client, snowflake_engine, table_name
 ) -> None:
     """
-        This function is used to verify that the count of rows in the snowflake table with name "table_name"
-        is equivalent to the count of records found in the csv on aws s3 with path s3://bucket/file_key .
+    This function is used to verify that the count of rows in the snowflake table with name "table_name"
+    is equivalent to the count of records found in the csv on aws s3 with path s3://bucket/file_key .
 
-        If the counts are equal, this function returns gracefully and returns nothing.  If the counts are not equal,
-        this function logs an error and exits the current running program with an exit code of 1.  The exit code is
-        used to signal airflow that it should fail the task.
+    If the counts are equal, this function returns gracefully and returns nothing.  If the counts are not equal,
+    this function logs an error and exits the current running program with an exit code of 1.  The exit code is
+    used to signal airflow that it should fail the task.
     """
     snowflake_count_result_set = query_executor(
         snowflake_engine, f"select count(*) from {table_name}"
@@ -316,7 +277,7 @@ def csv_loader(
     Loads csv files from a local file system into a DataFrame and pass it to dw_uploader
     for loading into Snowflake.
 
-    Tablename will use the name of the csv by default. 
+    Tablename will use the name of the csv by default.
     python sheetload.py csv --filename nvd.csv --schema engineering_extracts
     becomes raw.engineering_extracts.nvd
 
@@ -346,6 +307,12 @@ if __name__ == "__main__":
     basicConfig(stream=sys.stdout, level=20)
     getLogger("snowflake.connector.cursor").disabled = True
     Fire(
-        {"sheets": sheet_loader, "gcs": gcs_loader, "s3": s3_loader, "csv": csv_loader}
+        {
+            "sheets": sheet_loader,
+            "gcs": gcs_loader,
+            "s3": s3_loader,
+            "csv": csv_loader,
+            "qualtrics": qualtrics_loader,
+        }
     )
     info("Complete.")

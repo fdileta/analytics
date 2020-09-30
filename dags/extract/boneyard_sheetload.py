@@ -18,6 +18,7 @@ from kube_secrets import (
     SNOWFLAKE_LOAD_USER,
     SNOWFLAKE_LOAD_WAREHOUSE,
 )
+from kubernetes_helpers import get_affinity, get_toleration
 
 # Load the env vars into a dict and set Secrets
 env = os.environ.copy()
@@ -33,13 +34,14 @@ default_args = {
     "retries": 0,
     "retry_delay": timedelta(minutes=1),
     "start_date": datetime(2019, 1, 1),
+    "dagrun_timeout": timedelta(hours=2),
 }
 
 # Set the command for the container
 container_cmd = f"""
     {clone_and_setup_extraction_cmd} &&
     cd sheetload/ &&
-    python3 sheetload.py sheets --sheet_file boneyard/sheets.txt --schema boneyard --database ANALYTICS
+    python3 sheetload.py sheets --sheet_file boneyard/sheets.yml --schema boneyard --database ANALYTICS
 """
 
 # Create the DAG
@@ -61,6 +63,8 @@ sheetload_run = KubernetesPodOperator(
         SNOWFLAKE_LOAD_WAREHOUSE,
         SNOWFLAKE_LOAD_PASSWORD,
     ],
+    affinity=get_affinity(False),
+    tolerations=get_toleration(False),
     env_vars=pod_env_vars,
     arguments=[container_cmd],
     dag=dag,

@@ -6,6 +6,24 @@
 
 {%- set event_ctes = [
    {
+      "event_name":"alert_management_viewed",
+      "regexp_where_statements":[
+         {
+            "regexp_pattern":"((\/([0-9A-Za-z_.-])*){2,})?\/alert_management",
+            "regexp_function":"REGEXP"
+         }
+      ]
+   },
+   {
+      "event_name":"alert_management_detail_viewed",
+      "regexp_where_statements":[
+         {
+            "regexp_pattern":"((\/([0-9A-Za-z_.-])*){2,})?\/alert_management\/(.)*",
+            "regexp_function":"REGEXP"
+         }
+      ]
+   },
+   {
       "event_name":"envrionments_viewed",
       "regexp_where_statements":[
          {
@@ -31,7 +49,7 @@
       "event_name":"logging_viewed",
       "regexp_where_statements":[
          {
-            "regexp_pattern":"((\/([0-9A-Za-z_.-])*){2,})?\/environments\/[0-9]*\/logs",
+            "regexp_pattern":"((\/([0-9A-Za-z_.-])*){2,})?\/logs",
             "regexp_function":"REGEXP"
          }
       ]

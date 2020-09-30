@@ -1,3 +1,4 @@
+import datetime
 import logging
 import os
 import sys
@@ -29,10 +30,10 @@ def load_ids(
     primary_key: str,
     raw_query: str,
     source_engine: Engine,
-    table: str,
+    source_table_name: str,
     table_name: str,
     target_engine: Engine,
-    id_range: int = 100_000,
+    id_range: int = 750_000,
 ) -> None:
     """ Load a query by chunks of IDs instead of all at once."""
 
@@ -42,7 +43,7 @@ def load_ids(
         primary_key,
         raw_query,
         target_engine,
-        table,
+        source_table_name,
         table_name,
         id_range=id_range,
     )
@@ -52,7 +53,12 @@ def load_ids(
         filtered_query = f"{query} {additional_filtering} ORDER BY {primary_key}"
         logging.info(filtered_query)
         chunk_and_upload(
-            filtered_query, source_engine, target_engine, table_name, backfill=backfill
+            filtered_query,
+            source_engine,
+            target_engine,
+            table_name,
+            source_table_name,
+            backfill=backfill,
         )
         backfill = False  # this prevents it from seeding rows for every chunk
 
@@ -81,7 +87,7 @@ def swap_temp_table(engine: Engine, real_table: str, temp_table: str) -> None:
 def load_incremental(
     source_engine: Engine,
     target_engine: Engine,
-    table: str,
+    source_table_name: str,
     table_dict: Dict[Any, Any],
     table_name: str,
 ) -> bool:
@@ -92,19 +98,55 @@ def load_incremental(
     raw_query = table_dict["import_query"]
     additional_filter = table_dict.get("additional_filtering", "")
     if "{EXECUTION_DATE}" not in raw_query:
-        logging.info(f"Table {table} does not need incremental processing.")
+        logging.info(f"Table {source_table_name} does not need incremental processing.")
         return False
+
+    replication_check_query = "select pg_last_xact_replay_timestamp();"
+
+    replication_timestamp = query_executor(source_engine, replication_check_query)[0][0]
+
+    """
+      If postgres replication is too far behind for gitlab_com, then data will not be replicated in this DAGRun that
+      will not be replicated in future DAGruns -- thus forcing the DE team to backfill.
+      This block of code raises an Exception whenever replication is far enough behind that data will be missed.
+    """
+    if table_dict["export_schema"] == "gitlab_com":
+        last_execution_date = datetime.datetime.strptime(
+            os.environ["LAST_EXECUTION_DATE"], "%Y-%m-%dT%H:%M:%S%z"
+        )
+        execution_date = datetime.datetime.strptime(
+            os.environ["EXECUTION_DATE"], "%Y-%m-%dT%H:%M:%S%z"
+        )
+
+        hours_difference = (execution_date - last_execution_date).seconds / 3600
+
+        hours_looking_back = int(os.environ["HOURS"])
+
+        """ The DAG moves forward 6 hours every run, but it is getting data for `hours` Hours in the past.
+            This means that replication has to be caught up to the point of execution_date + 6 which is the next execution date 
+            minus however far back data is being queried for each run which is the HOURS environ variable.  
+        """
+        if replication_timestamp < execution_date + datetime.timedelta(
+            hours=hours_difference
+        ) - datetime.timedelta(hours=hours_looking_back):
+            raise Exception(
+                f"PG replication is at {replication_timestamp}, \
+                farther behind on replication than current replication window."
+            )
+        else:
+            logging.info(f"Replication is good at {replication_timestamp}")
+
     # If _TEMP exists in the table name, skip it because it needs a full sync
     # If a temp table exists then it needs to finish syncing so don't load incrementally
     if "_TEMP" == table_name[-5:] or target_engine.has_table(f"{table_name}_TEMP"):
         logging.info(
-            f"Table {table} needs to be backfilled due to schema change, aborting incremental load."
+            f"Table {source_table_name} needs to be backfilled due to schema change, aborting incremental load."
         )
         return False
     env = os.environ.copy()
     query = f"{raw_query.format(**env)} {additional_filter}"
     logging.info(query)
-    chunk_and_upload(query, source_engine, target_engine, table_name)
+    chunk_and_upload(query, source_engine, target_engine, table_name, source_table_name)
 
     return True
 
@@ -147,7 +189,7 @@ def sync_incremental_ids(
 def load_scd(
     source_engine: Engine,
     target_engine: Engine,
-    table: str,
+    source_table_name: str,
     table_dict: Dict[Any, Any],
     table_name: str,
 ) -> bool:
@@ -159,23 +201,29 @@ def load_scd(
     additional_filter = table_dict.get("additional_filtering", "")
     advanced_metadata = table_dict.get("advanced_metadata", False)
     if "{EXECUTION_DATE}" in raw_query:
-        logging.info(f"Table {table} does not need SCD processing.")
+        logging.info(f"Table {source_table_name} does not need SCD processing.")
         return False
 
     # If the schema has changed for the SCD table, treat it like a backfill
     if "_TEMP" == table_name[-5:] or target_engine.has_table(f"{table_name}_TEMP"):
         logging.info(
-            f"Table {table} needs to be recreated to due to schema change. Recreating...."
+            f"Table {source_table_name} needs to be recreated to due to schema change. Recreating...."
         )
         backfill = True
     else:
         backfill = False
 
-    logging.info(f"Processing table: {table}")
+    logging.info(f"Processing table: {source_table_name}")
     query = f"{raw_query} {additional_filter}"
     logging.info(query)
     chunk_and_upload(
-        query, source_engine, target_engine, table_name, advanced_metadata, backfill
+        query,
+        source_engine,
+        target_engine,
+        table_name,
+        source_table_name,
+        advanced_metadata,
+        backfill,
     )
     return True
 
@@ -273,13 +321,14 @@ def check_new_tables(
         logging.info(f"Table {table} already exists and won't be tested.")
         return False
 
-    # If the table doesn't exist, load 1 million rows (or whatever the table has)
+    # If the table doesn't exist, load whatever the table has
     query = f"{raw_query} WHERE {primary_key} IS NOT NULL {additional_filtering} LIMIT 100000"
     chunk_and_upload(
         query,
         source_engine,
         target_engine,
         table_name,
+        table,
         advanced_metadata,
         backfill=True,
     )
@@ -287,7 +336,15 @@ def check_new_tables(
     return True
 
 
-def main(file_path: str, load_type: str) -> None:
+def filter_manifest(manifest_dict: Dict, load_only_table: str = None) -> None:
+    # When load_only_table specified reduce manifest to keep only relaevant table config
+    if load_only_table and load_only_table in manifest_dict["tables"].keys():
+        manifest_dict["tables"] = {
+            load_only_table: manifest_dict["tables"][load_only_table]
+        }
+
+
+def main(file_path: str, load_type: str, load_only_table: str = None) -> None:
     """
     Read data from a postgres DB and upload it directly to Snowflake.
     """
@@ -295,6 +352,8 @@ def main(file_path: str, load_type: str) -> None:
     # Process the manifest
     logging.info(f"Reading manifest at location: {file_path}")
     manifest_dict = manifest_reader(file_path)
+    # When load_only_table specified reduce manifest to keep only relevant table config
+    filter_manifest(manifest_dict, load_only_table)
 
     postgres_engine, snowflake_engine = get_engines(manifest_dict["connection_info"])
     logging.info(snowflake_engine)
@@ -314,11 +373,15 @@ def main(file_path: str, load_type: str) -> None:
         table_name = "{import_db}_{export_table}".format(**table_dict).upper()
         raw_query = table_dict["import_query"]
 
+        source_table = table_dict["export_table"]
+        if "import_schema" in table_dict:
+            source_table = table_dict["import_schema"] + "." + source_table
+
         # Check if the schema has changed or the table is new
         schema_changed = check_if_schema_changed(
             raw_query,
             postgres_engine,
-            table_dict["export_table"],
+            source_table,
             table_dict["export_table_primary_key"],
             snowflake_engine,
             table_name,
@@ -337,10 +400,18 @@ def main(file_path: str, load_type: str) -> None:
         # Drop the original table and rename the temp table
         if schema_changed and loaded:
             swap_temp_table(snowflake_engine, real_table_name, table_name)
+
+        if schema_changed:
             table_name = real_table_name
 
         count_query = f"SELECT COUNT(*) FROM {table_name}"
-        count = query_executor(snowflake_engine, count_query)[0][0]
+        count = 0
+
+        try:
+            count = query_executor(snowflake_engine, count_query)[0][0]
+        except:
+            pass  # likely that the table doesn't exist -- don't want an error here to stop the task
+
         append_to_xcom_file({table_name: count})
 
 

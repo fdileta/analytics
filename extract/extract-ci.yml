@@ -1,7 +1,7 @@
 # Job definitions
 #
 .job_template: &extract_definition
-  image: registry.gitlab.com/gitlab-data/data-image/data-image:latest
+  image: registry.gitlab.com/gitlab-data/data-image/data-image:v0.0.9
   stage: 🚂 Extract
   before_script:
     - export PATH="$CI_PROJECT_DIR/orchestration/:$PATH"
@@ -18,7 +18,7 @@
   <<: *extract_definition
   script:
     - cd extract/sheetload/
-    - python3 sheetload.py sheets --sheet_file boneyard/sheets.txt --schema boneyard --database ANALYTICS
+    - python3 sheetload.py sheets --sheet_file boneyard/sheets.yml --schema boneyard --database ANALYTICS
   only:
     - merge_requests
   when: manual
@@ -27,10 +27,20 @@
   <<: *extract_definition
   script:
     - cd extract/sheetload/
-    - python3 sheetload.py sheets --sheet_file sheets.txt
+    - python3 sheetload.py sheets --sheet_file sheets.yml
   only:
     - merge_requests
   when: manual
+
+qualtrics_sheetload:
+  <<: *extract_definition
+  script:
+    - cd extract/sheetload/
+    - python3 sheetload.py qualtrics --load_type test
+  only:
+    - merge_requests
+  when: manual
+    
 
 🛢pgp_test:
   <<: *extract_definition

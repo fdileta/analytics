@@ -3,7 +3,7 @@
 # ======
 
 variables:
-  PYTHONPATH: "$CI_PROJECT_DIR/extract/:$CI_PROJECT_DIR/extract/shared_modules/:$PYTHONPATH"
+  PYTHONPATH: "$CI_PROJECT_DIR/orchestration/:$CI_PROJECT_DIR/extract/:$CI_PROJECT_DIR/extract/shared_modules/:$PYTHONPATH"
   SNOWFLAKE_DATABASE: "$CI_COMMIT_REF_NAME"
 
 # ======
@@ -17,6 +17,8 @@ stages:
   - 📚 dbt Docs
   - 🐍 Python
   - 🛑 Snowflake Stop
+  - triage
+  - triage run
 
 include:
   - "extract/extract-ci.yml"
@@ -29,7 +31,7 @@ include:
 
 # Template for cloning databases in Snowflake for use in MRs
 .snowflake_clone_template: &snowflake_clone_template
-  image: registry.gitlab.com/gitlab-data/data-image/data-image:latest
+  image: registry.gitlab.com/gitlab-data/data-image/data-image:v0.0.9
   tags:
     - analytics
   before_script:
@@ -102,7 +104,7 @@ clone_stop:
 
 .python_check: &python_check
   stage: 🐍 Python
-  image: registry.gitlab.com/gitlab-data/data-image/data-image:latest
+  image: registry.gitlab.com/gitlab-data/data-image/data-image:v0.0.9
   tags:
     - analytics
   only:
@@ -138,15 +140,23 @@ python_complexity:
 python_pytest:
   <<: *python_check
   script:
-    - pytest -vv -x --ignore=dags
+    - python -m pytest -vv -x --no-print-logs --junitxml=report.xml
+  artifacts:
+      reports:
+          junit: ${CI_PROJECT_DIR}/report.xml
+      paths:
+          - ${CI_PROJECT_DIR}/.coverage.${CI_JOB_ID}
+      expire_in: 1 day
+      when: on_success
+
 
 # ======
 # Snowflake Permissions Validator
 # ======
 
-.permissions_check: &permissions_check
+.yaml_validate: &yaml_validate
   stage: 🐍 Python
-  image: registry.gitlab.com/gitlab-data/data-image/data-image:latest
+  image: registry.gitlab.com/gitlab-data/data-image/data-image:v0.0.9
   tags:
     - analytics
   only:
@@ -156,11 +166,26 @@ python_pytest:
       - merge_request
   allow_failure: true
 
-🔐permissions_query:
-  <<: *permissions_check
+yaml_validation:
+  <<: *yaml_validate
   script:
     - python -c 'import yaml, sys; print(yaml.safe_load(sys.stdin))' < load/snowflake/roles.yml
 
+.permifrost: &permifrost
+  stage: 🐍 Python
+  image: registry.gitlab.com/gitlab-data/permifrost:v0.2.0
+  tags:
+    - analytics
+  only:
+    refs:
+      - merge_requests
+  allow_failure: true
+
+permifrost_manual:
+  <<: *permifrost
+  script:
+    - permifrost grant load/snowflake/roles.yml --diff --dry
+  when: manual
 
 # ======
 # dbt docs to GitLab Pages
@@ -168,7 +193,7 @@ python_pytest:
 
 .pages_job_template: &pages_job_template
   stage: 📚 dbt Docs
-  image: registry.gitlab.com/gitlab-data/data-image/dbt-image:latest
+  image: registry.gitlab.com/gitlab-data/data-image/dbt-image:v0.0.9
   variables:
     SNOWFLAKE_ROLE: $SNOWFLAKE_TRANSFORM_ROLE
     SNOWFLAKE_WAREHOUSE: $SNOWFLAKE_TRANSFORM_WAREHOUSE
@@ -179,6 +204,12 @@ python_pytest:
     - export SNOWFLAKE_SNAPSHOT_DATABASE="SNOWFLAKE"
     - echo $SNOWFLAKE_SNAPSHOT_DATABASE
     - echo "SNOWFLAKE_DATABASE = $SNOWFLAKE_TRANSFORM_DATABASE"
+    - mkdir -p ~/.ssh
+    - touch ~/.ssh/id_rsa
+    - chmod 700 ~/.ssh
+    - echo "$GIT_DATA_TESTS_SSH_PRIVATE_KEY" | base64 --decode > ~/.ssh/id_rsa # decodes key from base64
+    - chmod 0400 ~/.ssh/id_rsa # Makes key read only
+    - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config # Adds gitlab.com as known host
     - cd $CI_PROJECT_DIR/transform/snowflake-dbt/
     - dbt deps --profiles-dir profile --target prod
     - dbt docs generate --profiles-dir profile --target prod
@@ -204,3 +235,37 @@ pages:
       - master
     variables:
       - $DEPLOY_DBT_PAGES
+
+dry-run:triage:
+    image: ruby:2.4
+    stage: triage
+    script:
+      - gem install gitlab-triage
+      - gitlab-triage --help
+      - gitlab-triage --dry-run --token $ANALYTICS_API_TOKEN --source projects --source-id $CI_PROJECT_PATH
+    when: manual
+    except:
+      - schedules
+
+policy:run-triage:
+    image: ruby:2.4
+    stage: triage run
+    script:
+      - gem install gitlab-triage
+      - gitlab-triage --token $ANALYTICS_API_TOKEN --source projects --source-id $CI_PROJECT_PATH
+    only:
+      refs:
+        - master
+    when: manual
+    except:
+      - schedules
+
+schedule:run-triage:
+    image: ruby:2.4
+    stage: triage run
+    script:
+      - gem install gitlab-triage
+      - gitlab-triage --token $ANALYTICS_API_TOKEN --source projects --source-id $CI_PROJECT_PATH
+    only:
+      variables:
+        - $RUN_GITLAB_TRIAGE

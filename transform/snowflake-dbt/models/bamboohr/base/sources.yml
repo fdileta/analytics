@@ -13,15 +13,19 @@ sources:
       identifier: false
 
     freshness:
-      warn_after: {count: 24, period: hour}
+      warn_after: {count: 8, period: hour}
+      error_after: {count: 24, period: hour}
 
     tables:
       - name: compensation
       - name: custom_bonus
         identifier: custombonus
       - name: directory
+      - name: emergency_contacts
+        identifier: emergencycontacts
       - name: employment_status
-        identifier: employmentstatus
+        identifier: employmentstatus       
       - name: job_info
         identifier: jobinfo
       - name: id_employee_number_mapping
+      

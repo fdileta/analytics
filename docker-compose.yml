@@ -1,7 +1,7 @@
 version: '3.7'
 services:
     airflow_webserver:
-        image: registry.gitlab.com/gitlab-data/data-image/airflow-image:latest
+        image: registry.gitlab.com/gitlab-data/data-image/airflow-image:v0.0.9
         restart: always
         ports:
           - "8080:8080"
@@ -18,7 +18,7 @@ services:
         command: bash -c "airflow webserver"
         volumes:
           - type: bind
-            source: ${KUBECONFIG}
+            source: ${HOME}/.kube/config
             target: /root/.kube/config
           - type: bind
             source: ${GOOGLE_APPLICATION_CREDENTIALS}
@@ -33,7 +33,7 @@ services:
             read_only: True
 
     airflow_scheduler:
-        image: registry.gitlab.com/gitlab-data/data-image/airflow-image:latest
+        image: registry.gitlab.com/gitlab-data/data-image/airflow-image:v0.0.9
         restart: always
         ports:
           - "8793:8793"
@@ -49,7 +49,7 @@ services:
         command: bash -c "airflow scheduler"
         volumes:
           - type: bind
-            source: ${KUBECONFIG}
+            source: ${HOME}/.kube/config
             target: /root/.kube/config
           - type: bind
             source: ${GOOGLE_APPLICATION_CREDENTIALS}
@@ -75,7 +75,7 @@ services:
         - pgdata:/var/lib/postgresql/data
 
     data_image:
-      image: registry.gitlab.com/gitlab-data/data-image/data-image:latest
+      image: registry.gitlab.com/gitlab-data/data-image/data-image:v0.0.9
       restart: always
       command: bash -c "/bin/bash"
       working_dir: /usr/local/analytics/
@@ -85,12 +85,18 @@ services:
           target: /usr/local/analytics
 
     dbt_image:
-      image: registry.gitlab.com/gitlab-data/data-image/dbt-image:latest
+      image: registry.gitlab.com/gitlab-data/data-image/dbt-image:v0.0.9
       environment:
         DBT_PROFILES_DIR: /usr/local/dbt_profiles/
+        DATA_TEST_BRANCH: "main"
         SNOWFLAKE_SNAPSHOT_DATABASE: "SNOWFLAKE"
         SNOWFLAKE_LOAD_DATABASE: "RAW"
         SNOWFLAKE_TRANSFORM_WAREHOUSE: "ANALYST_XS"
+        SALT: "pizza"
+        SALT_IP: "pie"
+        SALT_NAME: "pepperoni"
+        SALT_EMAIL: "cheese"
+        SALT_PASSWORD: "416C736F4E6F745365637265FFFFFFAB"
       restart: always
       command: bash -c "/bin/bash"
       working_dir: /usr/local/analytics/transform/snowflake-dbt/
@@ -99,9 +105,12 @@ services:
           source: .
           target: /usr/local/analytics
         - type: bind
-          source: ${DBT_PROFILE_PATH}
+          source: ${HOME}/.dbt
           target: /usr/local/dbt_profiles/
           read_only: True
+        - type: bind
+          source: ${HOME}/.ssh
+          target: /root/.ssh
 
 volumes:
   airflow_logs:

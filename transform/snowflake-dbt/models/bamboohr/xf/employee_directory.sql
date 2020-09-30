@@ -7,14 +7,23 @@ WITH bamboohr_directory AS (
 
     SELECT employee_id,
             last_value(job_title) RESPECT NULLS
-                OVER ( PARTITION BY employee_id ORDER BY effective_date ) AS last_job_title,
+                OVER ( PARTITION BY employee_id ORDER BY job_id ) AS last_job_title,
             last_value(reports_to) RESPECT NULLS
-                OVER ( PARTITION BY employee_id ORDER BY effective_date ) AS last_supervisor,
+                OVER ( PARTITION BY employee_id ORDER BY job_id ) AS last_supervisor,
             last_value(department) RESPECT NULLS
-                OVER ( PARTITION BY employee_id ORDER BY effective_date ) AS last_department,
+                OVER ( PARTITION BY employee_id ORDER BY job_id ) AS last_department,
             last_value(division) RESPECT NULLS
-                OVER ( PARTITION BY employee_id ORDER BY effective_date ) AS last_division
+                OVER ( PARTITION BY employee_id ORDER BY job_id ) AS last_division
+                
     FROM {{ ref ('bamboohr_job_info') }}
+
+), cost_center AS (
+
+    SELECT
+      employee_id,
+      last_value(cost_center) RESPECT NULLS
+                OVER ( PARTITION BY employee_id ORDER BY effective_date) AS last_cost_center  
+    FROM {{ ref ('bamboohr_job_role') }}
 
 ), mapping as (
 
@@ -27,10 +36,23 @@ WITH bamboohr_directory AS (
             FIRST_VALUE(location_factor) OVER ( PARTITION BY bamboo_employee_number ORDER BY valid_from) AS hire_location_factor
     FROM {{ ref('employee_location_factor_snapshots') }}
 
-), cost_center as (
+), initial_hire AS (
+    
+    SELECT 
+      employee_id,
+      effective_date as hire_date
+    FROM {{ref('bamboohr_employment_status')}}
+    WHERE employment_status != 'Terminated'
+    QUALIFY ROW_NUMBER() OVER (PARTITION BY employee_id ORDER BY effective_date) = 1
 
-    SELECT *
-    FROM {{ref('cost_center_division_department_mapping')}}
+), rehire AS (
+
+    Select 
+       employee_id,
+       is_rehire,
+       valid_from_date as rehire_date
+    FROM {{ref('bamboohr_employment_status_xf')}}
+    WHERE is_rehire='True'
 )
 
 SELECT distinct
@@ -39,32 +61,27 @@ SELECT distinct
         mapping.first_name,
         mapping.last_name,
         bamboohr_directory.work_email,
-        mapping.hire_date,
+        iff(rehire.is_rehire = 'True', initial_hire.hire_date, mapping.hire_date) AS hire_date,
+        rehire.rehire_date,
         mapping.termination_date,
         department_info.last_job_title,
         department_info.last_supervisor,
         department_info.last_department,
         department_info.last_division,
-        cost_center.cost_center,
+        cost_center.last_cost_center,
         location_factor.hire_location_factor
 FROM mapping
 LEFT JOIN bamboohr_directory
   ON bamboohr_directory.employee_id = mapping.employee_id
 LEFT JOIN department_info
   ON mapping.employee_id = department_info.employee_id
-LEFT JOIN cost_center
-  ON trim(department_info.last_department)=trim(cost_center.department)
- AND trim(department_info.last_division)=trim(cost_center.division)
 LEFT JOIN location_factor
   ON location_factor.bamboo_employee_number = mapping.employee_number
-WHERE hire_date < date_trunc('week', dateadd(week, 3, CURRENT_DATE))
-  AND mapping.employee_id NOT IN (
-                              '41683' --https://gitlab.com/gitlab-data/analytics/issues/2749
-                              , '41692' --https://gitlab.com/gitlab-data/analytics/issues/2749
-                              , '41693' --https://gitlab.com/gitlab-data/analytics/issues/2882
-                              , '41835' --https://gitlab.com/gitlab-data/analytics/issues/3219
-                              , '41816' --https://gitlab.com/gitlab-data/analytics/issues/3318
-                              , '41826' --https://gitlab.com/gitlab-data/analytics/issues/3318
-                            )
+LEFT JOIN initial_hire 
+  ON initial_hire.employee_id = mapping.employee_id
+LEFT JOIN rehire
+  ON rehire.employee_id = mapping.employee_id
+LEFT JOIN cost_center
+  ON cost_center.employee_id = mapping.employee_id  
+WHERE mapping.hire_date < date_trunc('week', dateadd(week, 3, CURRENT_DATE))
 
-ORDER BY hire_date DESC

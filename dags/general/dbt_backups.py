@@ -5,12 +5,19 @@ from airflow import DAG
 from airflow.contrib.operators.kubernetes_pod_operator import KubernetesPodOperator
 from airflow_utils import (
     DBT_IMAGE,
-    dbt_install_deps_cmd,
+    dbt_install_deps_nosha_cmd,
     gitlab_defaults,
     gitlab_pod_env_vars,
     slack_failed_task,
 )
 from kube_secrets import (
+    GIT_DATA_TESTS_PRIVATE_KEY,
+    GIT_DATA_TESTS_CONFIG,
+    SALT,
+    SALT_EMAIL,
+    SALT_IP,
+    SALT_NAME,
+    SALT_PASSWORD,
     SNOWFLAKE_ACCOUNT,
     SNOWFLAKE_PASSWORD,
     SNOWFLAKE_TRANSFORM_ROLE,
@@ -33,6 +40,7 @@ default_args = {
     "sla": timedelta(hours=12),
     "sla_miss_callback": slack_failed_task,
     "start_date": datetime(2019, 1, 1, 0, 0, 0),
+    "dagrun_timeout": timedelta(hours=6),
 }
 
 # Create the DAG. Run daily at 04:05
@@ -40,7 +48,7 @@ dag = DAG("dbt_backups", default_args=default_args, schedule_interval="5 4 * * *
 
 # dbt run-operation for backups
 dbt_backups_cmd = f"""
-    {dbt_install_deps_cmd} &&
+    {dbt_install_deps_nosha_cmd} &&
     dbt run-operation backup_to_gcs --profiles-dir profile
 """
 
@@ -50,6 +58,13 @@ dbt_backups = KubernetesPodOperator(
     task_id="dbt-backups",
     name="dbt-backups",
     secrets=[
+        GIT_DATA_TESTS_PRIVATE_KEY,
+        GIT_DATA_TESTS_CONFIG,
+        SALT,
+        SALT_EMAIL,
+        SALT_IP,
+        SALT_NAME,
+        SALT_PASSWORD,
         SNOWFLAKE_ACCOUNT,
         SNOWFLAKE_USER,
         SNOWFLAKE_PASSWORD,

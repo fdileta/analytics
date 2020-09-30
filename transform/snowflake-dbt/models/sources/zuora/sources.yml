@@ -2,6 +2,7 @@ version: 2
 
 sources:
   - name: zuora
+    tags: ["tdf","zuora"]
     database: '{{ env_var("SNOWFLAKE_LOAD_DATABASE") }}'
     schema: zuora_stitch
     loader: Stitch
@@ -19,9 +20,16 @@ sources:
     tables:
       - name: account
         description: '{{ doc("zuora_account_source") }}'
+        columns:
+          - name: id
+            description: Primary Key for Accounts
+            tests:
+              - dbt_utils.expression_is_true:
+                  expression: "id REGEXP '[0-9a-z]{32}'"
       - name: accounting_period
         identifier: accountingperiod
         description: '{{ doc("zuora_accounting_period_source") }}'
+      - name: amendment
       - name: contact
         description: '{{ doc("zuora_contact_source") }}'
       - name: discount_applied_metrics
@@ -37,9 +45,17 @@ sources:
         description: '{{ doc("zuora_invoice_payment_source") }}'
       - name: product
         description: '{{ doc("zuora_product_source") }}'
+      - name: product_rate_plan
+        identifier: productrateplan
+      - name: product_rate_plan_charge
+        identifier: productrateplancharge
+      - name: product_rate_plan_charge_tier
+        identifier: productrateplanchargetier
       - name: rate_plan_charge
         identifier: rateplancharge
         description: '{{ doc("zuora_rateplan_charge_source") }}'
+      - name: rate_plan_charge_tier
+        identifier: rateplanchargetier
       - name: rate_plan
         identifier: rateplan
         description: '{{ doc("zuora_rateplan_source") }}'
@@ -50,3 +66,12 @@ sources:
         description: '{{ doc("zuora_revenue_schedule_item_source") }}'
       - name: subscription
         description: '{{ doc("zuora_subscription_source") }}'
+        columns:
+          - name: accountid
+            description: Primary Key for Accounts
+            tests:
+              - dbt_utils.expression_is_true:
+                  expression: "accountid REGEXP '[0-9a-z]{32}'"
+              - relationships:
+                  to: source('zuora', 'account')
+                  field: id

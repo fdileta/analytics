@@ -8,9 +8,9 @@ from airflow.contrib.kubernetes.pod import Resources
 from airflow.operators.slack_operator import SlackAPIPostOperator
 
 REPO = "https://gitlab.com/gitlab-data/analytics.git"
-DATA_IMAGE = "registry.gitlab.com/gitlab-data/data-image/data-image:latest"
-DBT_IMAGE = "registry.gitlab.com/gitlab-data/data-image/dbt-image:latest"
-MELTANO_IMAGE = "registry.gitlab.com/meltano/meltano:v1.20.0"
+DATA_IMAGE = "registry.gitlab.com/gitlab-data/data-image/data-image:v0.0.9"
+DBT_IMAGE = "registry.gitlab.com/gitlab-data/data-image/dbt-image:v0.0.9"
+PERMIFROST_IMAGE = "registry.gitlab.com/gitlab-data/permifrost:v0.1.1"
 
 
 def split_date_parts(day: date, partition: str) -> List[dict]:
@@ -44,6 +44,31 @@ def partitions(from_date: date, to_date: date, partition: str) -> List[dict]:
             seen.add(p["part"])
             parts.append({k: v for k, v in p.items()})
     return parts
+
+
+class MultiSlackChannelOperator:
+    """
+    Class that enables sending notifications to multiple Slack channels
+    """
+
+    def __init__(self, channels, context):
+        self.channels = channels
+        self.context = context
+
+    def execute(self):
+        attachment, slack_channel, task_id, task_text = slack_defaults(
+            self.context, "failure"
+        )
+        for c in self.channels:
+            slack_alert = SlackAPIPostOperator(
+                attachments=attachment,
+                channel=c,
+                task_id=task_id,
+                text=task_text,
+                token=os.environ["SLACK_API_TOKEN"],
+                username="Airflow",
+            )
+            slack_alert.execute()
 
 
 def slack_defaults(context, task_type):
@@ -114,6 +139,18 @@ def slack_defaults(context, task_type):
         }
     ]
     return attachment, slack_channel, task_id, task_text
+
+
+def slack_snapshot_failed_task(context):
+    """
+    Function to be used as a callable for on_failure_callback for dbt-snapshots
+    Send a Slack alert to #dbt-runs and #analytics-pipelines
+    """
+    multi_channel_alert = MultiSlackChannelOperator(
+        channels=["#dbt-runs", "#analytics-pipelines"], context=context
+    )
+
+    return multi_channel_alert.execute()
 
 
 def slack_failed_task(context):
@@ -190,22 +227,48 @@ xs_warehouse = f"'{{warehouse_name: transforming_xs}}'"
 
 l_warehouse = f"'{{warehouse_name: transforming_l}}'"
 
+xl_warehouse = f"'{{warehouse_name: transforming_xl}}'"
+
+# git commands
+data_test_ssh_key_cmd = f"""
+    export DATA_TEST_BRANCH="main" &&
+    mkdir ~/.ssh/ &&
+    touch ~/.ssh/id_rsa && touch ~/.ssh/config &&
+    echo "$GIT_DATA_TESTS_PRIVATE_KEY" > ~/.ssh/id_rsa && chmod 0400 ~/.ssh/id_rsa &&
+    echo "$GIT_DATA_TESTS_CONFIG" > ~/.ssh/config"""
+
 clone_repo_cmd = f"""
+    {data_test_ssh_key_cmd} &&
     if [[ -z "$GIT_COMMIT" ]]; then
         export GIT_COMMIT="HEAD"
     fi
+    echo "git clone -b {GIT_BRANCH} --single-branch --depth 1 {REPO}" &&
     git clone -b {GIT_BRANCH} --single-branch --depth 1 {REPO} &&
     echo "checking out commit $GIT_COMMIT" &&
-    cd analytics && git checkout $GIT_COMMIT && cd .. """
+    cd analytics &&
+    git checkout $GIT_COMMIT &&
+    cd .."""
 
+clone_repo_sha_cmd = f"""
+    {data_test_ssh_key_cmd} &&
+    mkdir analytics &&
+    cd analytics &&
+    git init &&
+    git remote add origin {REPO} &&
+    echo "Fetching commit $GIT_COMMIT" &&
+    git fetch origin --quiet &&
+    git checkout $GIT_COMMIT"""
+
+# extract command
 clone_and_setup_extraction_cmd = f"""
     {clone_repo_cmd} &&
     export PYTHONPATH="$CI_PROJECT_DIR/orchestration/:$PYTHONPATH" &&
     cd analytics/extract/"""
 
+# dbt commands
 clone_and_setup_dbt_cmd = f"""
-    {clone_repo_cmd} &&
-    cd analytics/transform/snowflake-dbt/"""
+    {clone_repo_sha_cmd} &&
+    cd transform/snowflake-dbt/"""
 
 dbt_install_deps_cmd = f"""
     {clone_and_setup_dbt_cmd} &&
@@ -214,3 +277,19 @@ dbt_install_deps_cmd = f"""
 dbt_install_deps_and_seed_cmd = f"""
     {dbt_install_deps_cmd} &&
     dbt seed --profiles-dir profile --target prod --vars {xs_warehouse}"""
+
+clone_and_setup_dbt_nosha_cmd = f"""
+    {clone_repo_cmd} &&
+    cd analytics/transform/snowflake-dbt/"""
+
+dbt_install_deps_nosha_cmd = f"""
+    {clone_and_setup_dbt_nosha_cmd} &&
+    dbt deps --profiles-dir profile"""
+
+dbt_install_deps_and_seed_nosha_cmd = f"""
+    {dbt_install_deps_nosha_cmd} &&
+    dbt seed --profiles-dir profile --target prod --vars {xs_warehouse}"""
+
+
+def number_of_dbt_threads_argument(number_of_threads):
+    return f"--threads {number_of_threads}"
