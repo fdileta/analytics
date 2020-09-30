@@ -157,7 +157,7 @@ WITH source AS (
       IFF(separation_count <4 AND eeoc_field_name != 'no_eeoc', 
         NULL, separation_count)                                             AS separation_count,
       IFF(voluntary_separation <4, NULL, voluntary_separation)              AS voluntary_separation_count,
-      IFF(voluntary_separation < 4,  NULL, voluntary_separation)            AS involuntary_separation_count,  
+      IFF(involuntary_separation < 4,  NULL, involuntary_separation)        AS involuntary_separation_count,  
 
       rolling_12_month_headcount,
       rolling_12_month_separations,
