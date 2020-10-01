@@ -9,7 +9,7 @@ WITH orders_snapshots AS (
   
   SELECT *
   FROM orders_snapshots
-  WHERE order_is_trial = TRUE
+  WHERE order_is_trial = FALSE
   
 )
 
