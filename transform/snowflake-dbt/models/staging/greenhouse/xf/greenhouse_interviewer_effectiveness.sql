@@ -81,7 +81,7 @@ WITH scorecards AS (
       ON users.user_id = scorecards.interviewer_id
     LEFT JOIN employee_directory
       ON employee_directory.employee_number = users.employee_id 
-      AND DATE_TRUNC(day, scorecards.scorecard_scheduled_interview_ended_at) = employee_directory.date_actual
+      AND DATE_TRUNC(day, COALESCE(scorecards.scorecard_scheduled_interview_ended_at, scorecards.scorecard_updated_at)) = employee_directory.date_actual
     LEFT JOIN asessment
       ON asessment.application_id = scorecards.application_id
     LEFT JOIN bamboo_mapping 
