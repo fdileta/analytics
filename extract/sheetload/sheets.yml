@@ -189,3 +189,8 @@ sheets:
       - cert_product_geo_sql
       - cert_customer_segmentation_dashboard
       - cert_customer_segmentation_sql
+  - name: socialmedia101_certificate
+    owner: '@wspillane'
+    description: This identifies team members who have taken the social media 101 knowledge assesssment and have passed.
+    tabs: 
+      - socialmedia101_certificate
