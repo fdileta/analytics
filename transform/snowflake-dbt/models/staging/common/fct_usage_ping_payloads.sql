@@ -23,33 +23,8 @@ WITH license AS (
 
 ), usage_data AS (
 
-    SELECT {{ hash_sensitive_columns('version_usage_data_source') }}
-    FROM {{ ref('version_usage_data_source') }}
-    WHERE uuid IS NOT NULL
-
-), ip_to_geo AS (
-
     SELECT *
-    FROM {{ ref('dim_ip_to_geo') }}
-
-), calculated AS (
-
-    SELECT
-      *,
-      TO_NUMBER(TO_CHAR(created_at::DATE,'YYYYMMDD'),'99999999') AS date_id,
-      REGEXP_REPLACE(NULLIF(version, ''), '\-.*')                AS cleaned_version,
-      IFF(
-          version LIKE '%-pre%' OR version LIKE '%-rc%', 
-          TRUE, FALSE
-      )::BOOLEAN                                                 AS is_pre_release,
-      IFF(edition = 'CE', 'CE', 'EE')                            AS main_edition,
-      CASE
-        WHEN edition IN ('CE', 'EE Free') THEN 'Core'
-        WHEN edition IN ('EE', 'EES') THEN 'Starter'
-        WHEN edition = 'EEP' THEN 'Premium'
-        WHEN edition = 'EEU' THEN 'Ultimate'
-      ELSE NULL END                                              AS product_tier
-    FROM usage_data
+    FROM {{ ref('dim_usage_pings') }}
 
 ), license_product_details AS (
 
@@ -65,21 +40,18 @@ WITH license AS (
       ON subscription.subscription_id = rate_plan.subscription_id
     INNER JOIN product_rate_plan_charge
       ON rate_plan.product_rate_plan_id = product_rate_plan_charge.product_rate_plan_id
-    GROUP BY 1,2,3      
+    GROUP BY 1,2,3
 
 ), joined AS (
 
     SELECT
-      calculated.*,
+      usage_data.*,
       subscription_id,
       account_id,
-      array_product_details_id,
-      ip_to_geo.location_id
-    FROM calculated
+      array_product_details_id
+    FROM usage_data
     LEFT JOIN license_product_details
-      ON calculated.license_md5 = license_product_details.license_md5
-    LEFT JOIN ip_to_geo
-      ON calculated.source_ip_hash = ip_to_geo.ip_address_hash
+      ON usage_data.license_md5 = license_product_details.license_md5
 
 ), renamed AS (
 
@@ -97,7 +69,12 @@ WITH license AS (
       hostname,
       main_edition    AS edition,
       product_tier,
+      main_edition_product_tier,
+      ping_source,
       cleaned_version AS version,
+      major_version,
+      minor_version,
+      major_version || '.' || minor_version AS major_minor_version,
       is_pre_release,
       instance_user_count,
       license_plan,
@@ -106,7 +83,12 @@ WITH license AS (
       recorded_at
     FROM joined
 
-)  
+)
 
-SELECT *
-FROM renamed
+{{ dbt_audit(
+    cte_ref="renamed",
+    created_by="@derekatwood",
+    updated_by="@mpeychet",
+    created_date="2020-08-17",
+    updated_date="2020-10-16"
+) }}

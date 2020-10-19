@@ -8,9 +8,9 @@ WITH RECURSIVE employee_directory AS (
 
     SELECT
       employee_id,
-      employee_number,
-      first_name,
-      last_name,
+      employee_number,	
+      first_name,	
+      last_name,	
       (employee_directory.first_name ||' '|| employee_directory.last_name)   AS full_name,
       work_email,
       hire_date,
@@ -27,7 +27,7 @@ WITH RECURSIVE employee_directory AS (
 ), department_info AS (
 
     SELECT *
-    FROM {{ ref('bamboohr_job_info') }}
+    FROM {{ ref('bamboohr_job_info_current_division_base') }}
 
 ), job_role AS (
 
@@ -111,14 +111,27 @@ WITH RECURSIVE employee_directory AS (
     SELECT *
     FROM {{ ref('cost_center_division_department_mapping') }}
 
+), sheetload_engineering_speciality AS (
+
+    SELECT *
+    FROM {{ ref('sheetload_engineering_speciality_prior_to_capture') }}  
+
+), bamboohr_discretionary_bonuses_xf AS (
+
+    SELECT *
+    FROM {{ ref('bamboohr_directionary_bonuses_xf') }}  
+
+
 ), enriched AS (
 
     SELECT
       date_details.date_actual,
       employee_directory.*,
-      department_info.job_title,
-      department_info.department,
+      department_info.job_title,	
+      department_info.department,	
+      department_info.department_modified,
       department_info.division,
+      department_info.division_mapped_current,
       COALESCE(job_role.cost_center, 
                cost_center_prior_to_bamboo.cost_center)                     AS cost_center,
       department_info.reports_to,
@@ -129,7 +142,8 @@ WITH RECURSIVE employee_directory AS (
       IFF(date_details.date_actual BETWEEN '2019-11-01' AND '2020-02-27', 
             job_info_mapping_historical.job_grade, 
             job_role.job_grade)                                             AS job_grade,
-      job_role.jobtitle_speciality,      
+       COALESCE(sheetload_engineering_speciality.speciality, job_role.jobtitle_speciality) AS jobtitle_speciality,
+      ---to capture speciality for engineering prior to 2020.09.30 we are using sheetload, and capturing from bamboohr afterwards
       location_factor.location_factor, 
       IFF(hire_date = date_actual OR 
           rehire_date = date_actual, True, False)                           AS is_hire_date,
@@ -172,12 +186,18 @@ WITH RECURSIVE employee_directory AS (
                 AND total_direct_reports > 0 
                 AND employment_status NOT IN ('Parental Leave','Garden Leave')
             THEN 'Senior Leadership'
+            WHEN COALESCE(total_direct_reports,0) =0 AND 
+                    COALESCE(job_role.job_role, job_info_mapping_historical.job_role,department_info.job_role) = 'Manager'
+              THEN 'Staff'
             WHEN COALESCE(total_direct_reports,0) = 0 
             THEN 'Individual Contributor'
              ELSE COALESCE(job_role.job_role, 
                            job_info_mapping_historical.job_role,
-                           department_info.job_role) END                           AS job_role_modified,
-          IFF(compensation_change_reason IS NOT NULL,TRUE,FALSE)                   AS is_promotion                                                                        
+                           department_info.job_role) END                       AS job_role_modified,
+      IFF(compensation_change_reason IS NOT NULL,TRUE,FALSE)                   AS is_promotion,
+      bamboohr_discretionary_bonuses_xf.total_discretionary_bonuses            AS discretionary_bonus,
+      ROW_NUMBER() OVER 
+            (PARTITION BY employee_directory.employee_id ORDER BY date_actual) AS tenure_days
     FROM date_details
     LEFT JOIN employee_directory
       ON hire_date::DATE <= date_actual
@@ -216,6 +236,14 @@ WITH RECURSIVE employee_directory AS (
     LEFT JOIN promotion
       ON promotion.employee_id = employee_directory.employee_id
       AND date_details.date_actual = promotion.effective_date
+    LEFT JOIN sheetload_engineering_speciality
+      ON employee_directory.employee_id = sheetload_engineering_speciality.employee_id
+      AND date_details.date_actual BETWEEN sheetload_engineering_speciality.speciality_start_date 
+                                       AND COALESCE(sheetload_engineering_speciality.speciality_end_date, '2020-09-30')
+                                       ---Post 2020.09.30 we will capture engineering speciality from bamboohr
+    LEFT JOIN bamboohr_discretionary_bonuses_xf
+      ON employee_directory.employee_id = bamboohr_discretionary_bonuses_xf.employee_id
+      AND date_details.date_actual = bamboohr_discretionary_bonuses_xf.bonus_date
     WHERE employee_directory.employee_id IS NOT NULL
 
 ), base_layers as (

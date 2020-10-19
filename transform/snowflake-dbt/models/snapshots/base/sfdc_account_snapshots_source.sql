@@ -21,7 +21,6 @@ WITH source AS (
       partner_vat_tax_id__c                      AS partner_vat_tax_id,
 
       -- key people GL side
-      entity__c                                  AS gitlab_entity,
       federal_account__c                         AS federal_account,
       gitlab_com_user__c                         AS gitlab_com_user,
       account_manager__c                         AS account_manager,
@@ -41,6 +40,7 @@ WITH source AS (
                      '_HL_ENCODED_/|<a\\s+href="/', ''), 0, 15))                 
                                                  AS ultimate_parent_account_id,
       type                                       AS account_type,
+      dfox_industry__c                           AS df_industry,
       industry                                   AS industry,
       account_tier__c                            AS account_tier,
       customer_since__c::DATE                    AS customer_since_date,
@@ -49,7 +49,6 @@ WITH source AS (
       next_renewal_date__c                       AS next_renewal_date,
       license_utilization__c                     AS license_utilization,
       region__c                                  AS account_region,
-      total_account_value__c                     AS total_account_value,
       sub_region__c                              AS account_sub_region,
       support_level__c                           AS support_level,
       named_account__c                           AS named_account,
@@ -75,7 +74,6 @@ WITH source AS (
 
       -- present state info
       health__c                                  AS health_score,
-      health_score_reasons__c                    AS health_score_explained,
 
       -- opportunity metrics
       count_of_active_subscription_charges__c    AS count_active_subscription_charges,

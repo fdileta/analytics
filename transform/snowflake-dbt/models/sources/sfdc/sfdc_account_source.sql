@@ -1,4 +1,3 @@
-
 WITH source AS (
 
     SELECT *
@@ -21,7 +20,6 @@ WITH source AS (
       partner_vat_tax_id__c                      AS partner_vat_tax_id,
 
       -- key people GL side
-      entity__c                                  AS gitlab_entity,
       federal_account__c                         AS federal_account,
       gitlab_com_user__c                         AS gitlab_com_user,
       account_manager__c                         AS account_manager,
@@ -35,8 +33,6 @@ WITH source AS (
       technical_account_manager_lu__c            AS technical_account_manager_id,
 
       -- info
-      ultimate_parent_sales_segment_employees__c AS sales_segment,
-      sales_segmentation_new__c                  AS account_segment,
       {{target.schema}}_staging.id15to18(substring(regexp_replace(ultimate_parent_account__c,
                      '_HL_ENCODED_/|<a\\s+href="/', ''), 0, 15))
                                                  AS ultimate_parent_account_id,
@@ -50,13 +46,13 @@ WITH source AS (
       next_renewal_date__c                       AS next_renewal_date,
       license_utilization__c                     AS license_utilization,
       region__c                                  AS account_region,
-      total_account_value__c                     AS total_account_value,
       sub_region__c                              AS account_sub_region,
       support_level__c                           AS support_level,
       named_account__c                           AS named_account,
       billingcountry                             AS billing_country,
       billingpostalcode                          AS billing_postal_code,
       sdr_target_account__c::BOOLEAN             AS is_sdr_target_account,
+      potential_arr_lam__c                       AS potential_arr_lam,
 
       -- territory success planning fields
       atam_approved_next_owner__c                AS tsp_approved_next_owner,
@@ -64,7 +60,6 @@ WITH source AS (
       atam_next_owner_team__c                    AS tsp_next_owner_team,
       atam_account_employees__c                  AS tsp_account_employees,
       jb_max_family_employees__c                 AS tsp_max_family_employees,
-      jb_test_sales_segment__c                   AS tsp_test_sales_segment,
       atam_region__c                             AS tsp_region,
       atam_sub_region__c                         AS tsp_sub_region,
       atam_area__c                               AS tsp_area,
@@ -77,7 +72,6 @@ WITH source AS (
 
       -- present state info
       health__c                                  AS health_score,
-      health_score_reasons__c                    AS health_score_explained,
 
       -- opportunity metrics
       count_of_active_subscription_charges__c    AS count_active_subscription_charges,
@@ -113,6 +107,20 @@ WITH source AS (
       sessions__c                                AS demandbase_sessions,
       trending_offsite_intent__c                 AS demandbase_trending_offsite_intent,
       trending_onsite_engagement__c              AS demandbase_trending_onsite_engagement,
+
+      -- sales segment fields
+      ultimate_parent_sales_segment_employees__c AS ultimate_parent_sales_segment,
+      sales_segmentation_new__c                  AS division_sales_segment,
+      jb_test_sales_segment__c                   AS tsp_max_hierarchy_sales_segment,
+
+      -- ************************************
+      -- sales segmentation deprecated fields - 2020-09-03
+      -- left temporary for the sake of MVC and avoid breaking SiSense existing charts
+      jb_test_sales_segment__c                   AS tsp_test_sales_segment,
+      ultimate_parent_sales_segment_employees__c AS sales_segment,
+      sales_segmentation_new__c                  AS account_segment,
+
+     -- ************************************
 
       -- metadata
       createdbyid                                AS created_by_id,

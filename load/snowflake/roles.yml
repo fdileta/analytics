@@ -113,6 +113,7 @@ roles:
             - dbt_analytics
             - gcp_billing
             - gitlab_data_yaml
+            - gitlab_dotcom
             - handbook
             - license_db
             - postgres_pipeline
@@ -144,6 +145,7 @@ roles:
             - gitlab_data_yaml
             - handbook
             - license_db
+            - gitlab_dotcom
             - postgres_pipeline
             - netsuite
             - qualtrics
@@ -185,6 +187,7 @@ roles:
             - covid19
             - dbt_analytics
             - gitlab_data_yaml
+            - gitlab_dotcom
             - license_db
             - netsuite
             - postgres_pipeline
@@ -245,6 +248,7 @@ roles:
             - dbt_analytics
             - dbt_analytics_sensitive
             - gitlab_data_yaml
+            - gitlab_dotcom
             - greenhouse
             - license_db
             - netsuite
@@ -272,6 +276,7 @@ roles:
             - covid19
             - dbt_analytics
             - gitlab_data_yaml
+            - gitlab_dotcom
             - license_db
             - postgres_pipeline
             - salesforce
@@ -302,6 +307,7 @@ roles:
             - customers_db
             - dbt_analytics
             - gitlab_data_yaml
+            - gitlab_dotcom
             - handbook
             - license_db
             - netsuite
@@ -320,12 +326,26 @@ roles:
                 write:
                     - analytics
 
+    - decisive_data:
+        warehouses:
+            - analyst_xs
+        member_of:
+            - analyst_core
+            - snowflake_db
+            - zuora
+            - salesforce
+        privileges:
+            databases:
+                write:
+                    - analytics
+
     - engineer:
         member_of:
             - covid19
             - loader
             - transformer
             - snowflake_db
+            - static_admin
         warehouses:
             - airflow_testing_l
             - engineer_xs
@@ -374,7 +394,9 @@ roles:
                 - raw.gitter
                 - raw.pmg
                 - raw.prometheus
+                - raw.rspec
                 - raw.snowplow
+                - raw.snowflake_imports
                 - raw.tap_postgres
                 - raw.qualtrics_mailing_list
             tables:
@@ -385,8 +407,10 @@ roles:
                 - raw.gitter.*
                 - raw.pmg.*
                 - raw.prometheus.*
+                - raw.rspec.*
                 - raw.snowplow.*
                 - raw.tap_postgres.*
+                - raw.snowflake_imports.*
                 - raw.qualtrics_mailing_list.*
         privileges:
             databases:
@@ -419,6 +443,7 @@ roles:
         member_of:
             - boneyard
             - dbt_analytics
+            - gitlab_dotcom
             - license_db
             - postgres_pipeline
             - salesforce
@@ -520,12 +545,14 @@ roles:
                 - analytics.analytics_meta
                 - analytics.analytics_sensitive
                 - analytics.analytics_staging
+                - analytics.common
             tables:
                 - analytics.analytics.*
                 - analytics.analytics_clones.*
                 - analytics.analytics_meta.*
                 - analytics.analytics_sensitive.*
                 - analytics.analytics_staging.*
+                - analytics.common.*
         privileges:
             databases:
                 read:
@@ -556,14 +583,51 @@ roles:
         privileges:
             databases:
                 read:
+                    - analytics
+            schemas:
+                read:
+                    - analytics.analytics
+                    - analytics.analytics_sensitive
+                    - analytics.common
+            tables:
+                read:
+                    - analytics.analytics.*
+                    - analytics.analytics_sensitive.employee_*
+                    - analytics.analytics_sensitive.bamboohr_custom_bonus
+                    - analytics.analytics_sensitive.bamboohr_directory
+                    - analytics.analytics_sensitive.bamboohr_emergency_contacts
+                    - analytics.analytics_sensitive.bamboohr_id_employee_number_mapping
+                    - analytics.analytics_sensitive.bamboohr_employment_status
+                    - analytics.analytics_sensitive.bamboohr_job_info
+                    - analytics.analytics_sensitive.bamboohr_job_role
+                    - analytics.analytics_sensitive.bamboohr_locality
+                    - analytics.analytics_sensitive.bamboohr_employment_status_xf
+                    - analytics.analytics_sensitive.bamboohr_headcount_intermediate
+                    - analytics.common.*
+
+    - bamboohr_raw:
+        warehouses:
+            - analyst_xs
+        privileges:
+            databases:
+                read:
                     - raw
+                    - analytics
             schemas:
                 read:
                     - raw.bamboohr
+                    - analytics.analytics
+                    - analytics.analytics_sensitive
+
             tables:
                 read:
                     - raw.bamboohr.*
-    
+                    - analytics.analytics.*
+                    - analytics.analytics_sensitive.employee_*
+                    - analytics.analytics_sensitive.bamboohr_*
+
+
+
     - boneyard:
         warehouses:
             - analyst_xs
@@ -604,6 +668,18 @@ roles:
                     - analytics.analytics_sensitive.customers_db_customers_pii
                     - analytics.customers.*
 
+    - common:
+        privileges:
+            databases:
+                read:
+                    - analytics
+            schemas:
+                read:
+                    - analytics.common
+            tables:
+                read:
+                    - analytics.common.*
+
     - date:
         privileges:
             databases:
@@ -641,14 +717,18 @@ roles:
             schemas:
                 read:
                     - analytics.analytics
+                    - analytics.common
                     - analytics.analytics_meta
                     - analytics.analytics_staging
+                    - analytics.dbt
                     - raw.dbt
             tables:
                 read:
                     - analytics.analytics.*
+                    - analytics.common.*
                     - analytics.analytics_meta.*
                     - analytics.analytics_staging.*
+                    - analytics.dbt.*
                     - raw.dbt.*
 
     - dbt_analytics_clones:
@@ -713,7 +793,24 @@ roles:
                     - analytics.gitlab_data_yaml.*
                     - raw.gitlab_data_yaml.*
 
-    - google_analytics_360: 
+    - gitlab_dotcom:
+        warehouses:
+            - analyst_xs
+        privileges:
+            databases:
+                read:
+                    - analytics
+                    - raw
+            schemas:
+                read:
+                    - analytics.gitlab_dotcom
+                    - raw.tap_postgres
+            tables:
+                read:
+                    - analytics.gitlab_dotcom.*
+                    - raw.tap_postgres.gitlab_db*
+
+    - google_analytics_360:
         warehouses:
             - analyst_xs
         privileges:
@@ -784,15 +881,16 @@ roles:
             databases:
                 read:
                     - analytics
+                    - raw
             schemas:
                 read:
                     - analytics.maxmind
-                    - analytics.boneyard
+                    - raw.sheetload
             tables:
                 read:
                     - analytics.maxmind.*
-                    - analytics.boneyard.countries
-                    - analytics.boneyard.ranges
+                    - raw.sheetload.maxmind_countries
+                    - raw.sheetload.maxmind_ranges
 
     - netsuite:
         warehouses:
@@ -1151,11 +1249,8 @@ roles:
             - analyst_xs
 
     - datwood:
-        member_of:
-            - analyst_growth
-            - customers_db
-        warehouses:
-            - analyst_xs
+        member_of: []
+        warehouses: []
 
     - dknox:
         member_of:
@@ -1163,11 +1258,25 @@ roles:
         warehouses:
             - analyst_xs
 
+    - dmack:
+        member_of:
+            - analyst_sales
+        warehouses:
+            - analyst_xs
+
     - dparker:
         member_of:
             - reporter
+            - postgres_pipeline
         warehouses:
             - reporting
+            - analyst_xs
+
+    - dpeterson:
+        member_of:
+            - analyst_growth
+        warehouses:
+            - analyst_xs
 
     - dtang:
         member_of:
@@ -1210,6 +1319,12 @@ roles:
             - reporter
         warehouses:
             - reporting
+
+    - evan:
+        member_of:
+            - decisive_data
+        warehouses:
+            - analyst_xs
 
     - ewegscheider:
         member_of:
@@ -1263,6 +1378,10 @@ roles:
         warehouses:
             - analyst_xs
 
+    - hsharma:
+        warehouses:
+            - reporting
+
     - iroussos:
         member_of:
             - reporter
@@ -1294,7 +1413,7 @@ roles:
             - analyst_marketing
             - customers_db
             - netsuite
-            - static_sensitive
+            - static_admin
         warehouses:
             - analyst_xs
 
@@ -1369,6 +1488,12 @@ roles:
         warehouses:
             - admin
 
+    - michellecooper:
+        member_of:
+            - decisive_data
+        warehouses:
+            - analyst_xs
+
     - mjozenazemian:
         warehouses:
             - reporting
@@ -1434,6 +1559,7 @@ roles:
         member_of:
             - analyst_people
             - customers_db
+            - bamboohr_raw
         warehouses:
             - analyst_xs
 
@@ -1448,6 +1574,13 @@ roles:
             - analyst_core
         warehouses:
             - analyst_xs
+
+    - sawezec:
+        member_of:
+            - product_manager
+            - reporter
+        warehouses:
+            - reporting
 
     - skerr:
         member_of:
@@ -1524,6 +1657,8 @@ roles:
                     - testing_db.*.*
 
     - tmurphy:
+        member_of:
+            - bamboohr_raw
         warehouses:
             - admin
             - engineer_xs
@@ -1531,13 +1666,15 @@ roles:
             - loading
             - reporting
 
-    - wwright:
+    - vjuhasz:
         member_of:
-            - analyst_finance
-            - bamboohr
+            - reporter
         warehouses:
             - analyst_xs
-            - reporting
+
+    - wwright:
+        member_of: []
+        warehouses: []
 
     - ysun:
         member_of:
@@ -1614,20 +1751,29 @@ users:
         member_of:
             - cmestel
 
-    - datwood:
-        can_login: yes
-        member_of:
-            - datwood
+    - datwood: # https://gitlab.com/gitlab-data/analytics/-/issues/6551
+        can_login: no 
+        member_of: []
     
     - dknox:
         can_login: yes
         member_of:
             - dknox
     
+    - dmack:
+        can_login: yes
+        member_of:
+            - dmack   
+
     - dparker:
         can_login: yes
         member_of:
             - dparker
+
+    - dpeterson:
+        can_login: yes
+        member_of:
+            - dpeterson
 
     - dtang:
         can_login: yes
@@ -1657,7 +1803,12 @@ users:
         member_of:
             - eurie
             - securityadmin
-    
+
+    - evan:
+        can_login: yes 
+        member_of:
+            - evan
+
     - ewegscheider:
         can_login: yes
         member_of: 
@@ -1683,6 +1834,12 @@ users:
         can_login: yes
         member_of:
             - hfrancisco
+
+    - hsharma:
+        can_login: yes
+        member_of:
+            - hsharma
+            - securityadmin
 
     - iroussos:
         can_login: yes
@@ -1771,7 +1928,12 @@ users:
         member_of:
             - mdewji
             - securityadmin
-    
+
+    - michellecooper:
+        can_login: yes 
+        member_of:
+            - michellecooper
+
     - mjozenazemian:
         can_login: yes
         member_of:
@@ -1797,6 +1959,7 @@ users:
         member_of:
             - engineer
             - msendal
+            - bamboohr_raw
 
     - mvilain:
         can_login: yes
@@ -1871,6 +2034,11 @@ users:
             - rparker
             - accountadmin
 
+    - sawezec:
+        can_login: yes
+        member_of:
+            - sawezec
+
     - skerr:
         can_login: yes
         member_of:
@@ -1883,7 +2051,6 @@ users:
     - ssichak:
         can_login: yes
         member_of:
-            - securityadmin
             - ssichak
 
     - stitch:
@@ -1917,10 +2084,14 @@ users:
         can_login: no
         member_of: []
 
-    - wwright:
+    - vjuhasz:
         can_login: yes
         member_of:
-            - wwright
+            - vjuhasz
+
+    - wwright: #https://gitlab.com/gitlab-data/analytics/-/issues/6552
+        can_login: no
+        member_of: []
 
     - ysun:
         can_login: yes

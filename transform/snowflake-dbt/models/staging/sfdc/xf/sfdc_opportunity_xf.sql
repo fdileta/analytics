@@ -18,6 +18,9 @@ WITH sfdc_opportunity AS (
 
     SELECT *
     FROM {{ ref('sfdc_record_type') }}
+), sfdc_account AS (
+
+    SELECT * FROM {{ref('sfdc_account')}}
 
 ), layered AS (
 
@@ -52,12 +55,10 @@ WITH sfdc_opportunity AS (
       sfdc_opportunity.opportunity_development_representative,
       sfdc_opportunity.account_owner_team_stamped,
       sfdc_opportunity.opportunity_term,
-      sfdc_opportunity.parent_segment,
       sfdc_opportunity.primary_campaign_source_id                                                 AS primary_campaign_source_id,
       sfdc_opportunity.sales_accepted_date,
       sfdc_opportunity.sales_path,
       sfdc_opportunity.sales_qualified_date,
-      sfdc_opportunity.sales_segment,
       sfdc_opportunity.sales_type,
       sfdc_opportunity.sdr_pipeline_contribution,
       sfdc_opportunity.source_buckets,
@@ -115,6 +116,24 @@ WITH sfdc_opportunity AS (
       sfdc_opportunity.subscription_end_date,
       sfdc_opportunity.true_up_value,
       sfdc_opportunity.order_type_live,
+      sfdc_opportunity.order_type_stamped,
+      sfdc_opportunity.net_arr,
+
+      -- days and dates per stage
+      sfdc_opportunity.days_in_1_discovery,
+      sfdc_opportunity.days_in_2_scoping,
+      sfdc_opportunity.days_in_3_technical_evaluation,
+      sfdc_opportunity.days_in_4_proposal,
+      sfdc_opportunity.days_in_5_negotiating,
+      sfdc_opportunity.stage_0_pending_acceptance_date,
+      sfdc_opportunity.stage_1_discovery_date,
+      sfdc_opportunity.stage_2_scoping_date,
+      sfdc_opportunity.stage_3_technical_evaluation_date,
+      sfdc_opportunity.stage_4_proposal_date,
+      sfdc_opportunity.stage_5_negotiating_date,
+      sfdc_opportunity.stage_6_awaiting_signature_date,
+      sfdc_opportunity.stage_6_closed_won_date,
+      sfdc_opportunity.stage_6_closed_lost_date,
 
       -- command plan fields
       sfdc_opportunity.cp_champion,
@@ -131,6 +150,26 @@ WITH sfdc_opportunity AS (
       sfdc_opportunity.cp_why_do_anything_at_all,
       sfdc_opportunity.cp_why_gitlab,
       sfdc_opportunity.cp_why_now,
+
+      -- sales segment refactor
+      sfdc_opportunity.division_sales_segment_stamped,
+      sfdc_account.tsp_max_hierarchy_sales_segment,
+      sfdc_account.division_sales_segment,
+      sfdc_account.ultimate_parent_sales_segment,
+
+      -- ************************************
+      -- sales segmentation deprecated fields - 2020-09-03
+      -- left temporary for the sake of MVC and avoid breaking SiSense existing charts
+      -- issue: https://gitlab.com/gitlab-data/analytics/-/issues/5709
+      sfdc_opportunity.segment                          AS segment,
+      sfdc_opportunity.sales_segment                    AS sales_segment,
+      sfdc_opportunity.parent_segment                   AS parent_segment,
+      
+      -- ************************************
+      -- channel reporting
+      -- issue: https://gitlab.com/gitlab-data/analytics/-/issues/6072
+      sfdc_opportunity.dr_partner_deal_type,
+      sfdc_opportunity.dr_partner_engagement,
 
       -- metadata
       sfdc_opportunity._last_dbt_run,
@@ -152,9 +191,11 @@ WITH sfdc_opportunity AS (
   LEFT JOIN sfdc_lead_source
     ON sfdc_opportunity.lead_source = sfdc_lead_source.initial_source
   LEFT JOIN sfdc_users_xf
-    ON sfdc_opportunity.owner_id = sfdc_users_xf.id
+    ON sfdc_opportunity.owner_id = sfdc_users_xf.user_id
   LEFT JOIN sfdc_record_type
     ON sfdc_opportunity.record_type_id = sfdc_record_type.record_type_id
+  LEFT JOIN sfdc_account
+    ON sfdc_account.account_id = sfdc_opportunity.account_id
 
 )
 

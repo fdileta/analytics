@@ -107,6 +107,19 @@ models:
               - relationships:
                     to: ref('sfdc_opportunity_stage')
                     field: primary_label
+  - name: sfdc_opportunity_contact_role
+    description: base model for SFDC Opportunity Contact Role
+    columns:
+        - name: opportunity_contact_role_id
+          tests:
+              - not_null
+              - unique
+        - name: opportunity_id
+          tests:
+              - not_null
+        - name: contact_id
+          tests:
+              - not_null
   - name: sfdc_opportunity_field_history
     description: base model for SFDC Opportunity Field History
     columns:
@@ -187,7 +200,7 @@ models:
   - name: sfdc_users
     description: base model for SFDC Users
     columns:
-        - name: id
+        - name: user_id
           tests:
               - not_null
               - unique

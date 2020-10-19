@@ -17,6 +17,8 @@ from airflow_utils import (
 )
 from kube_secrets import (
     GCP_SERVICE_CREDS,
+    GIT_DATA_TESTS_PRIVATE_KEY,
+    GIT_DATA_TESTS_CONFIG,
     SALT,
     SALT_EMAIL,
     SALT_IP,
@@ -113,7 +115,7 @@ for sheet in sheets:
 dbt_sheetload_cmd = f"""
     export snowflake_load_database="RAW" &&
     {dbt_install_deps_and_seed_nosha_cmd} &&
-    dbt run --profiles-dir profile --target prod --models sources.sheetload+ --vars {xs_warehouse}; ret=$?;
+    dbt run --profiles-dir profile --target prod --models source:sheetload+ --vars {xs_warehouse}; ret=$?;
     python ../../orchestration/upload_dbt_file_to_snowflake.py results; exit $ret
 """
 dbt_sheetload = KubernetesPodOperator(
@@ -122,6 +124,8 @@ dbt_sheetload = KubernetesPodOperator(
     task_id="dbt-sheetload",
     name="dbt-sheetload",
     secrets=[
+        GIT_DATA_TESTS_PRIVATE_KEY,
+        GIT_DATA_TESTS_CONFIG,
         SALT,
         SALT_EMAIL,
         SALT_IP,

@@ -6,7 +6,7 @@ from gitlabdata.orchestration_utils import (
     snowflake_engine_factory,
     query_executor,
 )
-from google_sheets_client import GoogleSheetsClient
+from google_sheets_client import APIError, GoogleSheetsClient
 from qualtrics_client import QualtricsClient
 from sheetload_dataframe_utils import dw_uploader
 
@@ -17,7 +17,11 @@ def construct_qualtrics_contact(result):
         "lastName": result["last_name"],
         "email": result["email_address"],
         "language": result["language"],
-        "embeddedData": {"gitlabUserID": result["user_id"]},
+        "embeddedData": {
+            "gitlabUserID": result["user_id"],
+            "user_id": result["user_id"],
+            "plan": result["plan"],
+        },
     }
 
 
@@ -25,25 +29,79 @@ def get_qualtrics_request_table_name(file_id):
     return "".join(x for x in file_id if x.isalpha()).lower()
 
 
-def should_file_be_processed(file, qualtrics_mailing_lists):
-    file_name = file.title
-    _, tab = file_name.split(".")
+def should_file_be_processed(file_name, tab, qualtrics_mailing_lists):
+    _, file_name_split = file_name.split(".")
     if tab in qualtrics_mailing_lists:
         info(
             f"{file_name}: Qualtrics already has mailing list with corresponding name -- not processing."
         )
         return False
-    if file.sheet1.title != tab:
-        error(f"{file_name}: First worksheet did not match expected name of {tab}")
+    if tab != file_name_split:
+        error(
+            f"{file_name}: First worksheet did not match expected name of {file_name_split}"
+        )
         return False
     return True
 
 
+def push_contacts_to_qualtrics(
+    tab_name, file, qualtrics_client, qualtrics_contacts
+) -> str:
+    final_status = "processed"
+    try:
+        mailing_id = qualtrics_client.create_mailing_list(
+            env["QUALTRICS_POOL_ID"], tab_name, env["QUALTRICS_GROUP_ID"]
+        )
+    except:
+        file.sheet1.update_acell(
+            "A1",
+            "Mailing list could not be created in Qualtrics.  Try changing mailing list name.",
+        )
+        raise
+    else:
+        error_contacts = qualtrics_client.upload_contacts_to_mailing_list(
+            env["QUALTRICS_POOL_ID"], mailing_id, qualtrics_contacts
+        )
+        error_contacts_ids = [
+            contact["embeddedData"]["gitlabUserID"] for contact in error_contacts
+        ]
+        if error_contacts_ids:
+            final_status = f"{final_status} except {error_contacts_ids}"
+    return final_status
+
+
+def get_metadata(file, google_sheet_client):
+    maximum_backoff_sec = 300
+    n = 0
+    while maximum_backoff_sec > (2 ** n):
+        try:
+            file_name = file.title
+            tab = file.sheet1.title
+            return file_name, tab
+        except APIError as gspread_error:
+            if gspread_error.response.status_code == 429:
+                google_sheet_client.wait_exponential_backoff(n)
+                n = n + 1
+            else:
+                raise
+    else:
+        error(f"Max retries exceeded, giving up on {file}")
+        return
+
+
 def process_qualtrics_file(
-    file, is_test, google_sheet_client, schema, qualtrics_client
+    file,
+    is_test,
+    google_sheet_client,
+    schema,
+    qualtrics_client,
+    qualtrics_mailing_lists,
 ):
-    tab = file.sheet1.title
-    dataframe = google_sheet_client.load_google_sheet(None, file.title, tab)
+    file_name, tab = get_metadata(file, google_sheet_client)
+    if not should_file_be_processed(file_name, tab, qualtrics_mailing_lists):
+        return
+
+    dataframe = google_sheet_client.load_google_sheet(None, file_name, tab)
     if list(dataframe.columns.values)[0].lower() != "id":
         warning(f"{file.title}: First column did not match expected name of id")
         return
@@ -54,7 +112,7 @@ def process_qualtrics_file(
     table = get_qualtrics_request_table_name(file.id)
     dw_uploader(engine, table, dataframe, schema)
     query = f"""
-        SELECT first_name, last_name, email_address, language, user_id
+        SELECT first_name, last_name, email_address, language, user_id, plan
         FROM ANALYTICS_SENSITIVE.QUALTRICS_API_FORMATTED_CONTACTS WHERE user_id in
         (
             SELECT id
@@ -68,33 +126,12 @@ def process_qualtrics_file(
 
     qualtrics_contacts = [construct_qualtrics_contact(result) for result in results]
 
-    final_status = "processed"
-
-    if not is_test:
-
-        try:
-            mailing_id = qualtrics_client.create_mailing_list(
-                env["QUALTRICS_POOL_ID"], tab, env["QUALTRICS_GROUP_ID"]
-            )
-        except:
-            file.sheet1.update_acell(
-                "A1",
-                "Mailing list could not be created in Qualtrics.  Try changing mailing list name.",
-            )
-            raise
-        else:
-            error_contacts = qualtrics_client.upload_contacts_to_mailing_list(
-                env["QUALTRICS_POOL_ID"], mailing_id, qualtrics_contacts
-            )
-            error_contacts_ids = [
-                contact["embeddedData"]["gitlabUserID"] for contact in error_contacts
-            ]
-            if error_contacts_ids:
-                final_status = f"{final_status} except {error_contacts_ids}"
-
     if is_test:
-        info(f"Not renaming file for test.")
+        info(f"Not updating file for test.")
     else:
+        final_status = push_contacts_to_qualtrics(
+            tab, file, qualtrics_client, qualtrics_contacts
+        )
         file.sheet1.update_acell("A1", final_status)
 
 
@@ -125,16 +162,12 @@ def qualtrics_loader(load_type: str):
         qualtrics_client = None
         qualtrics_mailing_lists = []
 
-    qualtrics_files_to_load = list(
-        filter(
-            lambda file: should_file_be_processed(file, qualtrics_mailing_lists),
-            all_qualtrics_files_to_load,
-        )
-    )
-
-    info(f"Found {len(qualtrics_files_to_load)} files to process.")
-
-    for file in qualtrics_files_to_load:
+    for file in all_qualtrics_files_to_load:
         process_qualtrics_file(
-            file, is_test, google_sheet_client, schema, qualtrics_client
+            file,
+            is_test,
+            google_sheet_client,
+            schema,
+            qualtrics_client,
+            qualtrics_mailing_lists,
         )

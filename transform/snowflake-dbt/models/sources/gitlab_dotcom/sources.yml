@@ -2,6 +2,7 @@ version: 2
 
 sources:
   - name: gitlab_dotcom
+    tags: ["tdf", "gitlab_dotcom"]
     database: '{{ env_var("SNOWFLAKE_LOAD_DATABASE") }}'
     schema: tap_postgres
     loaded_at_field: DATEADD(sec, _uploaded_at, '1970-01-01')
@@ -68,6 +69,8 @@ sources:
         identifier: gitlab_db_ci_pipeline_variables
       - name: ci_pipelines
         identifier: gitlab_db_ci_pipelines
+      - name: ci_platform_metrics
+        identifier: gitlab_db_ci_platform_metrics
       - name: ci_runner_projects
         identifier: gitlab_db_ci_runner_projects
       - name: ci_runners
@@ -128,6 +131,8 @@ sources:
         freshness:
           warn_after: {count: 7, period: day}
           error_after: {count: 30, period: day}
+      - name: emails
+        identifier: gitlab_db_emails
       - name: environments
         identifier: gitlab_db_environments
       - name: epic_issues
@@ -139,6 +144,10 @@ sources:
         identifier: gitlab_db_epics
       - name: events
         identifier: gitlab_db_events
+      - name: experiment_users
+        identifier: gitlab_db_experiment_users
+      - name: experiments
+        identifier: gitlab_db_experiments
       - name: gitlab_subscription_histories
         identifier: gitlab_db_gitlab_subscription_histories
       - name: gitlab_subscriptions

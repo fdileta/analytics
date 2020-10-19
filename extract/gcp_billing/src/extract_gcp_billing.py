@@ -2,6 +2,7 @@ import json
 from google.cloud import bigquery
 from logging import info
 from os import environ as env
+from typing import List
 
 from pandas import DataFrame
 from big_query_client import BigQueryClient
@@ -15,7 +16,7 @@ from gitlabdata.orchestration_utils import (
 config_dict = env.copy()
 
 
-def get_billing_data_query(start_date: str, end_date: str) -> str:
+def get_billing_data_query(start_date: str) -> str:
     return f"""
         SELECT 
           billing_account_id,
@@ -35,12 +36,12 @@ def get_billing_data_query(start_date: str, end_date: str) -> str:
           credits,
           invoice,
           cost_type
-        FROM gitlab_com_billing.gcp_billing_export_combined
-        WHERE export_time >= '{start_date}' and export_time < '{end_date}'
+        FROM gitlab_com_billing.gcp_billing_export_v1_017B02_778F9C_493B83
+        WHERE DATE(_PARTITIONTIME)= '{start_date}'
     """
 
 
-def write_date_json(date: str, df: DataFrame) -> str:
+def write_date_json(date: str, df: DataFrame) -> List[str]:
     """
     Chunks the dataframe into 10,000 rows each
     then writes each chunk locally.
@@ -72,11 +73,10 @@ if __name__ == "__main__":
     bq = BigQueryClient(credentials)
 
     start_time = config_dict["START_TIME"]
-    end_time = config_dict["END_TIME"]
 
     snowflake_engine = snowflake_engine_factory(config_dict, "LOADER")
 
-    sql_statement = get_billing_data_query(start_time, end_time)
+    sql_statement = get_billing_data_query(start_time)
 
     df_result = bq.get_dataframe_from_sql(
         sql_statement,
@@ -84,7 +84,7 @@ if __name__ == "__main__":
         job_config=bigquery.QueryJobConfig(use_legacy_sql=False),
     )
 
-    file_names = write_date_json(end_time, df_result)
+    file_names = write_date_json(start_time, df_result)
 
     for file_name in file_names:
         snowflake_stage_load_copy_remove(

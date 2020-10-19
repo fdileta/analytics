@@ -171,6 +171,22 @@ models:
       - name: environment_name
         tests:
           - not_null
+
+  - name: gitlab_dotcom_gitlab_emails
+    description: '{{ doc("gitlab_dotcom_gitlab_emails") }}'
+    columns:
+        - name: confirmation_sent_at
+        - name: created_at
+        - name: email_address
+          tests:
+            - not_null
+        - name: email_confirmed_at
+        - name: gitlab_email_id
+        - name: user_id
+          tests:
+            - not_null
+        - name: updated_at
+
   - name: gitlab_dotcom_gitlab_user_requests
     description: '{{ doc("gitlab_dotcom_gitlab_user_requests") }}'
     tests:
@@ -401,7 +417,6 @@ models:
       - name: namespace_id
         description: This is added as a helper column. This is either the group_id (groups are namespaces) or the namespace associated with the milestone's project.
 
-
   - name: gitlab_dotcom_namespaces_xf
     description: '{{ doc("gitlab_dotcom_namespaces_xf") }}'
     columns:
@@ -409,9 +424,6 @@ models:
         tests:
           - not_null
           - unique
-      - name: namespace_name
-        tests:
-          - not_null
       - name: namespace_path
         tests:
           - not_null
@@ -437,6 +449,18 @@ models:
       - name: project_count
         description: The number of projects that are presently associated with the namespace.
 
+  - name: gitlab_dotcom_project_statistic_snapshots_daily
+    columns:
+      - name: snapshot_day
+        tests:
+          - not_null
+      - name: project_id
+        tests:
+          - not_null
+      - name: namespace_id
+        tests:
+          - not_null
+          
   - name: gitlab_dotcom_projects_xf
     description: '{{ doc("gitlab_dotcom_projects_xf") }}'
     columns:

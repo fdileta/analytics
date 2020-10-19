@@ -39,8 +39,7 @@ If you are the person who will be using this data and/or the dashboard it depend
 <summary><i>Click to toggle Macros</i></summary>
 
   - [ ] Does this MR utilize [macros](https://docs.getdbt.com/docs/macros)?
-  - [ ] This MR contains new macros. Follow the naming convention (file name matches macro name) and document in the macros.yml file
-</details>
+  - [ ] This MR contains new macros. Follow the naming convention (file name matches macro name) and document in the `macros.yml` file
 </details>
 
 #### Incremental Models
@@ -66,6 +65,8 @@ If you are the person who will be using this data and/or the dashboard it depend
 <summary><i>Click to toggle Auditing</i></summary>
 What are you using to audit your results are accurate If you have an existing report/dashboard/dataset as reference, please provide your query used to validate the results of your model changes. If this is the first iteration of a model or validation is otherwise out of scope, please provide additional context.
 
+- [ ] Have you updated the values in any `dbt_audit` macros that you're referencing?
+
 <details>
 <summary> Paste query and results here </summary>
 
@@ -83,7 +84,9 @@ Example: You might be looking at the count of opportunities before and after, if
 <summary><i>Click to toggle Testing</i></summary>
 
 - [ ] Every model should be [tested](https://docs.getdbt.com/docs/testing-and-documentation) AND documented in a `schema.yml` file. At minimum, unique, not nullable fields, and foreign key constraints should be tested, if applicable.
+- [ ] All models should be integrated into the [trusted data framework](https://about.gitlab.com/handbook/business-ops/data-team/direction/trusted-data/)
 - [ ] Run the appropriate pipeline for the model changes in this MR
+  - [ ] If there is an associated MR in the [Data Tests](https://gitlab.com/gitlab-data/data-tests) project, be sure to pass the branch name to the manual job using the `DATA_TEST_BRANCH` environment variable.
 - [ ] If the periscope_query job failed, validate that the changes you've made don't affect the grain of the table or the expected output in Periscope.
 - [ ] If you are on the Data Team, please paste the output of `dbt test` when run locally below. Any failing tests should be fixed or explained prior to requesting a review.
 
