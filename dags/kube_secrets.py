@@ -75,6 +75,11 @@ GITLAB_PROFILER_DB_NAME = Secret(
     "env", "GITLAB_PROFILER_DB_NAME", "airflow", "GITLAB_PROFILER_DB_NAME"
 )
 
+CI_STATS_DB_USER = Secret("env", "CI_STATS_DB_USER", "airflow", "CI_STATS_DB_USER")
+CI_STATS_DB_PASS = Secret("env", "CI_STATS_DB_PASS", "airflow", "CI_STATS_DB_PASS")
+CI_STATS_DB_HOST = Secret("env", "CI_STATS_DB_HOST", "airflow", "CI_STATS_DB_HOST")
+CI_STATS_DB_NAME = Secret("env", "CI_STATS_DB_NAME", "airflow", "CI_STATS_DB_NAME")
+
 # dbt
 GIT_DATA_TESTS_PRIVATE_KEY = Secret(
     "env", "GIT_DATA_TESTS_PRIVATE_KEY", "airflow", "GIT_DATA_TESTS_PRIVATE_KEY"
