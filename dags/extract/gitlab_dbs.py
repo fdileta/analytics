@@ -8,6 +8,10 @@ from airflow.contrib.operators.kubernetes_pod_operator import KubernetesPodOpera
 from airflow_utils import DATA_IMAGE, clone_repo_cmd, gitlab_defaults, slack_failed_task
 from kubernetes_helpers import get_affinity, get_toleration
 from kube_secrets import (
+    CI_STATS_DB_HOST,
+    CI_STATS_DB_NAME,
+    CI_STATS_DB_PASS,
+    CI_STATS_DB_USER,
     CUSTOMERS_DB_HOST,
     CUSTOMERS_DB_NAME,
     CUSTOMERS_DB_PASS,
@@ -56,6 +60,21 @@ every_day_at_four = "0 4 */1 * *"
 
 # Dictionary containing the configuration values for the various Postgres DBs
 config_dict = {
+    "ci_stats": {
+        "dag_name"                    : "ci_stats",
+        "env_vars"                    : {"HOURS": "13"},
+        "extract_schedule_interval"   : "0 */6 * * *",
+        "secrets"                     : [
+            CI_STATS_DB_USER,
+            CI_STATS_DB_PASS,
+            CI_STATS_DB_HOST,
+            CI_STATS_DB_NAME,
+        ],
+        "start_date"                  : datetime(2019, 5, 30),
+        "sync_schedule_interval"      : every_day_at_four,
+        "task_name"                   : "ci-stats",
+        "validation_schedule_interval": validation_schedule_interval,
+    },
     "customers": {
         "dag_name": "customers",
         "env_vars": {"DAYS": "1"},
