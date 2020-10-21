@@ -7,6 +7,18 @@ sheets:
     owner: '@ken_aguilar'
     tabs:
       - abuse_mitigation
+  - name: abuse_top_ci_data
+    owner: '@ken_aguilar'
+    tabs:
+      - abuse_top_ci_data
+  - name: abuse_top_download_data
+    owner: '@ken_aguilar'
+    tabs:
+      - abuse_top_download_data
+  - name: abuse_top_storage_data
+    owner: '@ken_aguilar'
+    tabs:
+      - abuse_top_storage_data
   - name: ar_aging_details
     owner: '@s_mccauley'
     tabs:
@@ -35,10 +47,14 @@ sheets:
     owner: '@pluthra'
     tabs:
       - employee_location_factor
-  - name: dev_section_metrics
+  - name: engineering_contributing_organizations
+    owner: '@kwiebers'
+    tabs:
+      - engineering_contributing_organizations
+  - name: event_dictionary_simplified
     owner: '@mpeychet_'
     tabs:
-      - dev_section_metrics
+      - event_dictionary_simplified
   - name: gitlab_slack_stats
     owner: '@pluthra'
     tabs:
@@ -104,6 +120,11 @@ sheets:
     owner: '@pluthra'
     tabs:
       - osat
+  - name: people_budget
+    description: Data used by people team for budget spend.
+    owner: '@pluthra'
+    tabs: 
+      - people_budget      
   - name: planned_values
     owner: '@iweeks'
     tabs:
@@ -124,6 +145,10 @@ sheets:
     owner: '@derekatwood'
     tabs:
       - rep_quotas_full_ps_fy2020
+  - name: sales_training_completion_dates
+    owner: '@paul_armstrong'
+    tabs:
+      - sales_training_completion_dates
   - name: scalable_employment_values
     owner: '@iweeks'
     tabs:
@@ -132,6 +157,10 @@ sheets:
     owner: '@jeanpeguero'
     tabs:
       - social_marketing_metrics
+  - name: usage_ping_metrics_sections
+    owner: '@mpeychet_'
+    tabs:
+      - usage_ping_metrics_sections
   - name: values_certificate
     owner: '@jbandur'
     tabs:
@@ -161,14 +190,6 @@ sheets:
     owner: '@kathleentam'
     tabs:
       - data_team_capacity
-  - name: zuora_account_golden_records
-    owner: '@paul_armstrong'
-    tabs:
-      - zuora_account_golden_records
-  - name: zuora_subscription_golden_records
-    owner: '@paul_armstrong'
-    tabs:
-    - zuora_subscription_golden_records
   - name: product_maturity_historical
     owner: '@pluthra'
     tabs:
@@ -177,4 +198,11 @@ sheets:
     owner: '@pluthra'
     tabs: 
       - engineering_speciality_prior_to_capture
-
+  - name: data_certifications
+    description: This identifies team members who have taken the level 2 certifications and have passed.
+    owner: '@pluthra'
+    tabs:
+      - cert_product_geo_dashboard
+      - cert_product_geo_sql
+      - cert_customer_segmentation_dashboard
+      - cert_customer_segmentation_sql
