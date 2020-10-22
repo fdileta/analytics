@@ -398,10 +398,11 @@ WITH sfdc_opportunity AS (
       -- calculated fields for pipeline velocity report
       
       -- 20201021 NF: This should be replaced by a table that keeps track of excluded deals for forecasting purposes
+      -- the exclusions are in ID 15, but the ultimate parent id is on ID 18, temporary fix using left.
       -- excluded accounts 
       CASE 
-        WHEN sfdc_account.ultimate_parent_account_id IN ('001610000111bA3','0016100001F4xla','0016100001CXGCs','00161000015O9Yn','0016100001b9Jsc') 
-          AND sfdc_opportunity.close_date < '2020-08-01' 
+        WHEN left(sfdc_account.ultimate_parent_account_id,15) IN ('001610000111bA3','0016100001F4xla','0016100001CXGCs','00161000015O9Yn','0016100001b9Jsc') 
+          AND sfdc_opportunity.close_date < '2020-08-01'::DATE 
             THEN 1
         ELSE 0
       END                                                                                               AS is_excluded_flag

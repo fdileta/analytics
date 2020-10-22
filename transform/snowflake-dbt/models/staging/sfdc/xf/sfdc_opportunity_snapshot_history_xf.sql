@@ -12,7 +12,8 @@ WITH date_details AS (
 
     SELECT
       *,
-      DENSE_RANK() OVER (ORDER BY first_day_of_fiscal_quarter) AS quarter_number
+      DENSE_RANK() OVER (ORDER BY first_day_of_fiscal_quarter)        AS quarter_number,
+      90 - DATEDIFF(day, date_actual, last_day_of_fiscal_quarter)     AS day_of_fiscal_quarter_normalised
     FROM {{ ref('date_details') }}
     ORDER BY 1 DESC
 
@@ -133,12 +134,22 @@ WITH date_details AS (
       snapshot_date.fiscal_year                                                                              AS snapshot_fiscal_year,
       snapshot_date.fiscal_quarter_name_fy                                                                   AS snapshot_fiscal_quarter,
       snapshot_date.first_day_of_fiscal_quarter                                                              AS snapshot_fiscal_quarter_date,
+      snapshot_date.day_of_fiscal_quarter_normalised                                                         AS snapshot_day_of_fiscal_quarter_normalised,
 
       --close date helpers
       close_date_detail.first_day_of_month                                                                   AS close_month,
       close_date_detail.fiscal_year                                                                          AS close_fiscal_year,
       close_date_detail.fiscal_quarter_name_fy                                                               AS close_fiscal_quarter,
       close_date_detail.first_day_of_fiscal_quarter                                                          AS close_fiscal_quarter_date,
+      close_date_detail.day_of_fiscal_quarter_normalised                                                     AS close_date_day_of_fiscal_quarter_normalised,
+
+     --created date helpers
+      created_date_detail.first_day_of_month                                                                 AS created_date_month,
+      created_date_detail.fiscal_year                                                                        AS created_fiscal_year,
+      created_date_detail.fiscal_quarter_name_fy                                                             AS created_fiscal_quarter,
+      created_date_detail.first_day_of_fiscal_quarter                                                        AS created_fiscal_quarter_date,
+      created_date_detail.day_of_fiscal_quarter_normalised                                                   AS created_date_day_of_fiscal_quarter_normalised,
+
 
       CASE
         WHEN (sfdc_accounts_xf.ultimate_parent_sales_segment  = 'Unknown' 
@@ -189,7 +200,8 @@ WITH date_details AS (
       -- excluded accounts 
       CASE 
         WHEN sfdc_accounts_xf.ultimate_parent_id IN ('001610000111bA3','0016100001F4xla','0016100001CXGCs','00161000015O9Yn','0016100001b9Jsc') 
-          AND h.close_date < '2020-08-01' THEN 1
+          AND h.close_date < '2020-08-01'::DATE
+            THEN 1
         ELSE 0
       END                                                                                                   AS is_excluded_flag,
 
