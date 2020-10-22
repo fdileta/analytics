@@ -26,7 +26,7 @@ WITH date_details AS (
       -- remove omitted deals
       AND forecast_category_name != 'Omitted'
       -- remove incomplete quarters, data from beggining of Q4 FY20
-      AND snapshot_date >= CAST('2019-11-01' AS DATE)
+      AND snapshot_date >= '2019-11-01'::DATE
       -- remove excluded deals
       AND is_excluded_flag = 0
 
@@ -63,7 +63,8 @@ WITH date_details AS (
           THEN '2. Growth' 
         WHEN order_type_stamped = '4. Churn'
           THEN '3. Churn'
-        ELSE '4. Other' END                                                       AS deal_category,
+        ELSE '4. Other'
+      END                                                                         AS deal_category,
 
       -- the account hierarchy can be related to the VP / ASM / RD levels
       -- and to an approximate region
@@ -108,17 +109,25 @@ WITH date_details AS (
 
       CASE 
         WHEN pipeline_snapshot_base.stage_name_3plus IN ('3+ Pipeline','Closed Won')
-          THEN pipeline_snapshot_base.forecasted_iacv ELSE 0 END                                            AS open_won_3plus_net_iacv,
+          THEN pipeline_snapshot_base.forecasted_iacv
+        ELSE 0
+      END                                                                                                   AS open_won_3plus_net_iacv,
       CASE 
         WHEN pipeline_snapshot_base.stage_name_3plus IN ('3+ Pipeline','Closed Won')
-          THEN pipeline_snapshot_base.opps ELSE 0 END                                                       AS open_won_3plus_deal_count,
+          THEN pipeline_snapshot_base.opps
+        ELSE 0
+      END                                                                                                   AS open_won_3plus_deal_count,
   
       CASE 
         WHEN LOWER(pipeline_snapshot_base.stage_name) LIKE '%won%'
-          THEN pipeline_snapshot_base.net_iacv ELSE 0 END                                                   AS won_net_iacv,
+          THEN pipeline_snapshot_base.net_iacv
+        ELSE 0  
+      END                                                                                                   AS won_net_iacv,
       CASE 
         WHEN LOWER(pipeline_snapshot_base.stage_name) LIKE '%won%'
-          THEN pipeline_snapshot_base.opps ELSE 0 END                                                       AS won_deal_count,
+          THEN pipeline_snapshot_base.opps
+        ELSE 0
+      END                                                                                                   AS won_deal_count,
   
       -- created and closed
       pipeline_snapshot_base.created_and_won_iacv,
@@ -126,9 +135,9 @@ WITH date_details AS (
 
       -- snapshot date fields
       pipeline_snapshot_base.snapshot_date,
-      snapshot_date.fiscal_quarter_name_fy                                                                AS snapshot_fiscal_quarter,
-      snapshot_date.first_day_of_fiscal_quarter                                                           AS snapshot_fiscal_quarter_date,
-      snapshot_date.day_of_fiscal_quarter_normalised                                                      AS snapshot_day_of_fiscal_quarter
+      snapshot_date.fiscal_quarter_name_fy                                                                  AS snapshot_fiscal_quarter,
+      snapshot_date.first_day_of_fiscal_quarter_normalised                                                  AS snapshot_fiscal_quarter_date,
+      snapshot_date.day_of_fiscal_quarter                                                                   AS snapshot_day_of_fiscal_quarter
           
     FROM pipeline_snapshot_base
     -- Current day
