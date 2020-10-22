@@ -40,7 +40,14 @@ WITH source AS (
         createddate                                 AS created_date,
         days_in_stage                               AS days_in_stage,
         deployment_preference__c                    AS deployment_preference,
+
+        -- ************************************
+        -- DEPRECATED - 2020-10-21
+        -- Renamed this field to sales qualified source to align it to the label in SFDC and what is presented in opportunity_snapshot_history
+        -- left temporary for the sake of MVC and avoid breaking SiSense existing charts
         sql_source__c                               AS generated_source,
+        -- ************************************
+               
         leadsource                                  AS lead_source,
         merged_opportunity__c                       AS merged_opportunity_id,
         account_owner__c                            AS account_owner,

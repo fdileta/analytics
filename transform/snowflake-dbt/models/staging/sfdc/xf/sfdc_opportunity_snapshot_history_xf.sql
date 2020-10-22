@@ -87,6 +87,7 @@ WITH date_details AS (
       h.stage_name,
       h.sales_type,
       h.is_deleted,
+      h.sales_qualified_source,
 
       -- metrics
       h.renewal_acv,
@@ -202,6 +203,11 @@ WITH date_details AS (
         WHEN created_date_detail.fiscal_quarter_name_fy = close_date_detail.fiscal_quarter_name_fy
           AND h.stage_name IN ('Closed Won')  
             THEN h.forecasted_iacv ELSE 0 END                                                               AS created_and_won_iacv,
+
+      -- created within quarter
+      CASE
+        WHEN created_date_detail.fiscal_quarter_name_fy = snapshot_date.fiscal_quarter_name_fy
+          THEN h.forecasted_iacv ELSE 0 END                                                                   AS created_in_quarter_iacv,
 
       -- account owner hierarchies levels
       COALESCE(account_owner.sales_team_level_2,'n/a')                                                      AS account_owner_team_level_2,

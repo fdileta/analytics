@@ -10,7 +10,8 @@ WITH date_details AS (
 
     SELECT
       *,
-      DENSE_RANK() OVER (ORDER BY first_day_of_fiscal_quarter) AS quarter_number
+      DENSE_RANK() OVER (ORDER BY first_day_of_fiscal_quarter)        AS quarter_number,
+      90 - DATEDIFF(day, date_actual, last_day_of_fiscal_quarter)     AS day_of_fiscal_quarter_normalised
     FROM {{ ref('date_details') }}
     ORDER BY 1 DESC
 
@@ -44,6 +45,8 @@ WITH date_details AS (
       account_owner_team_rd_level,
       account_owner_team_asm_level,
       account_owner_sales_region,
+
+      sales_qualified_source,
       
       stage_name_3plus,
       stage_name_4plus,
@@ -60,7 +63,7 @@ WITH date_details AS (
           THEN '2. Growth' 
         WHEN order_type_stamped = '4. Churn'
           THEN '3. Churn'
-        ELSE '4. Other' END                                                     AS deal_category,
+        ELSE '4. Other' END                                                       AS deal_category,
 
       -- the account hierarchy can be related to the VP / ASM / RD levels
       -- and to an approximate region
@@ -72,14 +75,16 @@ WITH date_details AS (
       SUM(forecasted_iacv)                                                        AS forecasted_iacv,
       SUM(total_contract_value)                                                   AS tcv,
 
+      SUM(created_in_quarter_iacv)                                                AS created_in_quarter_iacv,
       SUM(created_and_won_iacv)                                                   AS created_and_won_iacv
+
     FROM sfdc_opportunity_snapshot_history_xf 
     WHERE 
       -- till end of quarter
       snapshot_date <= DATEADD(month,3,close_fiscal_quarter_date)
       -- 1 quarters before start
       AND snapshot_date >= DATEADD(month,-3,close_fiscal_quarter_date)
-      {{ dbt_utils.group_by(n=18) }}
+      {{ dbt_utils.group_by(n=19) }}
 
 ), pipeline_snapshot AS (
 
@@ -95,8 +100,9 @@ WITH date_details AS (
       pipeline_snapshot_base.account_owner_team_asm_level,
       pipeline_snapshot_base.account_owner_sales_region,
 
+      pipeline_snapshot_base.sales_qualified_source,
+
       pipeline_snapshot_base.deal_category,
-      snapshot_date.day_of_fiscal_quarter,
       pipeline_snapshot_base.forecasted_iacv                                                                AS open_won_net_iacv,
       pipeline_snapshot_base.opps                                                                           AS open_won_deal_count,
 
@@ -116,12 +122,13 @@ WITH date_details AS (
   
       -- created and closed
       pipeline_snapshot_base.created_and_won_iacv,
+      pipeline_snapshot_base.created_in_quarter_iacv,
 
       -- snapshot date fields
       pipeline_snapshot_base.snapshot_date,
       snapshot_date.fiscal_quarter_name_fy                                                                AS snapshot_fiscal_quarter,
       snapshot_date.first_day_of_fiscal_quarter                                                           AS snapshot_fiscal_quarter_date,
-      snapshot_date.day_of_fiscal_quarter                                                                 AS snapshot_day_of_fiscal_quarter
+      snapshot_date.day_of_fiscal_quarter_normalised                                                      AS snapshot_day_of_fiscal_quarter
           
     FROM pipeline_snapshot_base
     -- Current day
@@ -134,7 +141,7 @@ WITH date_details AS (
     -- exclude close lost
     WHERE LOWER(pipeline_snapshot_base.stage_name) NOT LIKE '%lost%'
       -- remove the 92 day
-      AND snapshot_date.day_of_fiscal_quarter < 92
+      AND snapshot_date.day_of_fiscal_quarter_normalised > 0
       -- exclude current quarter
       AND snapshot_date.fiscal_quarter_name_fy != today_date.fiscal_quarter_name_fy  
 
@@ -151,27 +158,28 @@ WITH date_details AS (
       pipeline_snapshot.deal_category,
       pipeline_snapshot.snapshot_day_of_fiscal_quarter,
   
-      -- keys missing
       pipeline_snapshot.account_owner_min_team_level,
-      -- channel
+      pipeline_snapshot.sales_qualified_source,
       
       -- open / won pipeline in quarter
-      SUM(open_won_net_iacv)                                                          AS open_won_net_iacv,
-      SUM(open_won_deal_count)                                                        AS open_won_deal_count,
+      SUM(pipeline_snapshot.open_won_net_iacv)                                        AS open_won_net_iacv,
+      SUM(pipeline_snapshot.open_won_deal_count)                                      AS open_won_deal_count,
 
-      SUM(open_won_3plus_net_iacv)                                                    AS open_won_3plus_net_iacv,
-      SUM(open_won_3plus_deal_count)                                                  AS open_won_3plus_deal_count,
+      SUM(pipeline_snapshot.open_won_3plus_net_iacv)                                  AS open_won_3plus_net_iacv,
+      SUM(pipeline_snapshot.open_won_3plus_deal_count)                                AS open_won_3plus_deal_count,
 
-      SUM(won_net_iacv)                                                               AS won_net_iacv,
-      SUM(won_deal_count)                                                             AS won_deal_count,
+      SUM(pipeline_snapshot.won_net_iacv)                                             AS won_net_iacv,
+      SUM(pipeline_snapshot.won_deal_count)                                           AS won_deal_count,
 
       --created in quarter
+      SUM(pipeline_snapshot.created_in_quarter_iacv)                                  AS created_in_quarter_iacv,
       SUM(pipeline_snapshot.created_and_won_iacv)                                     AS created_and_won_iacv
+
 
     FROM pipeline_snapshot
     -- restrict the rows to pipeline of the quarter the snapshot was taken
     WHERE pipeline_snapshot.snapshot_fiscal_quarter = pipeline_snapshot.close_fiscal_quarter
-    {{ dbt_utils.group_by(n=8) }}
+    {{ dbt_utils.group_by(n=9) }}
   
 ), next_quarter AS (
     
@@ -187,21 +195,20 @@ WITH date_details AS (
       pipeline_snapshot.deal_category,
       pipeline_snapshot.snapshot_day_of_fiscal_quarter,
 
-      -- keys missing
       pipeline_snapshot.account_owner_min_team_level,
-      -- channel
+      pipeline_snapshot.sales_qualified_source,
+      
+      SUM(pipeline_snapshot.open_won_net_iacv)                                     AS next_open_net_iacv,
+      SUM(pipeline_snapshot.open_won_deal_count)                                   AS next_open_deal_count,
 
-      SUM(open_won_net_iacv)                                                      AS next_open_net_iacv,
-      SUM(open_won_deal_count)                                                    AS next_open_deal_count,
-
-      SUM(open_won_3plus_net_iacv)                                                AS next_open_3plus_net_iacv,
-      SUM(open_won_3plus_deal_count)                                              AS next_open_3plus_deal_count
+      SUM(pipeline_snapshot.open_won_3plus_net_iacv)                               AS next_open_3plus_net_iacv,
+      SUM(pipeline_snapshot.open_won_3plus_deal_count)                             AS next_open_3plus_deal_count
 
     FROM pipeline_snapshot
     -- restrict the report to show next quarter lines
     -- without this we would get results for multiple quarters
     WHERE pipeline_snapshot.snapshot_fiscal_quarter_date = DATEADD(month, -3,pipeline_snapshot.close_fiscal_quarter_date)  
-    {{ dbt_utils.group_by(n=10) }}
+    {{ dbt_utils.group_by(n=11) }}
 
 ), base_fields AS (
     
@@ -216,10 +223,12 @@ WITH date_details AS (
       c.snapshot_fiscal_quarter_date,
       d.snapshot_fiscal_quarter,
       d.snapshot_day_of_fiscal_quarter,
-      d.snapshot_next_fiscal_quarter_date
+      d.snapshot_next_fiscal_quarter_date,
+      f.sales_qualified_source
     FROM (SELECT DISTINCT adj_ultimate_parent_sales_segment FROM pipeline_snapshot) a
     CROSS JOIN (SELECT DISTINCT deal_category FROM pipeline_snapshot) b
     CROSS JOIN (SELECT DISTINCT snapshot_fiscal_quarter_date FROM pipeline_snapshot) c
+    CROSS JOIN (SELECT DISTINCT sales_qualified_source FROM pipeline_snapshot) f
     CROSS JOIN (SELECT DISTINCT account_owner_min_team_level,
                                 account_owner_sales_region,
                                 account_owner_team_vp_level,
@@ -242,20 +251,22 @@ SELECT
   base_fields.account_owner_team_rd_level,
   base_fields.account_owner_team_asm_level,
   base_fields.account_owner_sales_region,
+  base_fields.sales_qualified_source,
   LOWER(base_fields.deal_category) || '_' || LOWER(base_fields.adj_ultimate_parent_sales_segment)                   AS key_segment_report,
-  LOWER(base_fields.account_owner_min_team_level) || '_' || LOWER(base_fields.adj_ultimate_parent_sales_segment)    AS key_region_report,
+  LOWER(base_fields.sales_qualified_source) || '_' || LOWER(base_fields.adj_ultimate_parent_sales_segment)          AS key_sqs_report,
   base_fields.snapshot_fiscal_quarter                                                                               AS close_fiscal_quarter,
   base_fields.snapshot_fiscal_quarter,
   base_fields.snapshot_day_of_fiscal_quarter,
-  COALESCE(previous_quarter.open_won_net_iacv,0) - COALESCE(previous_quarter.won_net_iacv,0)                                        AS open_pipeline_net_iacv,
-  COALESCE(previous_quarter.open_won_3plus_net_iacv,0)- COALESCE(previous_quarter.won_net_iacv,0)                                   AS open_3plus_pipeline_net_iacv,  
+  COALESCE(previous_quarter.open_won_net_iacv,0) - COALESCE(previous_quarter.won_net_iacv,0)                        AS open_pipeline_net_iacv,
+  COALESCE(previous_quarter.open_won_3plus_net_iacv,0)- COALESCE(previous_quarter.won_net_iacv,0)                   AS open_3plus_pipeline_net_iacv,  
   COALESCE(previous_quarter.won_net_iacv,0)                                                                         AS won_net_iacv,
-  COALESCE(previous_quarter.open_won_deal_count,0) - COALESCE(previous_quarter.won_deal_count,0)                                    AS open_pipeline_deal_count,
-  COALESCE(previous_quarter.open_won_3plus_deal_count,0) - COALESCE(previous_quarter.won_deal_count,0)                              AS open_3plus_deal_count,
+  COALESCE(previous_quarter.open_won_deal_count,0) - COALESCE(previous_quarter.won_deal_count,0)                    AS open_pipeline_deal_count,
+  COALESCE(previous_quarter.open_won_3plus_deal_count,0) - COALESCE(previous_quarter.won_deal_count,0)              AS open_3plus_deal_count,
   COALESCE(previous_quarter.won_deal_count,0)                                                                       AS won_deal_count,
 
   -- created and closed
   previous_quarter.created_and_won_iacv,
+  previous_quarter.created_in_quarter_iacv,
           
   -- next quarter 
   next_quarter_date.fiscal_quarter_name_fy                                                                          AS next_close_fiscal_quarter,
@@ -264,19 +275,24 @@ SELECT
   next_quarter.next_open_3plus_net_iacv,
   next_quarter.next_open_deal_count,
   next_quarter.next_open_3plus_deal_count
-       
+
+-- created a list of all options to avoid having blanks when attaching totals in the reporting phase
 FROM base_fields
+-- historical quarter
 LEFT JOIN previous_quarter
   ON base_fields.adj_ultimate_parent_sales_segment = previous_quarter.adj_ultimate_parent_sales_segment
   AND base_fields.snapshot_fiscal_quarter_date = previous_quarter.snapshot_fiscal_quarter_date
   AND base_fields.deal_category = previous_quarter.deal_category
   AND base_fields.snapshot_day_of_fiscal_quarter = previous_quarter.snapshot_day_of_fiscal_quarter
   AND base_fields.account_owner_min_team_level = previous_quarter.account_owner_min_team_level
+  AND base_fields.sales_qualified_source = previous_quarter.sales_qualified_source
+-- next quarter in relation to the considered historical quarter
 LEFT JOIN  next_quarter
   ON next_quarter.close_fiscal_quarter_date = base_fields.snapshot_fiscal_quarter_date
   AND next_quarter.adj_ultimate_parent_sales_segment = base_fields.adj_ultimate_parent_sales_segment
   AND next_quarter.deal_category = base_fields.deal_category
   AND next_quarter.snapshot_day_of_fiscal_quarter = base_fields.snapshot_day_of_fiscal_quarter
   AND next_quarter.account_owner_min_team_level = base_fields.account_owner_min_team_level
+  AND next_quarter.sales_qualified_source = base_fields.sales_qualified_source
 LEFT JOIN date_details next_quarter_date
   ON next_quarter_date.date_actual = base_fields.snapshot_next_fiscal_quarter_date

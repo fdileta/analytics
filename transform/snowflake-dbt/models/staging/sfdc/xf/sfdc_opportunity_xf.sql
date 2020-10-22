@@ -86,7 +86,14 @@ WITH sfdc_opportunity AS (
       sfdc_opportunity.created_date,
       sfdc_opportunity.days_in_stage,
       sfdc_opportunity.deployment_preference,
-      sfdc_opportunity.generated_source,
+
+      -- ************************************
+      -- DEPRECATED - 2020-10-21
+      -- Renamed this field to sales qualified source to align it to the label in SFDC and the one in opportunity_snapshot_history
+      -- Left temporary for the sake of MVC and avoid breaking SiSense existing charts
+      sfdc_opportunity.generated_source,    
+      -- ************************************
+     
       sfdc_opportunity.lead_source,
       sfdc_lead_source.lead_source_id                                                             AS lead_source_id,
       COALESCE(sfdc_lead_source.initial_source, 'Unknown')                                        AS lead_source_name,
