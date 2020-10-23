@@ -20,28 +20,50 @@ WITH date_details AS (
     SELECT *
     FROM {{ ref('sfdc_opportunity_snapshot_history_xf') }}
     -- remove lost & deleted deals
-    WHERE stage_name NOT IN ('9-Unqualified','10-Duplicate','Unqualified')
+    WHERE stage_name NOT IN ('9-Unqualified','00-Pre Opportunity','10-Duplicate','Unqualified')
       -- exclude deleted deals
       AND is_deleted = 0
-      -- remove omitted deals
-      AND forecast_category_name != 'Omitted'
       -- remove incomplete quarters, data from beggining of Q4 FY20
       AND snapshot_date >= '2019-11-01'::DATE
       -- remove excluded deals
       AND is_excluded_flag = 0
+      -- remove omitted deals
+      AND forecast_category_name != 'Omitted'   
+      -- exclude order type stamped "other"
+      AND order_type_stamped IN ('2. New - Connected','1. New - First Order','3. Growth','4. Churn')
 
 ), pipeline_snapshot_base AS (
     
     SELECT
-      snapshot_date,
+      -- report keys
+      adj_ultimate_parent_sales_segment,
+      sales_qualified_source,
+      deal_category,
+    
+      -- the account hierarchy can be related to the VP / ASM / RD levels
+      -- and to an approximate region
+      account_owner_min_team_level,
+
       close_fiscal_quarter,
       close_fiscal_quarter_date,
       close_fiscal_year,
+
+      snapshot_date,
+      snapshot_month,
+      snapshot_fiscal_year,
+      snapshot_fiscal_quarter,
+      snapshot_fiscal_quarter_date,
+      snapshot_day_of_fiscal_quarter_normalised      AS snapshot_day_of_fiscal_quarter,
 
       created_fiscal_quarter,
       created_fiscal_quarter_date,
       created_fiscal_year,
 
+      stage_name_3plus,
+      stage_name_4plus,
+      is_excluded_flag,
+      stage_name,
+      forecast_category_name,
       order_type_stamped,
 
       -- sales team - region fields
@@ -51,48 +73,17 @@ WITH date_details AS (
       account_owner_team_asm_level,
       account_owner_sales_region,
 
-      sales_qualified_source,
-      
-      stage_name_3plus,
-      stage_name_4plus,
-      is_excluded_flag,
-      stage_name,
-      forecast_category_name,
+      COUNT(DISTINCT opportunity_id)                  AS opps,
+      SUM(net_iacv)                                   AS net_iacv,
+      SUM(churn_only)                                 AS churn_only,
+      SUM(forecasted_iacv)                            AS forecasted_iacv,
+      SUM(total_contract_value)                       AS tcv,
 
-      adj_ultimate_parent_sales_segment,
-      
-      CASE 
-        WHEN order_type_stamped = '1. New - First Order' 
-          THEN '1. New'
-        WHEN order_type_stamped IN ('2. New - Connected', '3. Growth') 
-          THEN '2. Growth' 
-        WHEN order_type_stamped = '4. Churn'
-          THEN '3. Churn'
-        ELSE '4. Other'
-      END                                                                         AS deal_category,
-
-      -- the account hierarchy can be related to the VP / ASM / RD levels
-      -- and to an approximate region
-      account_owner_min_team_level,
-
-      COUNT(DISTINCT opportunity_id)                                              AS opps,
-      SUM(net_iacv)                                                               AS net_iacv,
-      SUM(churn_only)                                                             AS churn_only,
-      SUM(forecasted_iacv)                                                        AS forecasted_iacv,
-      SUM(total_contract_value)                                                   AS tcv,
-
-      SUM(created_in_quarter_iacv)                                                AS created_in_quarter_iacv,
-      SUM(created_and_won_iacv)                                                   AS created_and_won_iacv
+      SUM(created_in_quarter_iacv)                    AS created_in_quarter_iacv,
+      SUM(created_and_won_iacv)                       AS created_and_won_iacv
 
     FROM sfdc_opportunity_snapshot_history_xf 
-    WHERE 
-      -- till end of quarter
-      snapshot_date <= DATEADD(month,3,close_fiscal_quarter_date)
-      -- 1 quarters before start
-      AND snapshot_date >= DATEADD(month,-3,close_fiscal_quarter_date)
-      -- exclude order type stamped "other"
-      AND order_type_stamped IN ('2. New - Connected','1. New - First Order','3. Growth','4. Churn')
-      {{ dbt_utils.group_by(n=22) }}
+    {{ dbt_utils.group_by(n=27) }} 
 
 ), pipeline_snapshot AS (
 
@@ -113,6 +104,7 @@ WITH date_details AS (
       -------------------------------------
       
       pipeline_snapshot_base.stage_name,
+      pipeline_snapshot_base.forecast_category_name,
       
       pipeline_snapshot_base.close_fiscal_quarter,
       pipeline_snapshot_base.close_fiscal_quarter_date,
@@ -150,23 +142,24 @@ WITH date_details AS (
 
       -- snapshot date fields
       pipeline_snapshot_base.snapshot_date,
-      snapshot_date.fiscal_quarter_name_fy                                                                  AS snapshot_fiscal_quarter,
-      snapshot_date.first_day_of_fiscal_quarter                                                             AS snapshot_fiscal_quarter_date,
-      snapshot_date.day_of_fiscal_quarter_normalised                                                        AS snapshot_day_of_fiscal_quarter
-          
+      pipeline_snapshot_base.snapshot_fiscal_year,
+      pipeline_snapshot_base.snapshot_fiscal_quarter,
+      pipeline_snapshot_base.snapshot_fiscal_quarter_date,
+      pipeline_snapshot_base.snapshot_day_of_fiscal_quarter
+
     FROM pipeline_snapshot_base
     -- Current day
     CROSS JOIN (SELECT *
                   FROM date_details
                   WHERE date_actual = DATEADD(day,-1,CURRENT_DATE)) today_date
-    -- snapshot date
-    INNER JOIN date_details snapshot_date
-      ON snapshot_date.date_actual = pipeline_snapshot_base.snapshot_date
-    -- exclude close lost
-    WHERE snapshot_date.day_of_fiscal_quarter_normalised > 0
+    WHERE pipeline_snapshot_base.snapshot_day_of_fiscal_quarter > 0
       -- exclude current quarter
-      AND snapshot_date.fiscal_quarter_name_fy != today_date.fiscal_quarter_name_fy  
-
+      AND pipeline_snapshot_base.snapshot_fiscal_quarter != today_date.fiscal_quarter_name_fy 
+      -- till end of quarter
+      AND pipeline_snapshot_base.snapshot_date <= DATEADD(month,3,pipeline_snapshot_base.close_fiscal_quarter_date)
+      -- 1 quarters before start
+      AND pipeline_snapshot_base.snapshot_date >= DATEADD(month,-3,pipeline_snapshot_base.close_fiscal_quarter_date)
+     
 ), previous_quarter AS (
   
     -- daily snapshot of pipeline metrics per quarter within the quarter
@@ -198,6 +191,7 @@ WITH date_details AS (
     FROM pipeline_snapshot
     -- restrict the rows to pipeline of the quarter the snapshot was taken
     WHERE pipeline_snapshot.snapshot_fiscal_quarter = pipeline_snapshot.close_fiscal_quarter
+    -- exclude lost deals from pipeline
     AND LOWER(pipeline_snapshot.stage_name) NOT LIKE '%lost%'
     {{ dbt_utils.group_by(n=9) }}
   
@@ -228,25 +222,26 @@ WITH date_details AS (
     -- restrict the report to show next quarter lines
     -- without this we would get results for multiple quarters
     WHERE pipeline_snapshot.snapshot_fiscal_quarter_date = DATEADD(month, -3,pipeline_snapshot.close_fiscal_quarter_date) 
-    AND LOWER(pipeline_snapshot.stage_name) NOT LIKE '%lost%'      
+    -- exclude lost deals from pipeline
+    AND LOWER(pipeline_snapshot.stage_name) NOT LIKE '%lost%'   
     {{ dbt_utils.group_by(n=11) }}
 
 ), pipeline_gen AS (
 
     SELECT
-      pipeline_snapshot.snapshot_fiscal_quarter_date,
-      pipeline_snapshot.snapshot_day_of_fiscal_quarter,
-      pipeline_snapshot.adj_ultimate_parent_sales_segment,
-      pipeline_snapshot.deal_category, 
-      pipeline_snapshot.account_owner_min_team_level,
-      pipeline_snapshot.sales_qualified_source,
+      pipeline_snapshot_base.snapshot_fiscal_quarter_date,
+      pipeline_snapshot_base.snapshot_day_of_fiscal_quarter,
+      pipeline_snapshot_base.adj_ultimate_parent_sales_segment,
+      pipeline_snapshot_base.deal_category, 
+      pipeline_snapshot_base.account_owner_min_team_level,
+      pipeline_snapshot_base.sales_qualified_source,
 
       --created in quarter
-      SUM(pipeline_snapshot.net_iacv)                                               AS created_in_quarter_iacv,
-      SUM(pipeline_snapshot.deal_count)
-    FROM pipeline_snapshot
+      SUM(pipeline_snapshot_base.forecasted_iacv)           AS created_in_quarter_iacv,
+      SUM(pipeline_snapshot_base.opps)                      AS created_in_quarter_count
+    FROM pipeline_snapshot_base
     -- restrict the rows to pipeline of the quarter the snapshot was taken
-    WHERE pipeline_snapshot.snapshot_fiscal_quarter = pipeline_snapshot.created_fiscal_quarter
+    WHERE pipeline_snapshot_base.snapshot_fiscal_quarter = pipeline_snapshot_base.created_fiscal_quarter
     {{ dbt_utils.group_by(n=6) }}
 
 ), base_fields AS (
@@ -264,16 +259,16 @@ WITH date_details AS (
       d.snapshot_day_of_fiscal_quarter,
       d.snapshot_next_fiscal_quarter_date,
       f.sales_qualified_source
-    FROM (SELECT DISTINCT adj_ultimate_parent_sales_segment FROM pipeline_snapshot) a
-    CROSS JOIN (SELECT DISTINCT deal_category FROM pipeline_snapshot) b
-    CROSS JOIN (SELECT DISTINCT snapshot_fiscal_quarter_date FROM pipeline_snapshot) c
-    CROSS JOIN (SELECT DISTINCT sales_qualified_source FROM pipeline_snapshot) f
+    FROM (SELECT DISTINCT adj_ultimate_parent_sales_segment FROM pipeline_snapshot_base) a
+    CROSS JOIN (SELECT DISTINCT deal_category FROM pipeline_snapshot_base) b
+    CROSS JOIN (SELECT DISTINCT snapshot_fiscal_quarter_date FROM pipeline_snapshot_base) c
+    CROSS JOIN (SELECT DISTINCT sales_qualified_source FROM pipeline_snapshot_base) f
     CROSS JOIN (SELECT DISTINCT account_owner_min_team_level,
                                 account_owner_sales_region,
                                 account_owner_team_vp_level,
                                 account_owner_team_rd_level,
                                 account_owner_team_asm_level
-                FROM pipeline_snapshot) e
+                FROM pipeline_snapshot_base) e
     INNER JOIN (SELECT DISTINCT fiscal_quarter_name_fy                                                              AS snapshot_fiscal_quarter,
                               first_day_of_fiscal_quarter                                                           AS snapshot_fiscal_quarter_date, 
                               DATEADD(month,3,first_day_of_fiscal_quarter)                                          AS snapshot_next_fiscal_quarter_date,
@@ -306,6 +301,7 @@ SELECT
   -- created and closed
   previous_quarter.created_and_won_iacv,
   pipeline_gen.created_in_quarter_iacv,
+  pipeline_gen.created_in_quarter_count,
           
   -- next quarter 
   next_quarter_date.fiscal_quarter_name_fy                                                                          AS next_close_fiscal_quarter,
