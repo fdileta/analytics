@@ -82,7 +82,13 @@ WITH date_details AS (
       SUM(created_in_quarter_iacv)                    AS created_in_quarter_iacv,
       SUM(created_and_won_iacv)                       AS created_and_won_iacv
 
-    FROM sfdc_opportunity_snapshot_history_xf 
+    FROM sfdc_opportunity_snapshot_history_xf
+     -- current day
+    CROSS JOIN (SELECT *
+                  FROM date_details
+                  WHERE date_actual = DATEADD(day,-1,CURRENT_DATE)) today_date 
+      -- exclude current quarter
+    WHERE sfdc_opportunity_snapshot_history_xf.snapshot_fiscal_quarter != today_date.fiscal_quarter_name_fy 
     {{ dbt_utils.group_by(n=27) }} 
 
 ), pipeline_snapshot AS (
@@ -148,13 +154,7 @@ WITH date_details AS (
       pipeline_snapshot_base.snapshot_day_of_fiscal_quarter
 
     FROM pipeline_snapshot_base
-    -- Current day
-    CROSS JOIN (SELECT *
-                  FROM date_details
-                  WHERE date_actual = DATEADD(day,-1,CURRENT_DATE)) today_date
     WHERE pipeline_snapshot_base.snapshot_day_of_fiscal_quarter > 0
-      -- exclude current quarter
-      AND pipeline_snapshot_base.snapshot_fiscal_quarter != today_date.fiscal_quarter_name_fy 
       -- till end of quarter
       AND pipeline_snapshot_base.snapshot_date <= DATEADD(month,3,pipeline_snapshot_base.close_fiscal_quarter_date)
       -- 1 quarters before start
