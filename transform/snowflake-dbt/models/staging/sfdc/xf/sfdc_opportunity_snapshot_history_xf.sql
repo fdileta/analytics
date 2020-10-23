@@ -43,7 +43,7 @@ WITH date_details AS (
     SELECT
       opportunity_id,
       owner_id,
-      'CRO'                                                           AS level_1,
+      'CRO'                                              AS level_1,
       CASE account_owner_team_stamped
         WHEN 'APAC'                 THEN 'VP Ent'
         WHEN 'Commercial'           THEN 'VP Comm SMB'
@@ -62,7 +62,7 @@ WITH date_details AS (
         WHEN 'US East'              THEN 'VP Ent'
         WHEN 'US West'              THEN 'VP Ent'
         ELSE NULL
-      END                                                  AS level_2,
+      END                                                AS level_2,
       CASE account_owner_team_stamped
         WHEN 'APAC'                 THEN 'RD APAC'
         WHEN 'EMEA'                 THEN 'RD EMEA'
@@ -75,7 +75,7 @@ WITH date_details AS (
         WHEN 'US East'              THEN 'RD US East'
         WHEN 'US West'              THEN 'RD US West'
         ELSE NULL
-      END                                                   AS level_3
+      END                                                AS level_3
     FROM sfdc_opportunity_xf
     -- sfdc Sales Admin user
     WHERE owner_id = '00561000000mpHTAAY'
@@ -83,7 +83,7 @@ WITH date_details AS (
 ), final AS (
 
     SELECT 
-      h.date_actual                                                                                           AS snapshot_date,  
+      h.date_actual                                      AS snapshot_date,  
       h.forecast_category_name,                
       h.opportunity_id,
       h.owner_id,    
@@ -111,7 +111,7 @@ WITH date_details AS (
         WHEN sfdc_opportunity_xf.order_type_stamped IS NULL 
           THEN '3. Growth'
         ELSE sfdc_opportunity_xf.order_type_stamped
-      END                                                                                                    AS order_type_stamped,     
+      END                                                        AS order_type_stamped,     
      
       --********************************************************
       -- Deprecated field - 20201013
@@ -121,7 +121,7 @@ WITH date_details AS (
         WHEN sfdc_opportunity_xf.order_type IS NULL 
           THEN '3. Growth'
         ELSE sfdc_opportunity_xf.order_type
-      END                                                                                                    AS order_type, 
+      END                                                        AS order_type, 
       --********************************************************    
 
       -- account driven fields
@@ -130,25 +130,25 @@ WITH date_details AS (
       sfdc_accounts_xf.ultimate_parent_sales_segment,
 
       --snapshot date helpers
-      snapshot_date.first_day_of_month                                                                       AS snapshot_month,
-      snapshot_date.fiscal_year                                                                              AS snapshot_fiscal_year,
-      snapshot_date.fiscal_quarter_name_fy                                                                   AS snapshot_fiscal_quarter,
-      snapshot_date.first_day_of_fiscal_quarter                                                              AS snapshot_fiscal_quarter_date,
-      snapshot_date.day_of_fiscal_quarter_normalised                                                         AS snapshot_day_of_fiscal_quarter_normalised,
+      snapshot_date.first_day_of_month                           AS snapshot_month,
+      snapshot_date.fiscal_year                                  AS snapshot_fiscal_year,
+      snapshot_date.fiscal_quarter_name_fy                       AS snapshot_fiscal_quarter,
+      snapshot_date.first_day_of_fiscal_quarter                  AS snapshot_fiscal_quarter_date,
+      snapshot_date.day_of_fiscal_quarter_normalised             AS snapshot_day_of_fiscal_quarter_normalised,
 
       --close date helpers
-      close_date_detail.first_day_of_month                                                                   AS close_month,
-      close_date_detail.fiscal_year                                                                          AS close_fiscal_year,
-      close_date_detail.fiscal_quarter_name_fy                                                               AS close_fiscal_quarter,
-      close_date_detail.first_day_of_fiscal_quarter                                                          AS close_fiscal_quarter_date,
-      close_date_detail.day_of_fiscal_quarter_normalised                                                     AS close_date_day_of_fiscal_quarter_normalised,
+      close_date_detail.first_day_of_month                       AS close_month,
+      close_date_detail.fiscal_year                              AS close_fiscal_year,
+      close_date_detail.fiscal_quarter_name_fy                   AS close_fiscal_quarter,
+      close_date_detail.first_day_of_fiscal_quarter              AS close_fiscal_quarter_date,
+      close_date_detail.day_of_fiscal_quarter_normalised         AS close_date_day_of_fiscal_quarter_normalised,
 
      --created date helpers
-      created_date_detail.first_day_of_month                                                                 AS created_date_month,
-      created_date_detail.fiscal_year                                                                        AS created_fiscal_year,
-      created_date_detail.fiscal_quarter_name_fy                                                             AS created_fiscal_quarter,
-      created_date_detail.first_day_of_fiscal_quarter                                                        AS created_fiscal_quarter_date,
-      created_date_detail.day_of_fiscal_quarter_normalised                                                   AS created_date_day_of_fiscal_quarter_normalised,
+      created_date_detail.first_day_of_month                     AS created_date_month,
+      created_date_detail.fiscal_year                            AS created_fiscal_year,
+      created_date_detail.fiscal_quarter_name_fy                 AS created_fiscal_quarter,
+      created_date_detail.first_day_of_fiscal_quarter            AS created_fiscal_quarter_date,
+      created_date_detail.day_of_fiscal_quarter_normalised       AS created_date_day_of_fiscal_quarter_normalised,
 
 
       CASE
@@ -243,7 +243,9 @@ WITH date_details AS (
       -- created within quarter
       CASE
         WHEN created_date_detail.fiscal_quarter_name_fy = snapshot_date.fiscal_quarter_name_fy
-          THEN h.forecasted_iacv ELSE 0 END                                                                   AS created_in_quarter_iacv,
+          THEN h.forecasted_iacv 
+        ELSE 0 
+      END                                                                                                   AS created_in_quarter_iacv,
 
       -- account owner hierarchies levels
       COALESCE(account_owner.sales_team_level_2,'n/a')                                                      AS account_owner_team_level_2,
