@@ -3,7 +3,6 @@ connection_info:
   pass: 'CI_STATS_DB_PASS'
   host: CI_STATS_DB_HOST
   database: CI_STATS_DB_NAME
-  port: PG_PORT
 tables:
   spec_profiling_results:
     import_db: CI_STATS_DB
