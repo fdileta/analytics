@@ -440,6 +440,7 @@ WITH sfdc_opportunity AS (
     -- sales admin hierarchy
     LEFT JOIN sales_admin_hierarchy 
       ON sfdc_opportunity.opportunity_id = sales_admin_hierarchy.opportunity_id
+    WHERE sfdc_account.account_id not in ('0014M00001kGcORQA0')
 )
 
 SELECT *

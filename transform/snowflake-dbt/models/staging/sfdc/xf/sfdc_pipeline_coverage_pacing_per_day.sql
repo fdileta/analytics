@@ -27,8 +27,6 @@ WITH date_details AS (
       AND snapshot_date >= '2019-11-01'::DATE
       -- remove excluded deals
       AND is_excluded_flag = 0
-      -- remove omitted deals
-      AND forecast_category_name != 'Omitted'   
       -- exclude order type stamped "other"
       AND order_type_stamped IN ('2. New - Connected','1. New - First Order','3. Growth','4. Churn')
 
@@ -159,6 +157,8 @@ WITH date_details AS (
       AND pipeline_snapshot_base.snapshot_date <= DATEADD(month,3,pipeline_snapshot_base.close_fiscal_quarter_date)
       -- 1 quarters before start
       AND pipeline_snapshot_base.snapshot_date >= DATEADD(month,-3,pipeline_snapshot_base.close_fiscal_quarter_date)
+      -- remove omitted deals
+      AND forecast_category_name != 'Omitted'  
      
 ), previous_quarter AS (
   
@@ -242,6 +242,9 @@ WITH date_details AS (
     FROM pipeline_snapshot_base
     -- restrict the rows to pipeline of the quarter the snapshot was taken
     WHERE pipeline_snapshot_base.snapshot_fiscal_quarter = pipeline_snapshot_base.created_fiscal_quarter
+    -- remove pre-opty deals
+  -- remove pre-opty deals and stage 0
+    AND pipeline_snapshot_base.stage_name NOT IN ('0-Pending Acceptance','10-Duplicate','00-Pre Opportunity','9-Unqualified')
     {{ dbt_utils.group_by(n=6) }}
 
 ), base_fields AS (

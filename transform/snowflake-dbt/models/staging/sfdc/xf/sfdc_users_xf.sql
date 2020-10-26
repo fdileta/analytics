@@ -29,19 +29,23 @@ WITH RECURSIVE users AS (
 
 ),  managers AS (
     
-    SELECT
-      user_id,
-      name,
-      role_name,
-      manager_name,
-      manager_id,
+  SELECT
+      u.user_id,
+      u.name,
+      u.role_name,
+      u.manager_name,
+      u.manager_id,
       0 AS level,
-      '' AS path
-    FROM base
-    WHERE role_name = 'CRO'
-
+      '' AS path,
+      r.parentroleid,
+      r.id
+    FROM base u
+    JOIN user_role r
+      ON u.role_name = r.name
+    WHERE u.role_name = 'CRO'
+    
     UNION ALL
-
+    
     SELECT
       users.user_id,
       users.name,
@@ -49,10 +53,27 @@ WITH RECURSIVE users AS (
       users.manager_name,
       users.manager_id,
       level + 1,
-      path || managers.role_name || '::'
+      path || managers.role_name || '::',
+      r.parentroleid,
+      r.id
     FROM base users
+    JOIN user_role r
+      ON users.role_name = r.name
     INNER JOIN managers
-      ON users.manager_id = managers.user_id
+      ON r.parentroleid = managers.id 
+), final AS (  
+
+  SELECT
+    user_id,
+    name,
+    role_name,
+    manager_name,
+    SPLIT_PART(path, '::', 1)::VARCHAR AS parent_role_1,
+    SPLIT_PART(path, '::', 2)::VARCHAR AS parent_role_2,
+    SPLIT_PART(path, '::', 3)::VARCHAR AS parent_role_3,
+    SPLIT_PART(path, '::', 4)::VARCHAR AS parent_role_4,
+    SPLIT_PART(path, '::', 5)::VARCHAR AS parent_role_5
+  FROM managers
 
 ), cro_sfdc_hierarchy AS (
 
@@ -107,6 +128,8 @@ SELECT
   END                                                                                             AS sales_min_hierarchy_level,
     CASE sales_min_hierarchy_level
       WHEN 'ASM - APAC - Japan'                 THEN 'APAC'
+      WHEN 'ASM-MM-APAC'                        THEN 'APAC'
+      WHEN 'Channel Manager - APAC'             THEN 'APAC'
       WHEN 'ASM - Civilian'                     THEN 'PUBSEC'
       WHEN 'ASM - DoD - USAF+COCOMS+4th Estate' THEN 'PUBSEC'
       WHEN 'ASM - EMEA - DACH'                  THEN 'EMEA'
