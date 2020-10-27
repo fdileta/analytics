@@ -34,8 +34,8 @@ WITH date_details AS (
     
     SELECT
       -- report keys
-      adj_ultimate_parent_sales_segment,
-      sales_qualified_source,
+      COALESCE(adj_ultimate_parent_sales_segment,'n/a')     AS adj_ultimate_parent_sales_segment,
+      COALESCE(sales_qualified_source, 'n/a')               AS sales_qualified_source,
       deal_category,
     
       -- the account hierarchy can be related to the VP / ASM / RD levels
