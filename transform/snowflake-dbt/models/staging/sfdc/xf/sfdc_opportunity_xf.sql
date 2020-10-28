@@ -98,7 +98,7 @@ WITH sfdc_opportunity AS (
       sfdc_opportunity.opportunity_owner_manager                                                  AS opportunity_owner_manager,
       opportunity_owner.role_name                                                                 AS opportunity_owner_role,
       sfdc_opportunity.opportunity_owner_team                                                     AS opportunity_owner_team,
-      opportunity_owner.title                                                                     AS opportunity_owner_title,
+      --opportunity_owner.title                                                                     AS opportunity_owner_title,
       sfdc_opportunity.opportunity_sales_development_representative,
       sfdc_opportunity.opportunity_development_representative,
       sfdc_opportunity.account_owner_team_stamped,
@@ -222,6 +222,16 @@ WITH sfdc_opportunity AS (
       sfdc_opportunity.dr_partner_deal_type,
       sfdc_opportunity.dr_partner_engagement,
 
+      -- top level grouping of the order type field
+      CASE 
+        WHEN order_type_stamped = '1. New - First Order' 
+          THEN '1. New'
+        WHEN order_type_stamped IN ('2. New - Connected', '3. Growth', '4. Churn') 
+          THEN '2. Growth' 
+        ELSE '3. Other'
+      END                                                                                               AS deal_group,
+
+      -- medium level grouping of the order type field
       CASE
         WHEN sfdc_opportunity.order_type_stamped = '1. New - First Order' 
           THEN '1. New'

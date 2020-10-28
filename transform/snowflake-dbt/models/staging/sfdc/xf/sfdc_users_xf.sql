@@ -61,19 +61,6 @@ WITH RECURSIVE users AS (
       ON users.role_name = r.name
     INNER JOIN managers
       ON r.parentroleid = managers.id 
-), final AS (  
-
-  SELECT
-    user_id,
-    name,
-    role_name,
-    manager_name,
-    SPLIT_PART(path, '::', 1)::VARCHAR AS parent_role_1,
-    SPLIT_PART(path, '::', 2)::VARCHAR AS parent_role_2,
-    SPLIT_PART(path, '::', 3)::VARCHAR AS parent_role_3,
-    SPLIT_PART(path, '::', 4)::VARCHAR AS parent_role_4,
-    SPLIT_PART(path, '::', 5)::VARCHAR AS parent_role_5
-  FROM managers
 
 ), cro_sfdc_hierarchy AS (
 
@@ -89,7 +76,7 @@ WITH RECURSIVE users AS (
       SPLIT_PART(path, '::', 5)::VARCHAR(50) AS level_5
     FROM managers
 
-), final AS (
+), final_cte AS (
     SELECT 
       base.*,
 

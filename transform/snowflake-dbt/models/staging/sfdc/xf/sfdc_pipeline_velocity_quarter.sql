@@ -9,18 +9,24 @@ WITH sfdc_opportunity_snapshot_history_xf AS (
     SELECT *
     FROM {{ ref('sfdc_opportunity_snapshot_history_xf') }}
     -- remove lost & deleted deals
-    WHERE stage_name NOT IN ('9-Unqualified','10-Duplicate','Unqualified')
-      AND is_deleted = 0
+    WHERE is_deleted = 0
+      -- Lost deals have the forecast category name of ommitted, and we need to include them to correctly account for 
+      -- churned deals
+      AND (stage_name NOT IN ('9-Unqualified','10-Duplicate','Unqualified','00-Pre Opportunity','0-Pending Acceptance') 
+          AND forecast_category_name != 'Omitted'
+          OR stage_name = '8-Closed Lost')
+      AND is_excluded_flag = 0									
 
 ), final AS (
 
     SELECT
+      order_type_stamped,
+      adj_ultimate_parent_sales_segment                                                 AS sales_segment,
+      90 - DATEDIFF(day, snapshot_date, DATEADD(month,3,close_fiscal_quarter_date))     AS snapshot_day_of_fiscal_quarter_normalised,
       snapshot_date,
       close_fiscal_quarter,
       close_fiscal_quarter_date,
       close_fiscal_year,
-      order_type_stamped,
-      adj_ultimate_parent_sales_segment                       AS sales_segment,
       stage_name_3plus,
       stage_name_4plus,
       is_excluded_flag,

@@ -20,15 +20,20 @@ WITH date_details AS (
     SELECT *
     FROM {{ ref('sfdc_opportunity_snapshot_history_xf') }}
     -- remove lost & deleted deals
-    WHERE stage_name NOT IN ('9-Unqualified','00-Pre Opportunity','10-Duplicate','Unqualified')
-      -- exclude deleted deals
-      AND is_deleted = 0
+    WHERE is_deleted = 0
       -- remove incomplete quarters, data from beggining of Q4 FY20
       AND snapshot_date >= '2019-11-01'::DATE
       -- remove excluded deals
       AND is_excluded_flag = 0
       -- exclude order type stamped "other"
       AND order_type_stamped IN ('2. New - Connected','1. New - First Order','3. Growth','4. Churn')
+      -- Lost deals have the forecast category name of ommitted, and we need to include them to correctly account for 
+      -- churned deals
+      AND (stage_name NOT IN ('9-Unqualified','10-Duplicate','Unqualified','00-Pre Opportunity','0-Pending Acceptance') 
+          AND forecast_category_name != 'Omitted'
+          OR stage_name = '8-Closed Lost')
+      -- exclude accounts with outlier deals
+      AND is_excluded_flag = 0		
 
 ), pipeline_snapshot_base AS (
     
@@ -89,6 +94,7 @@ WITH date_details AS (
     WHERE sfdc_opportunity_snapshot_history_xf.snapshot_fiscal_quarter != today_date.fiscal_quarter_name_fy 
     {{ dbt_utils.group_by(n=27) }} 
 
+--NF: Is this accounting correctly for Churn?
 ), pipeline_snapshot AS (
 
     SELECT 
@@ -97,6 +103,7 @@ WITH date_details AS (
       pipeline_snapshot_base.adj_ultimate_parent_sales_segment,
       pipeline_snapshot_base.sales_qualified_source,
       pipeline_snapshot_base.deal_category,
+      pipeline_snapshot_base.deal_group,
 
       -- sales team - region fields
       pipeline_snapshot_base.account_owner_min_team_level,
@@ -157,8 +164,6 @@ WITH date_details AS (
       AND pipeline_snapshot_base.snapshot_date <= DATEADD(month,3,pipeline_snapshot_base.close_fiscal_quarter_date)
       -- 1 quarters before start
       AND pipeline_snapshot_base.snapshot_date >= DATEADD(month,-3,pipeline_snapshot_base.close_fiscal_quarter_date)
-      -- remove omitted deals
-      AND forecast_category_name != 'Omitted'  
      
 ), previous_quarter AS (
   
@@ -171,6 +176,8 @@ WITH date_details AS (
 
       pipeline_snapshot.adj_ultimate_parent_sales_segment,
       pipeline_snapshot.deal_category,
+      pipeline_snapshot.deal_group,
+
       pipeline_snapshot.snapshot_day_of_fiscal_quarter,
   
       pipeline_snapshot.account_owner_min_team_level,
@@ -193,7 +200,7 @@ WITH date_details AS (
     WHERE pipeline_snapshot.snapshot_fiscal_quarter = pipeline_snapshot.close_fiscal_quarter
     -- exclude lost deals from pipeline
     AND LOWER(pipeline_snapshot.stage_name) NOT LIKE '%lost%'
-    {{ dbt_utils.group_by(n=9) }}
+    {{ dbt_utils.group_by(n=10) }}
   
 ), next_quarter AS (
     
@@ -207,8 +214,9 @@ WITH date_details AS (
       
       pipeline_snapshot.adj_ultimate_parent_sales_segment,
       pipeline_snapshot.deal_category,
-      pipeline_snapshot.snapshot_day_of_fiscal_quarter,
+      pipeline_snapshot.deal_group,
 
+      pipeline_snapshot.snapshot_day_of_fiscal_quarter,
       pipeline_snapshot.account_owner_min_team_level,
       pipeline_snapshot.sales_qualified_source,
       
@@ -224,7 +232,7 @@ WITH date_details AS (
     WHERE pipeline_snapshot.snapshot_fiscal_quarter_date = DATEADD(month, -3,pipeline_snapshot.close_fiscal_quarter_date) 
     -- exclude lost deals from pipeline
     AND LOWER(pipeline_snapshot.stage_name) NOT LIKE '%lost%'   
-    {{ dbt_utils.group_by(n=11) }}
+    {{ dbt_utils.group_by(n=12) }}
 
 ), pipeline_gen AS (
 
@@ -233,6 +241,8 @@ WITH date_details AS (
       pipeline_snapshot_base.snapshot_day_of_fiscal_quarter,
       pipeline_snapshot_base.adj_ultimate_parent_sales_segment,
       pipeline_snapshot_base.deal_category, 
+      pipeline_snapshot_base.deal_group,
+
       pipeline_snapshot_base.account_owner_min_team_level,
       pipeline_snapshot_base.sales_qualified_source,
 
@@ -245,7 +255,7 @@ WITH date_details AS (
     -- remove pre-opty deals
   -- remove pre-opty deals and stage 0
     AND pipeline_snapshot_base.stage_name NOT IN ('0-Pending Acceptance','10-Duplicate','00-Pre Opportunity','9-Unqualified')
-    {{ dbt_utils.group_by(n=6) }}
+    {{ dbt_utils.group_by(n=7) }}
 
 ), base_fields AS (
     
@@ -263,7 +273,9 @@ WITH date_details AS (
       d.snapshot_next_fiscal_quarter_date,
       f.sales_qualified_source
     FROM (SELECT DISTINCT adj_ultimate_parent_sales_segment FROM pipeline_snapshot_base) a
-    CROSS JOIN (SELECT DISTINCT deal_category FROM pipeline_snapshot_base) b
+    CROSS JOIN (SELECT DISTINCT deal_category,
+                                deal_group 
+                FROM pipeline_snapshot_base) b
     CROSS JOIN (SELECT DISTINCT snapshot_fiscal_quarter_date FROM pipeline_snapshot_base) c
     CROSS JOIN (SELECT DISTINCT sales_qualified_source FROM pipeline_snapshot_base) f
     CROSS JOIN (SELECT DISTINCT account_owner_min_team_level,
@@ -324,6 +336,7 @@ LEFT JOIN previous_quarter
   AND base_fields.snapshot_day_of_fiscal_quarter = previous_quarter.snapshot_day_of_fiscal_quarter
   AND base_fields.account_owner_min_team_level = previous_quarter.account_owner_min_team_level
   AND base_fields.sales_qualified_source = previous_quarter.sales_qualified_source
+  AND base_fields.deal_group = previous_quarter.deal_group
 -- next quarter in relation to the considered historical quarter
 LEFT JOIN  next_quarter
   ON next_quarter.close_fiscal_quarter_date = base_fields.snapshot_fiscal_quarter_date
@@ -332,6 +345,7 @@ LEFT JOIN  next_quarter
   AND next_quarter.snapshot_day_of_fiscal_quarter = base_fields.snapshot_day_of_fiscal_quarter
   AND next_quarter.account_owner_min_team_level = base_fields.account_owner_min_team_level
   AND next_quarter.sales_qualified_source = base_fields.sales_qualified_source
+  AND next_quarter.deal_group = base_fields.deal_group
 LEFT JOIN date_details next_quarter_date
   ON next_quarter_date.date_actual = base_fields.snapshot_next_fiscal_quarter_date
 LEFT JOIN pipeline_gen 
@@ -341,3 +355,4 @@ LEFT JOIN pipeline_gen
   AND pipeline_gen.snapshot_day_of_fiscal_quarter = base_fields.snapshot_day_of_fiscal_quarter
   AND pipeline_gen.account_owner_min_team_level = base_fields.account_owner_min_team_level
   AND pipeline_gen.sales_qualified_source = base_fields.sales_qualified_source
+  AND pipeline_gen.deal_group = base_fields.deal_group

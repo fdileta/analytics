@@ -149,7 +149,7 @@ WITH date_details AS (
               OR sfdc_accounts_xf.ultimate_parent_sales_segment  IS NULL) 
           THEN 'SMB'    
         ELSE sfdc_accounts_xf.ultimate_parent_sales_segment
-      END                                                                                                 AS adj_ultimate_parent_sales_segment,
+      END                                                                                                   AS adj_ultimate_parent_sales_segment,
   
       CASE 
         WHEN opp_snapshot.stage_name IN ('00-Pre Opportunity', '0-Pending Acceptance', '0-Qualifying'
@@ -163,7 +163,7 @@ WITH date_details AS (
         WHEN opp_snapshot.stage_name IN ('Closed Won')                                                                                                         
           THEN 'Closed Won'
         ELSE 'Other'
-      END                                                                                                 AS stage_name_3plus,
+      END                                                                                                   AS stage_name_3plus,
       CASE 
         WHEN opp_snapshot.stage_name IN ('00-Pre Opportunity', '0-Pending Acceptance', '0-Qualifying'
                             , 'Developing', '1-Discovery', '2-Developing', '2-Scoping', '3-Technical Evaluation')     
@@ -175,8 +175,18 @@ WITH date_details AS (
         WHEN opp_snapshot.stage_name IN ('Closed Won')                                                                                                                                     
           THEN 'Closed Won'
         ELSE 'Other'
-      END                                                                                                 AS stage_name_4plus,
+      END                                                                                                   AS stage_name_4plus,
       
+      -- top level grouping of the order type field
+      CASE 
+        WHEN order_type_stamped = '1. New - First Order' 
+          THEN '1. New'
+        WHEN order_type_stamped IN ('2. New - Connected', '3. Growth', '4. Churn') 
+          THEN '2. Growth' 
+        ELSE '3. Other'
+      END                                                                                                   AS deal_group,
+
+      -- medium level grouping of the order type field
       CASE 
         WHEN order_type_stamped = '1. New - First Order' 
           THEN '1. New'
@@ -185,7 +195,7 @@ WITH date_details AS (
         WHEN order_type_stamped = '4. Churn'
           THEN '3. Churn'
         ELSE '4. Other'
-      END                                                                                                 AS deal_category,
+      END                                                                                                   AS deal_category,
       --********************************************************
       -- calculated fields for pipeline velocity report
 
@@ -205,7 +215,7 @@ WITH date_details AS (
         WHEN opp_snapshot.stage_name IN ('Closed Won')                                                     
           THEN opp_snapshot.forecasted_iacv  
         ELSE 0
-      END                                                                                                 AS net_iacv,
+      END                                                                                                   AS net_iacv,
       CASE 
         WHEN opp_snapshot.stage_name IN ('8-Closed Lost', 'Closed Lost') 
           AND opp_snapshot.sales_type = 'Renewal'      
