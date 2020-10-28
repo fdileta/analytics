@@ -235,7 +235,7 @@ WITH date_details AS (
       -- created within quarter
       CASE
         WHEN created_date_detail.fiscal_quarter_name_fy = snapshot_date.fiscal_quarter_name_fy
-          THEN h.forecasted_iacv 
+          THEN opp_snapshot.forecasted_iacv 
         ELSE 0 
       END                                                                                                   AS created_in_quarter_iacv,
 

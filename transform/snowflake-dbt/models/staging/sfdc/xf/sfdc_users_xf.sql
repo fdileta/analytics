@@ -76,7 +76,7 @@ WITH RECURSIVE users AS (
       SPLIT_PART(path, '::', 5)::VARCHAR(50) AS level_5
     FROM managers
 
-), final_cte AS (
+), final AS (
     SELECT 
       base.*,
 

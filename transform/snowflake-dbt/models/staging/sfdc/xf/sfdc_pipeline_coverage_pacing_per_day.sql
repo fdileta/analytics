@@ -32,8 +32,6 @@ WITH date_details AS (
       AND (stage_name NOT IN ('9-Unqualified','10-Duplicate','Unqualified','00-Pre Opportunity','0-Pending Acceptance') 
           AND forecast_category_name != 'Omitted'
           OR stage_name = '8-Closed Lost')
-      -- exclude accounts with outlier deals
-      AND is_excluded_flag = 0		
 
 ), pipeline_snapshot_base AS (
     
