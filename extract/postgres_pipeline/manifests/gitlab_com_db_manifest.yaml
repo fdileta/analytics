@@ -2203,6 +2203,7 @@ tables:
       , created_at
       , updated_at
       , name
+      , email
       , admin
       , projects_limit
       , failed_attempts
