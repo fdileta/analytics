@@ -119,11 +119,6 @@ def postgres_engine_factory(
     port = env[connection_dict["port"]]
 
     # Inject the values to create the engine
-    logging.info(user)
-    logging.info(password)
-    password = "abc"
-    logging.info(password)
-    logging.info(host)
     connection_string = f"postgresql://{user}:'{password}'@{host}:{port}/{database}"
     logging.info(connection_string)
 
