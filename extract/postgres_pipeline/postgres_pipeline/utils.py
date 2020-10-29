@@ -121,7 +121,7 @@ def postgres_engine_factory(
     # Inject the values to create the engine
     logging.info(user)
     logging.info(password)
-    password = password.replace("@", "%@")
+    password = "abc"
     logging.info(password)
     logging.info(host)
     logging.info(f"postgresql://{user}:{password}@{host}:{port}/{database}")
