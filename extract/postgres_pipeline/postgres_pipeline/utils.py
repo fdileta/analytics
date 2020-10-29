@@ -118,8 +118,10 @@ def postgres_engine_factory(
     database = env[connection_dict["database"]]
     port = env[connection_dict["port"]]
 
+    password = f"'{password}'"
+
     # Inject the values to create the engine
-    connection_string = f"postgresql://{user}:'{password}'@{host}:{port}/{database}"
+    connection_string = f"postgresql://{user}:{password}@{host}:{port}/{database}"
     logging.info(connection_string)
 
     engine = create_engine(
