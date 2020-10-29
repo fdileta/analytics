@@ -126,7 +126,7 @@ def postgres_engine_factory(
     logging.info(host)
     logging.info(f"postgresql://{user}:{password}@{host}:{port}/{database}")
     engine = create_engine(
-        f"postgresql://{user}:{password}@{host}:{port}/{database}",
+        f"postgresql://{user}:{password}@{host}/{database}",
         connect_args={"sslcompression": 0},
     )
     logging.info(engine)
