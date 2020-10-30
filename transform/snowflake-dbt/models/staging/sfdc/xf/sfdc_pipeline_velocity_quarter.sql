@@ -20,6 +20,8 @@ WITH sfdc_opportunity_snapshot_history_xf AS (
 ), final AS (
 
     SELECT
+      deal_category,
+      deal_group,
       order_type_stamped,
       adj_ultimate_parent_sales_segment                                                 AS sales_segment,
       90 - DATEDIFF(day, snapshot_date, DATEADD(month,3,close_fiscal_quarter_date))     AS snapshot_day_of_fiscal_quarter_normalised,
@@ -44,9 +46,7 @@ WITH sfdc_opportunity_snapshot_history_xf AS (
       snapshot_date <= DATEADD(month,3,close_fiscal_quarter_date)
       -- 2 quarters before start
       AND snapshot_date >= DATEADD(month,-6,close_fiscal_quarter_date)
-      -- remove forecast category Omitted
-      AND forecast_category_name != 'Omitted'
-    {{ dbt_utils.group_by(n=11) }}
+    {{ dbt_utils.group_by(n=14) }}
 )
 
 SELECT *

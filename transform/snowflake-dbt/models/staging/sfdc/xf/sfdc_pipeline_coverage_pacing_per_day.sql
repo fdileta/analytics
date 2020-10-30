@@ -40,6 +40,7 @@ WITH date_details AS (
       COALESCE(adj_ultimate_parent_sales_segment,'n/a')     AS adj_ultimate_parent_sales_segment,
       COALESCE(sales_qualified_source, 'n/a')               AS sales_qualified_source,
       deal_category,
+      deal_group,
     
       -- the account hierarchy can be related to the VP / ASM / RD levels
       -- and to an approximate region
@@ -90,7 +91,7 @@ WITH date_details AS (
                   WHERE date_actual = DATEADD(day,-1,CURRENT_DATE)) today_date 
       -- exclude current quarter
     WHERE sfdc_opportunity_snapshot_history_xf.snapshot_fiscal_quarter != today_date.fiscal_quarter_name_fy 
-    {{ dbt_utils.group_by(n=27) }} 
+    {{ dbt_utils.group_by(n=28) }} 
 
 --NF: Is this accounting correctly for Churn?
 ), pipeline_snapshot AS (
@@ -260,6 +261,7 @@ WITH date_details AS (
     SELECT DISTINCT 
       a.adj_ultimate_parent_sales_segment,
       b.deal_category,
+      b.deal_group,
       e.account_owner_min_team_level,
       e.account_owner_sales_region,
       e.account_owner_team_vp_level,

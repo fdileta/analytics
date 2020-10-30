@@ -41,7 +41,7 @@ WITH sfdc_opportunity_snapshot_history_xf AS (
       AND snapshot_date >= DATEADD(month,-1, close_month)
       -- till end of the month
       AND snapshot_date <= DATEADD(month, 1, close_month)
-    {{ dbt_utils.group_by(n=13) }}
+    {{ dbt_utils.group_by(n=14) }}
 )
 
 SELECT *
