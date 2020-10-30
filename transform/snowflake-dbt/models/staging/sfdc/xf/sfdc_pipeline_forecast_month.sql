@@ -16,7 +16,7 @@ WITH sfdc_opportunity_snapshot_history_xf AS (
 
     SELECT
       snapshot_date,
-      90 - DATEDIFF(day, snapshot_date, DATEADD(month,3,close_fiscal_quarter_date))     AS snapshot_day_of_fiscal_quarter_normalised,
+      30 - DATEDIFF(day, snapshot_date, DATEADD(month,1,close_month))     AS snapshot_day_of_month_normalised,
       close_month,
       close_fiscal_year,
       forecast_category_name,            
