@@ -146,9 +146,11 @@ models:
     description: '{{ doc("gitlab_dotcom_daily_usage_data_events") }}'
     columns:
       - name: event_name
+        description: This is set using case statements see https://gitlab.com/gitlab-data/analytics/-/blob/master/transform/snowflake-dbt/models/staging/gitlab_dotcom/xf/gitlab_dotcom_usage_data_events.sql
         tests:
           - not_null
       - name: stage_name
+        description: This is set using case statements see https://gitlab.com/gitlab-data/analytics/-/blob/master/transform/snowflake-dbt/models/staging/gitlab_dotcom/xf/gitlab_dotcom_usage_data_events.sql
         tests:
           - not_null
       - name: is_representative_of_stage
