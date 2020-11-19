@@ -158,9 +158,9 @@ WITH date_details AS (
       pipeline_snapshot_base.snapshot_day_of_fiscal_quarter
 
     FROM pipeline_snapshot_base
-    WHERE pipeline_snapshot_base.snapshot_day_of_fiscal_quarter > 0
-      -- till end of quarter
-      AND pipeline_snapshot_base.snapshot_date <= DATEADD(month,3,pipeline_snapshot_base.close_fiscal_quarter_date)
+    -- till end of quarter
+    WHERE       
+      pipeline_snapshot_base.snapshot_date <= DATEADD(month,3,pipeline_snapshot_base.close_fiscal_quarter_date)
       -- 1 quarters before start
       AND pipeline_snapshot_base.snapshot_date >= DATEADD(month,-3,pipeline_snapshot_base.close_fiscal_quarter_date)
      
