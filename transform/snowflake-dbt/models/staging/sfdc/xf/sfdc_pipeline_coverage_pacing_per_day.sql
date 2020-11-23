@@ -134,7 +134,19 @@ WITH date_details AS (
           THEN pipeline_snapshot_base.opps
         ELSE 0
       END                                                                                                   AS open_won_3plus_deal_count,
-  
+
+      CASE 
+        WHEN pipeline_snapshot_base.stage_name_4plus IN ('4+ Pipeline','Closed Won')
+          THEN pipeline_snapshot_base.forecasted_iacv
+        ELSE 0
+      END                                                                                                   AS open_won_4plus_net_iacv,
+
+      CASE 
+        WHEN pipeline_snapshot_base.stage_name_4plus IN ('4+ Pipeline','Closed Won')
+          THEN pipeline_snapshot_base.opps
+        ELSE 0
+      END                                                                                                   AS open_won_4plus_deal_count,
+
       CASE 
         WHEN LOWER(pipeline_snapshot_base.stage_name) LIKE '%won%'
           THEN pipeline_snapshot_base.net_iacv
@@ -189,6 +201,9 @@ WITH date_details AS (
       SUM(pipeline_snapshot.open_won_3plus_net_iacv)                                  AS open_won_3plus_net_iacv,
       SUM(pipeline_snapshot.open_won_3plus_deal_count)                                AS open_won_3plus_deal_count,
 
+      SUM(pipeline_snapshot.open_won_4plus_net_iacv)                                  AS open_won_4plus_net_iacv,
+      SUM(pipeline_snapshot.open_won_4plus_deal_count)                                AS open_won_4plus_deal_count,
+
       SUM(pipeline_snapshot.won_net_iacv)                                             AS won_net_iacv,
       SUM(pipeline_snapshot.won_deal_count)                                           AS won_deal_count,
 
@@ -223,7 +238,10 @@ WITH date_details AS (
       SUM(pipeline_snapshot.deal_count)                                            AS next_open_deal_count,
 
       SUM(pipeline_snapshot.open_won_3plus_net_iacv)                               AS next_open_3plus_net_iacv,
-      SUM(pipeline_snapshot.open_won_3plus_deal_count)                             AS next_open_3plus_deal_count
+      SUM(pipeline_snapshot.open_won_3plus_deal_count)                             AS next_open_3plus_deal_count,
+
+      SUM(pipeline_snapshot.open_won_4plus_net_iacv)                               AS next_open_4plus_net_iacv,
+      SUM(pipeline_snapshot.open_won_4plus_deal_count)                             AS next_open_4plus_deal_count
 
     FROM pipeline_snapshot
     -- restrict the report to show next quarter lines
@@ -307,10 +325,14 @@ SELECT
   base_fields.snapshot_fiscal_quarter,
   base_fields.snapshot_day_of_fiscal_quarter,
   COALESCE(previous_quarter.open_won_net_iacv,0) - COALESCE(previous_quarter.won_net_iacv,0)                        AS open_pipeline_net_iacv,
-  COALESCE(previous_quarter.open_won_3plus_net_iacv,0)- COALESCE(previous_quarter.won_net_iacv,0)                   AS open_3plus_pipeline_net_iacv,  
+  COALESCE(previous_quarter.open_won_3plus_net_iacv,0) - COALESCE(previous_quarter.won_net_iacv,0)                  AS open_3plus_pipeline_net_iacv, 
+  COALESCE(previous_quarter.open_won_4plus_net_iacv,0) - COALESCE(previous_quarter.won_net_iacv,0)                  AS open_4plus_pipeline_net_iacv, 
+
   COALESCE(previous_quarter.won_net_iacv,0)                                                                         AS won_net_iacv,
   COALESCE(previous_quarter.open_won_deal_count,0) - COALESCE(previous_quarter.won_deal_count,0)                    AS open_pipeline_deal_count,
   COALESCE(previous_quarter.open_won_3plus_deal_count,0) - COALESCE(previous_quarter.won_deal_count,0)              AS open_3plus_deal_count,
+  COALESCE(previous_quarter.open_won_4plus_deal_count,0) - COALESCE(previous_quarter.won_deal_count,0)              AS open_4plus_deal_count, 
+
   COALESCE(previous_quarter.won_deal_count,0)                                                                       AS won_deal_count,
 
   -- created and closed
@@ -319,12 +341,16 @@ SELECT
   pipeline_gen.created_in_quarter_count,
           
   -- next quarter 
-  next_quarter_date.fiscal_quarter_name_fy                                                                          AS next_close_fiscal_quarter,
-  next_quarter_date.first_day_of_fiscal_quarter                                                                     AS next_close_fiscal_quarter_date,                   
-  next_quarter.next_open_net_iacv,
-  next_quarter.next_open_3plus_net_iacv,
-  next_quarter.next_open_deal_count,
-  next_quarter.next_open_3plus_deal_count
+  next_quarter_date.fiscal_quarter_name_fy                AS next_close_fiscal_quarter,
+  next_quarter_date.first_day_of_fiscal_quarter           AS next_close_fiscal_quarter_date,                   
+
+  COALESCE(next_quarter.next_open_net_iacv,0)             AS next_open_net_iacv,
+  COALESCE(next_quarter.next_open_3plus_net_iacv,0)       AS next_open_3plus_net_iacv,
+  COALESCE(next_quarter.next_open_4plus_net_iacv,0)       AS next_open_4plus_net_iacv,
+
+  COALESCE(next_quarter.next_open_deal_count,0)           AS next_open_deal_count,
+  COALESCE(next_quarter.next_open_3plus_deal_count,0)     AS next_open_3plus_deal_count,
+  COALESCE(next_quarter.next_open_4plus_deal_count,0)     AS next_open_4plus_deal_count
 
 -- created a list of all options to avoid having blanks when attaching totals in the reporting phase
 FROM base_fields
