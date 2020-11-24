@@ -61,6 +61,10 @@ sheets:
     owner: '@mpeychet_'
     tabs:
       - event_dictionary_simplified
+  - name: exit_data
+    owner: '@pluthra'
+    tabs: 
+      - exit_data    
   - name: gitlab_slack_stats
     owner: '@pluthra'
     tabs:
