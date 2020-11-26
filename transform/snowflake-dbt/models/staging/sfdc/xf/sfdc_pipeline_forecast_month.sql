@@ -31,7 +31,7 @@ WITH sfdc_opportunity_snapshot_history_xf AS (
       account_owner_is_lvl_2_vp_flag, 
       COUNT(DISTINCT opportunity_id)                                      AS opps,
       SUM(net_iacv)                                                       AS net_iacv,
-      SUM(forecasted_iacv)                                                AS forecasted_iacv
+      SUM(incremental_acv)                                                AS incremental_acv
     FROM sfdc_opportunity_snapshot_history_xf
     -- filter only deals at the VP level 2 hierarchy
     -- we might want to filter using opportunity owner or account hierarchy

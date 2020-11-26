@@ -42,7 +42,7 @@ WITH date_details AS (
 
 ), sales_admin_hierarchy AS (
     
-    SELECT
+    SELECT DISTINCT
       opportunity_id,
       owner_id,
       'CRO'                                                AS level_1,
@@ -73,7 +73,7 @@ WITH date_details AS (
 
 ), final AS (
 
-    SELECT 
+    SELECT DISTINCT
       opp_snapshot.date_actual                                         AS snapshot_date,  
       opp_snapshot.forecast_category_name,                
       opp_snapshot.opportunity_id,
@@ -88,8 +88,7 @@ WITH date_details AS (
       opp_snapshot.net_incremental_acv,
       opp_snapshot.total_contract_value,
       opp_snapshot.professional_services_value,
-      opp_snapshot.forecasted_iacv,
-
+ 
       -- opportunity driven fields
       sfdc_opportunity_xf.opportunity_owner_manager,
       sfdc_opportunity_xf.account_owner_team_stamped,     
@@ -122,17 +121,17 @@ WITH date_details AS (
       snapshot_date.fiscal_quarter_name_fy                       AS snapshot_fiscal_quarter,
       snapshot_date.first_day_of_fiscal_quarter                  AS snapshot_fiscal_quarter_date,
       snapshot_date.day_of_fiscal_quarter_normalised             AS snapshot_day_of_fiscal_quarter_normalised,
+      
       close_date_detail.first_day_of_month                       AS close_month,
       close_date_detail.fiscal_year                              AS close_fiscal_year,
       close_date_detail.fiscal_quarter_name_fy                   AS close_fiscal_quarter,
       close_date_detail.first_day_of_fiscal_quarter              AS close_fiscal_quarter_date,
-      close_date_detail.day_of_fiscal_quarter_normalised         AS close_date_day_of_fiscal_quarter_normalised,
+
       created_date_detail.first_day_of_month                     AS created_date_month,
       created_date_detail.fiscal_year                            AS created_fiscal_year,
       created_date_detail.fiscal_quarter_name_fy                 AS created_fiscal_quarter,
       created_date_detail.first_day_of_fiscal_quarter            AS created_fiscal_quarter_date,
-      created_date_detail.day_of_fiscal_quarter_normalised       AS created_date_day_of_fiscal_quarter_normalised,
-
+      
 
       -- adjusted, as logic is applied to removed as many blanks as possible
       CASE
@@ -164,6 +163,7 @@ WITH date_details AS (
           THEN 'Closed Won'
         ELSE 'Other'
       END                                                                                                   AS stage_name_3plus,
+      
       CASE 
         WHEN opp_snapshot.stage_name IN ('00-Pre Opportunity', '0-Pending Acceptance', '0-Qualifying'
                             , 'Developing', '1-Discovery', '2-Developing', '2-Scoping', '3-Technical Evaluation')     
@@ -176,6 +176,58 @@ WITH date_details AS (
           THEN 'Closed Won'
         ELSE 'Other'
       END                                                                                                   AS stage_name_4plus,
+
+      CASE 
+        WHEN opp_snapshot.stage_name 
+          IN ('3-Technical Evaluation', '4-Proposal', 'Closed Won','5-Negotiating', '6-Awaiting Signature', '7-Closing')                               
+            THEN 1												                         
+        ELSE 0
+      END                                                                                                   AS is_stage_3_plus,
+
+      CASE 
+        WHEN opp_snapshot.stage_name 
+          IN ('4-Proposal', 'Closed Won','5-Negotiating', '6-Awaiting Signature', '7-Closing')                               
+            THEN 1												                         
+        ELSE 0
+      END                                                                                                   AS is_stage_4_plus,
+
+
+      CASE 
+        WHEN opp_snapshot.stage_name = 'Closed Won' 
+          THEN 1 ELSE 0
+      END                                                                                                   AS is_won,
+
+      CASE 
+        WHEN opp_snapshot.stage_name = '8-Closed Lost'  
+          THEN 1 ELSE 0
+      END                                                                                                   AS is_lost,
+
+      CASE 
+        WHEN (opp_snapshot.stage_name = '8-Closed Lost' 
+          OR opp_snapshot.stage_name = '9-Unqualified'
+          OR opp_snapshot.stage_name = 'Closed Won' ) 
+            THEN 0
+        ELSE 1  
+      END                                                                                                   AS is_open,
+
+      CASE 
+        WHEN is_open = 0
+          THEN 1
+        ELSE 0
+      END                                                                                                   AS is_closed,
+      
+      CASE 
+        WHEN opp_snapshot.stage_name = 'Closed Won' THEN '1.Won'
+        WHEN is_lost = 1 THEN '2.Lost'
+        WHEN is_open = 1 THEN '0. Open' 
+        ELSE 'N/A'
+      END                                                                                                   AS stage_category,
+
+      CASE 
+        WHEN LOWER(opp_snapshot.sales_type) like '%renewal%' 
+          THEN 1
+        ELSE 0
+      END                                                                                                   AS is_renewal, 
       
       -- top level grouping of the order type field
       CASE 
@@ -196,46 +248,36 @@ WITH date_details AS (
           THEN '3. Churn'
         ELSE '4. Other'
       END                                                                                                   AS deal_category,
-      --********************************************************
-      -- calculated fields for pipeline velocity report
-
-      -- 20201021 NF: This should be replaced by a table that keeps track of excluded deals for forecasting purposes
-      -- excluded accounts 
-      CASE 
-        WHEN sfdc_accounts_xf.ultimate_parent_id IN ('001610000111bA3','0016100001F4xla','0016100001CXGCs','00161000015O9Yn','0016100001b9Jsc') 
-          AND opp_snapshot.close_date < '2020-08-01'::DATE 
-            THEN 1
-        ELSE 0
-      END                                                                                                   AS is_excluded_flag,
 
       CASE 
         WHEN opp_snapshot.stage_name IN ('8-Closed Lost', 'Closed Lost') 
           AND opp_snapshot.sales_type = 'Renewal'      
             THEN opp_snapshot.renewal_acv * -1
         WHEN opp_snapshot.stage_name IN ('Closed Won')                                                     
-          THEN opp_snapshot.forecasted_iacv  
+          THEN opp_snapshot.incremental_acv  
         ELSE 0
       END                                                                                                   AS net_iacv,
+
       CASE 
         WHEN opp_snapshot.stage_name IN ('8-Closed Lost', 'Closed Lost') 
           AND opp_snapshot.sales_type = 'Renewal'      
             THEN opp_snapshot.renewal_acv*-1
         WHEN opp_snapshot.stage_name IN ('Closed Won') AND opp_snapshot.forecasted_iacv < 0                           
-          THEN opp_snapshot.forecasted_iacv
+          THEN opp_snapshot.incremental_acv
         ELSE 0
       END                                                                                                   AS churn_only,
 
       CASE 
         WHEN created_date_detail.fiscal_quarter_name_fy = close_date_detail.fiscal_quarter_name_fy
           AND opp_snapshot.stage_name IN ('Closed Won')  
-            THEN opp_snapshot.forecasted_iacv
+            THEN opp_snapshot.incremental_acv
         ELSE 0
       END                                                                                                   AS created_and_won_iacv,
 
       -- created within quarter
       CASE
         WHEN created_date_detail.fiscal_quarter_name_fy = snapshot_date.fiscal_quarter_name_fy
-          THEN opp_snapshot.forecasted_iacv 
+          THEN opp_snapshot.incremental_acv 
         ELSE 0 
       END                                                                                                   AS created_in_quarter_iacv,
 
@@ -266,15 +308,24 @@ WITH date_details AS (
           OR LOWER(sales_admin_hierarchy.level_2) LIKE 'vp%'
             THEN 1 
         ELSE 0
-      END                                                                AS opportunity_owner_is_lvl_2_vp_flag
+      END                                                                AS opportunity_owner_is_lvl_2_vp_flag,
+
+
+      -- 20201021 NF: This should be replaced by a table that keeps track of excluded deals for forecasting purposes
+      CASE 
+        WHEN sfdc_accounts_xf.ultimate_parent_id IN ('001610000111bA3','0016100001F4xla','0016100001CXGCs','00161000015O9Yn','0016100001b9Jsc') 
+          AND opp_snapshot.close_date < '2020-08-01' 
+            THEN 1
+        ELSE 0
+      END                                                               AS is_excluded_flag
 
     FROM sfdc_opportunity_snapshot_history opp_snapshot
     INNER JOIN date_details close_date_detail
-      ON close_date_detail.date_actual = opp_snapshot.close_date
+      ON close_date_detail.date_actual = opp_snapshot.close_date::date
     INNER JOIN date_details snapshot_date
-      ON opp_snapshot.date_actual = snapshot_date.date_actual
+      ON opp_snapshot.date_actual::date = snapshot_date.date_actual
     LEFT JOIN date_details created_date_detail
-      ON created_date_detail.date_actual = opp_snapshot.created_date
+      ON created_date_detail.date_actual = opp_snapshot.created_date::date
     LEFT JOIN sfdc_opportunity_xf    
       ON sfdc_opportunity_xf.opportunity_id = opp_snapshot.opportunity_id
     LEFT JOIN sfdc_accounts_xf

@@ -322,6 +322,13 @@ WITH sfdc_opportunity AS (
       END                                                                                               AS is_stage_3_plus,
 
       CASE 
+        WHEN sfdc_opportunity.stage_name 
+          IN ('4-Proposal', 'Closed Won','5-Negotiating', '6-Awaiting Signature', '7-Closing')                               
+            THEN 1												                         
+        ELSE 0
+      END                                                                                               AS is_stage_4_plus,
+
+      CASE 
         WHEN sfdc_opportunity.stage_name = '8-Closed Lost'  
           THEN 1 ELSE 0
       END                                                                                               AS is_lost,

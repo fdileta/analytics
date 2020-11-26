@@ -37,7 +37,7 @@ WITH sfdc_opportunity_snapshot_history_xf AS (
       COUNT(DISTINCT opportunity_id)                          AS opps,
       SUM(net_iacv)                                           AS net_iacv,
       SUM(churn_only)                                         AS churn_only,
-      SUM(forecasted_iacv)                                    AS forecasted_iacv,
+      SUM(incremental_acv)                                    AS incremental_acv,
       SUM(total_contract_value)                               AS tcv
     FROM sfdc_opportunity_snapshot_history_xf 
     WHERE 
