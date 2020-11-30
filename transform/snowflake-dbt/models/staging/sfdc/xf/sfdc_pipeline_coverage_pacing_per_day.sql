@@ -69,9 +69,9 @@ WITH date_details AS (
       account_owner_sales_region,
 
       COUNT(DISTINCT opportunity_id)                  AS opps,
+      SUM(incremental_acv)                            AS incremental_acv,
       SUM(net_iacv)                                   AS net_iacv,
       SUM(churn_only)                                 AS churn_only,
-      SUM(incremental_acv)                            AS incremental_acv,
       SUM(total_contract_value)                       AS tcv,
 
       SUM(created_in_quarter_iacv)                    AS created_in_quarter_iacv,
@@ -121,6 +121,18 @@ WITH date_details AS (
       pipeline_snapshot_base.opps                                                                           AS deal_count,
 
       CASE 
+        WHEN LOWER(pipeline_snapshot_base.stage_name) not like '%lost%' 
+          THEN pipeline_snapshot_base.opps  
+        ELSE 0                                                                                              
+      END                                                                                                   AS open_won_deal_count,
+
+      CASE 
+        WHEN LOWER(pipeline_snapshot_base.stage_name) not like '%lost%' 
+          THEN pipeline_snapshot_base.incremental_acv
+        ELSE 0                                                                                              
+      END                                                                                                   AS open_won_iacv,
+
+      CASE 
         WHEN pipeline_snapshot_base.stage_name_3plus IN ('3+ Pipeline','Closed Won')
           THEN pipeline_snapshot_base.incremental_acv
         ELSE 0
@@ -145,9 +157,13 @@ WITH date_details AS (
 
       CASE 
         WHEN LOWER(pipeline_snapshot_base.stage_name) LIKE '%won%'
-          THEN pipeline_snapshot_base.net_iacv
+          THEN pipeline_snapshot_base.incremental_acv
         ELSE 0  
-      END                                                                                                   AS won_net_iacv,
+      END                                                                                                   AS won_iacv,
+
+      pipeline_snapshot_base.net_iacv                                                                       AS won_net_iacv,
+
+
       CASE 
         WHEN LOWER(pipeline_snapshot_base.stage_name) LIKE '%won%'
           THEN pipeline_snapshot_base.opps
@@ -191,8 +207,8 @@ WITH date_details AS (
       pipeline_snapshot.sales_qualified_source,
       
       -- open / won pipeline in quarter
-      SUM(pipeline_snapshot.net_iacv)                                                 AS open_won_net_iacv,
-      SUM(pipeline_snapshot.deal_count)                                               AS open_won_deal_count,
+      SUM(pipeline_snapshot.open_won_iacv)                                            AS open_won_iacv,
+      SUM(pipeline_snapshot.open_won_deal_count)                                      AS open_won_deal_count,
 
       SUM(pipeline_snapshot.open_won_3plus_iacv)                                      AS open_won_3plus_iacv,
       SUM(pipeline_snapshot.open_won_3plus_deal_count)                                AS open_won_3plus_deal_count,
@@ -200,6 +216,7 @@ WITH date_details AS (
       SUM(pipeline_snapshot.open_won_4plus_iacv)                                      AS open_won_4plus_iacv,
       SUM(pipeline_snapshot.open_won_4plus_deal_count)                                AS open_won_4plus_deal_count,
 
+      SUM(pipeline_snapshot.won_iacv)                                                 AS won_iacv,
       SUM(pipeline_snapshot.won_net_iacv)                                             AS won_net_iacv,
       SUM(pipeline_snapshot.won_deal_count)                                           AS won_deal_count,
 
@@ -319,11 +336,13 @@ SELECT
   base_fields.snapshot_fiscal_quarter                                                                               AS close_fiscal_quarter,
   base_fields.snapshot_fiscal_quarter,
   base_fields.snapshot_day_of_fiscal_quarter,
-  COALESCE(reported_quarter.open_won_net_iacv,0) - COALESCE(reported_quarter.won_net_iacv,0)                        AS open_pipeline_net_iacv,
-  COALESCE(reported_quarter.open_won_3plus_iacv,0) - COALESCE(reported_quarter.won_net_iacv,0)                      AS open_3plus_pipeline_iacv, 
-  COALESCE(reported_quarter.open_won_4plus_iacv,0) - COALESCE(reported_quarter.won_net_iacv,0)                      AS open_4plus_pipeline_iacv, 
+  COALESCE(reported_quarter.open_won_iacv,0) - COALESCE(reported_quarter.won_iacv,0)                                AS open_pipeline_iacv,
+  COALESCE(reported_quarter.open_won_3plus_iacv,0) - COALESCE(reported_quarter.won_iacv,0)                          AS open_3plus_pipeline_iacv, 
+  COALESCE(reported_quarter.open_won_4plus_iacv,0) - COALESCE(reported_quarter.won_iacv,0)                          AS open_4plus_pipeline_iacv, 
 
   COALESCE(reported_quarter.won_net_iacv,0)                                                                         AS won_net_iacv,
+  COALESCE(reported_quarter.won_iacv,0)                                                                             AS won_iacv,
+
   COALESCE(reported_quarter.open_won_deal_count,0) - COALESCE(reported_quarter.won_deal_count,0)                    AS open_pipeline_deal_count,
   COALESCE(reported_quarter.open_won_3plus_deal_count,0) - COALESCE(reported_quarter.won_deal_count,0)              AS open_3plus_deal_count,
   COALESCE(reported_quarter.open_won_4plus_deal_count,0) - COALESCE(reported_quarter.won_deal_count,0)              AS open_4plus_deal_count, 
