@@ -47,7 +47,7 @@ WITH RECURSIVE users AS (
       ON u.role_name = r.name
     WHERE u.role_name = 'CRO'
     
-    UNION ALL
+    UNION
     
     SELECT
       users.user_id,
@@ -67,7 +67,7 @@ WITH RECURSIVE users AS (
 
 ), cro_sfdc_hierarchy AS (
 
-    SELECT
+    SELECT DISTINCT
       user_id,
       name,
       role_name,

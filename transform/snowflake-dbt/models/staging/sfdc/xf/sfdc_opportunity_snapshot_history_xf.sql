@@ -7,8 +7,6 @@ https://gitlab.com/gitlab-com/sales-team/field-operations/analytics/-/issues/204
 It incorporates flags added to support the pipeline velocity report of @fkurniadi 
 and the forecasting model for Commercial of Sales Strategy
 
--- NF: Is there any difference between net_iacv and net_incremental_acv within this model?
--- NF: do we need to keep this forecast iacv? It seems to be the same as Incremental ACV
 */ 
 WITH date_details AS (
 

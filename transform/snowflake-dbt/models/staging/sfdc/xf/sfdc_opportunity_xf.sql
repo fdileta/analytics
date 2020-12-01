@@ -33,7 +33,7 @@ WITH sfdc_opportunity AS (
 
 ), sales_admin_hierarchy AS (
     
-    SELECT
+    SELECT DISTINCT
       sfdc_opportunity.opportunity_id,
       sfdc_opportunity.owner_id,
       'CRO'                                                           AS level_1,
