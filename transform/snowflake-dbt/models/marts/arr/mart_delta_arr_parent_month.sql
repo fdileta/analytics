@@ -97,16 +97,35 @@ WITH dim_billing_accounts AS (
       AND base.ultimate_parent_account_id = mart_arr.ultimate_parent_account_id
     {{ dbt_utils.group_by(n=3) }}
 
-), prior_month AS (
+), days_between_arr AS (
+
+    SELECT
+      ultimate_parent_account_id,
+      arr_month,
+      arr_month - LAG(arr_month) OVER (PARTITION BY ultimate_parent_account_id ORDER BY arr_month) AS days_between_arr
+    FROM monthly_arr_parent_level
+    WHERE arr > 0
+
+), joined AS (
 
     SELECT
       monthly_arr_parent_level.*,
+      days_between_arr,
+    FROM monthly_arr_parent_level
+    LEFT JOIN days_between_arr
+      ON monthly_arr_parent_level.ultimate_parent_account_id = days_between_arr.ultimate_parent_account_id
+      AND monthly_arr_parent_level.arr_month = days_between_arr.arr_month
+
+), prior_month AS (
+
+    SELECT
+      joined.*,
       LAG(product_category) OVER (PARTITION BY ultimate_parent_account_id ORDER BY arr_month) AS previous_product_category,
       LAG(delivery) OVER (PARTITION BY ultimate_parent_account_id ORDER BY arr_month) AS previous_delivery,
       COALESCE(LAG(product_ranking) OVER (PARTITION BY ultimate_parent_account_id ORDER BY arr_month),0) AS previous_product_ranking,
       COALESCE(LAG(quantity) OVER (PARTITION BY ultimate_parent_account_id ORDER BY arr_month),0) AS previous_quantity,
       COALESCE(LAG(arr) OVER (PARTITION BY ultimate_parent_account_id ORDER BY arr_month),0) AS previous_arr
-    FROM monthly_arr_parent_level
+    FROM joined
 
 ), type_of_arr_change AS (
 
