@@ -104,9 +104,7 @@ models:
         tests:
           - not_null
   - name: sfdc_opportunity_snapshot_history
-    description: "This model constrains the scope of sfdc_opportunity_snapshots_base to the columns in sfdc_opportunity_xf and their corresponding aliases.
-
-    Note: The business deprecated the opportunity stage `00-Pre Opportunity` on XXXX-XX-XX."
+    description: This model constrains the scope of sfdc_opportunity_snapshots_base to the columns in sfdc_opportunity_xf and their corresponding aliases.
     columns:
         - name: account_id
           tests:
