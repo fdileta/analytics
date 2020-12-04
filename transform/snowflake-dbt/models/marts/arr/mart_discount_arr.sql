@@ -37,6 +37,7 @@ WITH dim_dates AS (
     SELECT
       fct_invoice_items.effective_start_month,
       fct_invoice_items.effective_end_month,
+      fct_invoice_items.is_prorated,
       dim_billing_account_id_subscription,
       dim_crm_account_id_subscription,
       dim_billing_account_id_invoice,
@@ -51,7 +52,7 @@ WITH dim_dates AS (
     WHERE fct_invoice_items.effective_end_month > fct_invoice_items.effective_start_month OR fct_invoice_items.effective_end_month IS NULL
       --filter out 2 subscription_ids with known data quality issues when comparing invoiced subscriptions to the Zuora UI.
       AND dim_subscription_id NOT IN ('2c92a0ff5e1dcf14015e3c191d4f7689','2c92a00e6a3477b5016a46aaec2f08bc')
-    {{ dbt_utils.group_by(n=8) }}
+    {{ dbt_utils.group_by(n=9) }}
 
 ), combined AS (
 
@@ -82,6 +83,7 @@ WITH dim_dates AS (
         WHEN zuora_subscription.current_term > 12  THEN TRUE
         ELSE NULL
       END                                                               AS is_myb,
+      arr_agg.is_prorated,
       zuora_subscription.current_term                                   AS current_term_months,
       ROUND(zuora_subscription.current_term / 12, 1)                    AS current_term_years,
       dim_crm_accounts_invoice.is_reseller,
@@ -119,7 +121,7 @@ WITH dim_dates AS (
       ON arr_agg.dim_crm_account_id_invoice = dim_crm_accounts_invoice.crm_account_id
     LEFT JOIN dim_crm_accounts AS dim_crm_accounts_subscription
       ON arr_agg.dim_crm_account_id_subscription = dim_crm_accounts_subscription.crm_account_id
-    {{ dbt_utils.group_by(n=30) }}
+    {{ dbt_utils.group_by(n=31) }}
     ORDER BY 3 DESC
 
 ), final AS (
@@ -143,5 +145,5 @@ WITH dim_dates AS (
     created_by="@iweeks",
     updated_by="@iweeks",
     created_date="2020-10-21",
-    updated_date="2020-12-03",
+    updated_date="2020-12-04",
 ) }}

@@ -80,6 +80,10 @@ WITH map_merged_crm_accounts AS (
       zuora_invoice_item.product_rate_plan_charge_id    AS product_details_id,
       zuora_invoice_item.sku                            AS sku,
       zuora_invoice_item.tax_amount                     AS tax_amount_sum,
+      CASE
+        WHEN LOWER(zuora_invoice_item.charge_name) LIKE '%proration%' THEN TRUE
+        ELSE FALSE
+      END                                               AS is_prorated,
       zuora_invoice.amount_without_tax                  AS invoice_amount_without_tax,
       zuora_invoice_item.charge_amount                  AS invoice_item_charge_amount,
       zuora_invoice_item.unit_price                     AS invoice_item_unit_price
@@ -108,6 +112,7 @@ WITH map_merged_crm_accounts AS (
       invoice_charges.invoice_date,
       invoice_charges.service_start_date,
       invoice_charges.service_end_date,
+      invoice_charges.is_prorated,
       base_charges.effective_start_month,
       base_charges.effective_end_month,
       base_charges.quantity,
