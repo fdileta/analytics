@@ -47,7 +47,7 @@ WITH RECURSIVE users AS (
       ON u.role_name = r.name
     WHERE u.role_name = 'CRO'
     
-    UNION
+    UNION ALL
     
     SELECT
       users.user_id,
