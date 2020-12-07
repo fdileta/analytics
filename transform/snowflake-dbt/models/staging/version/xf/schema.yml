@@ -29,7 +29,7 @@ models:
                 - not_null
                 - unique
 
-    - name: version_stage_usage_metric_count
+    - name: version_stage_usage_metric_count_xf
       description: dummy example - this data model will have the stage_name, metric_name, and count 
       columns:
           - name: stage_name
