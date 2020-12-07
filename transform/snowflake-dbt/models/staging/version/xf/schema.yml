@@ -29,6 +29,20 @@ models:
                 - not_null
                 - unique
 
+    - name: version_stage_usage_metric_count
+      description: dummy example - this data model will have the stage_name, metric_name, and count 
+      columns:
+          - name: stage_name
+            description: Name of product stage https://about.gitlab.com/handbook/product/product-categories/
+            tests:
+                - not_null
+          - name: usage_action_name
+            description: name of the usage ping metric 
+            tests:
+                - not_null
+          - name: usage_action_count
+            description: count of usage ping metric 
+
     - name: version_usage_data_monthly_change
       description: '{{ doc("version_usage_data_monthly_change") }}'
       columns:
@@ -92,3 +106,5 @@ models:
                 - not_null
           - name: zuora_subscription_id
             description: The Zuora subscription associated with the license sending the usage ping.
+
+   
