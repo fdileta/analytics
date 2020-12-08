@@ -1902,4 +1902,5 @@ models:
           - not_null
       - name: vulnerability_name
       - name: vulnerability_report_type
+        description: The scanner identifier (a number). 0 'sast' - 1 'dependency' - 2 'container' - 3 'dast' - 4 'secret' - 5 'fuzzing'
       - name: vulnerability_severity
