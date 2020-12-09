@@ -22,6 +22,9 @@ WITH source AS (
       userroleid       AS user_role_id,
       start_date__c    AS start_date,
       user_segment__c  AS user_segment,
+      user_area__c     AS user_area,
+      user_geo__c      AS user_geo,
+      user_region__c   AS user_region,
 
       --metadata
       createdbyid      AS created_by_id,
