@@ -110,7 +110,7 @@ WITH dim_billing_accounts AS (
 
     SELECT
       monthly_arr_parent_level.*,
-      days_between_arr,
+      days_between_arr
     FROM monthly_arr_parent_level
     LEFT JOIN days_between_arr
       ON monthly_arr_parent_level.ultimate_parent_account_id = days_between_arr.ultimate_parent_account_id
@@ -131,7 +131,7 @@ WITH dim_billing_accounts AS (
 
     SELECT
       prior_month.*,
-      {{ type_of_arr_change('arr','previous_arr') }}
+      {{ type_of_arr_change('arr','previous_arr','days_between_arr') }}
     FROM prior_month
 
 ), reason_for_arr_change_beg AS (

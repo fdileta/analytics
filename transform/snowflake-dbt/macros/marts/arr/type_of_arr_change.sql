@@ -1,4 +1,4 @@
-{%- macro type_of_arr_change(arr, previous_arr) -%}
+{%- macro type_of_arr_change(arr, previous_arr, days_between_arr) -%}
 
    CASE
      WHEN {{ previous_arr }} = 0 AND {{ arr }} > 0 AND {{ days_between_arr }} IS NULL OR {{ days_between_arr }} >= 180
