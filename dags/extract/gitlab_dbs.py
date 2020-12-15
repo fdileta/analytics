@@ -97,6 +97,7 @@ every_day_at_four = "0 4 */1 * *"
 config_dict = {
     "ci_stats": {
         "dag_name"                    : "ci_stats",
+        "dbt_name"                    : "ci_stats_db",
         "env_vars"                    : {"HOURS": "13"},
         "extract_schedule_interval"   : "0 */6 * * *",
         "secrets"                     : [
