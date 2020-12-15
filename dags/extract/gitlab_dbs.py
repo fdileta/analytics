@@ -96,6 +96,7 @@ every_day_at_four = "0 4 */1 * *"
 # Dictionary containing the configuration values for the various Postgres DBs
 config_dict = {
     "ci_stats": {
+        "cloudsql_instance_name": None,
         "dag_name"                    : "ci_stats",
         "dbt_name"                    : "ci_stats_db",
         "env_vars"                    : {"HOURS": "13"},
