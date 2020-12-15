@@ -25,6 +25,9 @@ sources:
         identifier: gitlab_db_alert_management_alerts
       - name: alerts_service_data
         identifier: gitlab_db_alerts_service_data
+        freshness:
+          warn_after: { count: 7, period: day }
+          error_after: { count: 30, period: day }
       - name: approval_merge_request_rules
         identifier: gitlab_db_approval_merge_request_rules
       - name: approvals
@@ -209,6 +212,8 @@ sources:
         identifier: gitlab_db_notification_settings
       - name: oauth_access_tokens
         identifier: gitlab_db_oauth_access_tokens
+      - name: packages_packages
+        identifier: gitlab_db_packages_packages
       - name: plans
         identifier: gitlab_db_plans
       - name: pages_domains
@@ -257,6 +262,8 @@ sources:
         identifier: gitlab_db_saml_providers
       - name: services
         identifier: gitlab_db_services
+      - name: sprints
+        identifier: gitlab_db_sprints
       - name: subscriptions
         identifier: gitlab_db_subscriptions
       - name: system_note_metadata
@@ -273,5 +280,7 @@ sources:
         identifier: gitlab_db_user_preferences
       - name: users
         identifier: gitlab_db_users
+      - name: vulnerabilities
+        identifier: gitlab_db_vulnerabilities
       - name: vulnerability_occurrences
         identifier: gitlab_db_vulnerability_occurrences

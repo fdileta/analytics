@@ -194,9 +194,7 @@ def get_postgres_types(table_name: str, source_engine: Engine) -> Dict[str, str]
 
 
 def transform_source_types_to_snowflake_types(
-    df: pd.DataFrame,
-    source_table_name: str,
-    source_engine: Engine,
+    df: pd.DataFrame, source_table_name: str, source_engine: Engine
 ) -> List[Column]:
     pg_types = get_postgres_types(source_table_name, source_engine)
     table_columns = [
@@ -215,9 +213,9 @@ def seed_table(
     Sets the proper data types and column names.
     """
     logging.info(f"Creating table {target_table_name}")
+    snowflake_types.append(Column("_uploaded_at", Float))
     if advanced_metadata:
         snowflake_types.append(Column("_task_instance", String))
-    snowflake_types.append(Column("_uploaded_at", Float))
     table = Table(target_table_name, sqlalchemy.MetaData(), *snowflake_types)
     if target_engine.has_table(target_table_name):
         query_executor(target_engine, DropTable(table))

@@ -79,7 +79,10 @@ def get_metadata(file, google_sheet_client):
             tab = file.sheet1.title
             return file_name, tab
         except APIError as gspread_error:
-            if gspread_error.response.status_code == 429:
+            if (
+                gspread_error.response.status_code == 429
+                or gspread_error.response.status_code == 503
+            ):
                 google_sheet_client.wait_exponential_backoff(n)
                 n = n + 1
             else:
@@ -113,7 +116,7 @@ def process_qualtrics_file(
     dw_uploader(engine, table, dataframe, schema)
     query = f"""
         SELECT first_name, last_name, email_address, language, user_id, plan
-        FROM ANALYTICS_SENSITIVE.QUALTRICS_API_FORMATTED_CONTACTS WHERE user_id in
+        FROM PREP.SENSITIVE.QUALTRICS_API_FORMATTED_CONTACTS WHERE user_id in
         (
             SELECT id
             FROM RAW.{schema}.{table}
@@ -132,6 +135,7 @@ def process_qualtrics_file(
         final_status = push_contacts_to_qualtrics(
             tab, file, qualtrics_client, qualtrics_contacts
         )
+        file.client.login()
         file.sheet1.update_acell("A1", final_status)
 
 

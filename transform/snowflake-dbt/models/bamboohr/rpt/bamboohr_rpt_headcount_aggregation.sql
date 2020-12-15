@@ -1,7 +1,6 @@
 {{ config({
     "materialized":"table",
-    "schema": "analytics"
-    
+    "schema": "legacy"
     })
 }}
  
@@ -24,6 +23,7 @@ WITH source AS (
 ), base AS (
 
     SELECT DISTINCT 
+      unique_key,
       month_date,
       breakout_type_modified AS breakout_type,
       department,
@@ -49,6 +49,7 @@ WITH source AS (
       IFF(base.eeoc_field_name = 'no_eeoc', TRUE, FALSE)                            AS show_value_criteria,
       headcount_start,
       headcount_end,
+      headcount_end_excluding_sdr,
       headcount_average,
       hire_count,
       separation_count,
@@ -132,7 +133,10 @@ WITH source AS (
         {{ratio_to_report_partition_statement}}                                     AS percent_of_headcount_contributor,
       
       SUM(COALESCE(promotion,0)) {{partition_statement}}                            AS rolling_12_month_promotions,
+      SUM(COALESCE(promotion_excluding_sdr,0)) {{partition_statement}}              AS rolling_12_month_promotions_excluding_sdr,
+
       SUM(COALESCE(percent_change_in_comp,0)) {{partition_statement}}               AS rolling_12_month_promotions_percent_change_in_comp,
+      SUM(COALESCE(percent_change_in_comp_excluding_sdr,0)) {{partition_statement}} AS rolling_12_month_promotions_percent_change_in_comp_excluding_sdr,
       location_factor,
       discretionary_bonus,
       tenure_months,
@@ -143,14 +147,15 @@ WITH source AS (
       tenure_four_plus_years
     FROM base
     LEFT JOIN source  
-      ON base.month_date = source.month_date
+      ON base.unique_key = source.unique_key
+      {# ON base.month_date = source.month_date
       AND base.breakout_type = source.breakout_type_modified
       AND base.department = source.department
       AND base.division = source.division
       AND COALESCE(base.job_role,'NA') = COALESCE(source.job_role,'NA')
       AND COALESCE(base.job_grade,'NA') = COALESCE(source.job_grade,'NA')
       AND base.eeoc_field_name = source.eeoc_field_name
-      AND base.eeoc_value = source.eeoc_value
+      AND base.eeoc_value = source.eeoc_value #}
     WHERE base.month_date < DATE_TRUNC('month', CURRENT_DATE)   
 
  ), final AS (
@@ -174,6 +179,8 @@ WITH source AS (
         NULL,headcount_start)                                               AS headcount_start,
       IFF(headcount_end <4 AND show_value_criteria = FALSE,
         NULL, headcount_end)                                                AS headcount_end,
+      IFF(headcount_end_excluding_sdr <4 AND show_value_criteria = FALSE,
+        NULL, headcount_end_excluding_sdr)                                  AS headcount_end_excluding_sdr,      
       IFF(headcount_average <4 AND eeoc_field_name != 'no_eeoc',  
         NULL, headcount_average)                                            AS headcount_average,
       IFF(hire_count <4 AND eeoc_field_name != 'no_eeoc', 
@@ -260,7 +267,24 @@ WITH source AS (
         NULL, percent_of_headcount_staff)                                        AS percent_of_headcount_staff,  
       IFF(min_headcount_contributor <2 AND eeoc_field_name != 'no_eeoc', 
         NULL, percent_of_headcount_leaders)                                      AS percent_of_headcount_contributor,
-      IFF(eeoc_field_name != 'no_eeoc', NULL, rolling_12_month_promotions)       AS rolling_12_month_promotions,
+
+      CASE WHEN breakout_type IN ('kpi_breakout','division_breakout','department_breakout') 
+            AND eeoc_value = 'no_eeoc'
+            THEN rolling_12_month_promotions
+           WHEN breakout_type IN ('eeoc_breakout')
+             AND eeoc_field_name IN ('gender','ethnicity','region_modified')
+             AND rolling_12_month_promotions > 3
+            THEN rolling_12_month_promotions
+            ELSE NULL END                                                         AS rolling_12_month_promotions,   
+            
+      CASE WHEN breakout_type IN ('kpi_breakout','division_breakout','department_breakout') 
+            AND eeoc_value = 'no_eeoc'
+            THEN rolling_12_month_promotions_excluding_sdr
+           WHEN breakout_type IN ('eeoc_breakout')
+             AND eeoc_field_name IN ('gender','ethnicity','region_modified')
+             AND rolling_12_month_promotions > 3
+            THEN rolling_12_month_promotions_excluding_sdr
+            ELSE NULL END                                                         AS rolling_12_month_promotions_excluding_sdr,
       CASE 
         WHEN breakout_type IN ('kpi_breakout','division_breakout','department_breakout') 
             AND eeoc_value = 'no_eeoc'
@@ -271,6 +295,17 @@ WITH source AS (
             AND rolling_12_month_promotions > 3
           THEN rolling_12_month_promotions_percent_change_in_comp/rolling_12_month_promotions
         ELSE NULL END                                                            AS rolling_12_month_promotion_increase,
+      CASE 
+        WHEN breakout_type IN ('kpi_breakout','division_breakout','department_breakout') 
+            AND eeoc_value = 'no_eeoc'
+            AND rolling_12_month_promotions_excluding_sdr > 3
+        THEN rolling_12_month_promotions_percent_change_in_comp_excluding_sdr/rolling_12_month_promotions_excluding_sdr
+        WHEN breakout_type IN ('eeoc_breakout') 
+            AND eeoc_field_name IN ('gender','ethnicity','region_modified')
+            AND rolling_12_month_promotions_excluding_sdr > 3
+          THEN rolling_12_month_promotions_percent_change_in_comp_excluding_sdr/rolling_12_month_promotions_excluding_sdr
+        ELSE NULL END                                                            AS rolling_12_month_promotion_increase_excluding_sdr,
+
       IFF(headcount_end <4 AND show_value_criteria = FALSE,
         NULL,location_factor)                                                    AS location_factor,
       IFF(discretionary_bonus<4 AND show_value_criteria = FALSE,

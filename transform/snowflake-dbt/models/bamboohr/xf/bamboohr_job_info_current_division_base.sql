@@ -1,5 +1,6 @@
 {{ config({
-    "schema": "staging"
+    "schema": "legacy",
+    "database": env_var('SNOWFLAKE_TRANSFORM_DATABASE'),
     })
 }}
 
@@ -20,7 +21,10 @@ WITH job_info AS (
 
 ), department_name_changes AS (
 
-    SELECT *
+    SELECT  
+      TRIM(old_department_name) AS old_department_name,
+      TRIM(new_department_name) AS new_department_name,
+      change_effective_date
     FROM {{ref ('department_name_changes')}}
 
 ), current_division_department_mapping AS (
@@ -44,7 +48,10 @@ SELECT
   job_info.*, 
   IFF(job_info.department = 'Meltano', 'Engineering',
       COALESCE(current_division_department_mapping.division, job_info.division))               AS division_mapped_current,
-  COALESCE(department_name_changes.new_department_name, job_info.department)                   AS department_modified,      
+  {{bamboohr_division_grouping(division=
+    'COALESCE(current_division_department_mapping.division, job_info.division)')}}             AS division_grouping,      
+  COALESCE(department_name_changes.new_department_name, job_info.department)                   AS department_modified,  
+  {{bamboohr_department_grouping(department='department_modified')}}                           AS department_grouping,  
   bamboo_mapping.termination_date   
 FROM bamboo_mapping
 LEFT JOIN job_info 

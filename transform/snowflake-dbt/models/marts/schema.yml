@@ -15,13 +15,6 @@ models:
       - name: subscription_sales_type
         description: Identifies whether a subscription is Sales-Assisted or Self-Service / Web Direct.
 
-  - name: mart_arr_incr
-    description: '{{ doc("mart_arr_incr") }}'
-    columns:
-      - name: primary_key
-        tests:
-          - not_null
-
   - name: mart_arr_snapshots
     description: Daily snapshots of MRR/ARR by month values per customer, subscription and product
     columns:
@@ -30,6 +23,24 @@ models:
           - not_null
           - unique
         tags: ["tdf", "mart", "arr"]
+
+  - name: mart_discount_arr
+    description: Model with Invoiced ARR used to calculate discounts across various dimensions.
+    columns:
+      - name: primary_key
+        description: Unique identifier of a product charge on the invoice amortized by month.
+        tests:
+            - not_null
+            - unique
+        tags: ["tdf", "mart", "arr"]
+      - name: is_myb
+        description: Identifies if a subscription charge is for a multiple year term.
+      - name: current_term_months
+        description: Term of the subscription in months.
+      - name: current_term_years
+        description: Term of the subscription in years. Rounds to the one decimal point. For examples, an 18 month term subscription will be a 1.5 year term.
+      - name: prepaid_myb
+        description: Identifies if a MYB deal has more than 1 year paid on the subscription. The flag does NOT identify how years have been prepaid or if the subscription has been prepaid in full.
 
   - name: mart_delta_arr_parent_month
     description: "Mart table by month pursuant to the ARR Analysis Framework at the parent customer level"
@@ -48,6 +59,9 @@ models:
           - not_null
           - unique
         tags: ["tdf", "mart", "arr"]
+
+  - name: mart_retention_parent_account
+    description: "Mart table to support drillable retention analysis"
 
   - name: usage_ping_mart
     description: '{{ doc("usage_ping_mart") }}'
