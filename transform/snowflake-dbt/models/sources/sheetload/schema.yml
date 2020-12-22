@@ -270,6 +270,8 @@ models:
       tests:
       - not_null
       - unique
+- name: sheetload_pricing_email_list
+  description: Pricing list to be augmented with emails.
 - name: sheetload_procurement_cost_savings_source
   description: This is the source of the KPI - Deliver Quantified Savings of greater than three million over a rolling 12 month period
   columns:

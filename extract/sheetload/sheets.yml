@@ -239,3 +239,7 @@ sheets:
     owner: '@mmaneval20'
     tabs:
       - rfs_support_requests
+  - name: pricing_email_list
+    owner: '@jeanpeguero'
+    tabs:
+      - pricing_email_list

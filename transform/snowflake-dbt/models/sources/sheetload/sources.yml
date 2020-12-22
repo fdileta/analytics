@@ -69,6 +69,7 @@ sources:
       - name: percent_over_comp_band_historical
       - name: people_budget
       - name: planned_values
+      - name: pricing_email_list
       - name: procurement_cost_savings
       - name: product_maturity_historical
       - name: release_blog_posts
