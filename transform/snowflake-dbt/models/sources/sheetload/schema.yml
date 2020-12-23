@@ -272,6 +272,13 @@ models:
       - unique
 - name: sheetload_pricing_email_list
   description: Pricing list to be augmented with emails.
+  columns:
+    - name: ultimate_parent_account_id
+      tests:
+      - not_null
+    - name: crm_account_id
+      tests:
+      - not_null
 - name: sheetload_procurement_cost_savings_source
   description: This is the source of the KPI - Deliver Quantified Savings of greater than three million over a rolling 12 month period
   columns:
