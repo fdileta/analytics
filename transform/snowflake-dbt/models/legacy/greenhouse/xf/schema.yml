@@ -15,8 +15,14 @@ models:
   - name: greenhouse_recruiting_xf
     description: This is shows all applications submitted and ties in offer data, greenhouse department (the associated division), and source data to be in 1 place.
     columns:
+        - name: unique_key
+          description: Creates a surrogate key to identify each unique application by accounting for the application_id, offer_id, candidate_id, requisition_id, and job_id
+          tests: 
+            - not_null
+            - unique
         - name: application_id
         - name: offer_id
+        - name: job_id
         - name: candidate_id
         - name: requisition_id
         - name: is_prospect
