@@ -2315,6 +2315,7 @@ tables:
       , email_opted_in
       , email_opted_in_source_id
       , email_opted_in_at
+      , email_opted_in_ip
       , theme_id
       , accepted_term_id
       , private_profile
