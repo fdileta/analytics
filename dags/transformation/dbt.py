@@ -82,7 +82,7 @@ def dbt_run_or_refresh(timestamp: datetime, dag: DAG) -> str:
     dag_interval = SCHEDULE_INTERVAL_HOURS * 3600
 
     # run a full-refresh once per week (on sunday early AM)
-    if current_weekday == 7:  # and dag_interval > current_seconds:
+    if current_weekday == 6:  # and dag_interval > current_seconds:
         return "dbt-full-refresh"
     else:
         return "dbt-non-product-models-run"
@@ -127,7 +127,8 @@ dbt_non_product_models_task = KubernetesPodOperator(
         SNOWFLAKE_LOAD_WAREHOUSE,
     ],
     env_vars=pod_env_vars,
-    arguments=[dbt_non_product_models_command],
+    # arguments=[dbt_non_product_models_command],
+    arguments=["exit 0;"],
     dag=dag,
 )
 
@@ -167,7 +168,8 @@ dbt_product_models_task = KubernetesPodOperator(
     ],
     env_vars=pod_env_vars,
     trigger_rule=none_skipped,
-    arguments=[dbt_product_models_command],
+    # arguments=[dbt_product_models_command],
+    arguments=["exit 0;"],
     dag=dag,
 )
 
@@ -205,7 +207,8 @@ dbt_full_refresh = KubernetesPodOperator(
         SNOWFLAKE_LOAD_WAREHOUSE,
     ],
     env_vars=pod_env_vars,
-    arguments=[dbt_full_refresh_cmd],
+    # arguments=[dbt_full_refresh_cmd],
+    arguments=["exit 0;"],
     dag=dag,
 )
 
@@ -244,7 +247,8 @@ dbt_source_freshness = KubernetesPodOperator(
         SNOWFLAKE_LOAD_WAREHOUSE,
     ],
     env_vars=pod_env_vars,
-    arguments=[dbt_source_cmd],
+    # arguments=[dbt_source_cmd],
+    arguments=["exit 0;"],
     dag=dag,
 )
 
@@ -281,7 +285,8 @@ dbt_test = KubernetesPodOperator(
         SNOWFLAKE_TRANSFORM_SCHEMA,
     ],
     env_vars=pod_env_vars,
-    arguments=[dbt_test_cmd],
+    # arguments=[dbt_test_cmd],
+    arguments=["exit 0;"],
     dag=dag,
 )
 
