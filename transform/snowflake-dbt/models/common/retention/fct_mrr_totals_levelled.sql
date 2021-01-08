@@ -4,7 +4,7 @@ WITH sfdc_accounts_xf AS (
 
 ), bridge_table AS (
 
-      SELECT * FROM {{ ref('bdg_account_levels ') }}
+      SELECT * FROM {{ ref('bdg_account_levels') }}
 
 ), joined AS (
 

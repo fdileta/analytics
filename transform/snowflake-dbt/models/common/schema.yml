@@ -10,6 +10,9 @@ models:
           - unique
           - not_null
 
+
+  - name: bdg_account_levels
+  - name: fct_mrr_totals_levelled
   - name: dim_billing_account
     description: '{{ doc("dim_billing_account") }}'
     columns:

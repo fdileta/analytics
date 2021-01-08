@@ -1,7 +1,7 @@
 WITH mrr_totals_levelled AS (
 
     SELECT *
-    FROM {{ ref('mrr_totals_levelled') }}
+    FROM {{ ref('fct_mrr_totals_levelled') }}
 
 ), sfdc_accounts_xf AS (
 
