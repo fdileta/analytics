@@ -267,7 +267,6 @@ dbt_test = KubernetesPodOperator(
     image=DBT_IMAGE,
     task_id="dbt-test",
     name="dbt-test",
-    trigger_rule="all_done",
     secrets=[
         GIT_DATA_TESTS_PRIVATE_KEY,
         GIT_DATA_TESTS_CONFIG,
