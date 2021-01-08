@@ -166,6 +166,7 @@ dbt_product_models_task = KubernetesPodOperator(
         SNOWFLAKE_LOAD_WAREHOUSE,
     ],
     env_vars=pod_env_vars,
+    trigger_rule=none_skipped,
     arguments=[dbt_product_models_command],
     dag=dag,
 )
