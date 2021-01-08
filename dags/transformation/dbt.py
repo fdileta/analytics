@@ -57,7 +57,6 @@ default_args = {
     "sla": timedelta(hours=8),
     "sla_miss_callback": slack_failed_task,
     "start_date": datetime(2019, 1, 1, 0, 0, 0),
-    "trigger_rule": TriggerRule.ALL_DONE,
     "dagrun_timeout": timedelta(hours=6),
 }
 
@@ -91,6 +90,7 @@ def dbt_run_or_refresh(timestamp: datetime, dag: DAG) -> str:
 branching_dbt_run = BranchPythonOperator(
     task_id="branching-dbt-run",
     python_callable=lambda: dbt_run_or_refresh(datetime.now(), dag),
+    trigger_rule=TriggerRule.ALL_DONE,
     dag=dag,
 )
 
@@ -129,6 +129,7 @@ dbt_non_product_models_task = KubernetesPodOperator(
     env_vars=pod_env_vars,
     # arguments=[dbt_non_product_models_command],
     arguments=["exit 0;"],
+    trigger_rule=TriggerRule.ALL_DONE,
     dag=dag,
 )
 
@@ -167,7 +168,7 @@ dbt_product_models_task = KubernetesPodOperator(
         SNOWFLAKE_LOAD_WAREHOUSE,
     ],
     env_vars=pod_env_vars,
-    trigger_rule="none_skipped",
+    trigger_rule=TriggerRule.NONE_SKIPPED,
     # arguments=[dbt_product_models_command],
     arguments=["exit 0;"],
     dag=dag,
@@ -208,6 +209,7 @@ dbt_full_refresh = KubernetesPodOperator(
     ],
     env_vars=pod_env_vars,
     # arguments=[dbt_full_refresh_cmd],
+    trigger_rule=TriggerRule.ALL_DONE,
     arguments=["exit 0;"],
     dag=dag,
 )
@@ -248,6 +250,7 @@ dbt_source_freshness = KubernetesPodOperator(
     ],
     env_vars=pod_env_vars,
     # arguments=[dbt_source_cmd],
+    trigger_rule=TriggerRule.ALL_DONE,
     arguments=["exit 0;"],
     dag=dag,
 )
@@ -287,6 +290,7 @@ dbt_test = KubernetesPodOperator(
     env_vars=pod_env_vars,
     # arguments=[dbt_test_cmd],
     arguments=["exit 0;"],
+    trigger_rule=TriggerRule.ALL_DONE,
     dag=dag,
 )
 
