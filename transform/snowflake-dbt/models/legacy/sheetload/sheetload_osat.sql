@@ -22,6 +22,7 @@ WITH bamboohr AS (
       ON source.employee_name = CONCAT(bamboohr.first_name, ' ', bamboohr.last_name)
     WHERE source.completed_date IS NOT NULL
 
+    
 )
 SELECT *
 FROM final
