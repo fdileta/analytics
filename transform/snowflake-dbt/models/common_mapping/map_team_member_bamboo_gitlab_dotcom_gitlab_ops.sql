@@ -8,7 +8,7 @@ WITH bamboo_hr_members AS (
 
     SELECT * 
     FROM {{ ref ('dim_gitlab_dotcom_gitlab_emails') }}
-  
+    
 ), gitlab_ops_members AS (
 
     SELECT

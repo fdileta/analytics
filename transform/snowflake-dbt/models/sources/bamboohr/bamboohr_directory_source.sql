@@ -21,12 +21,12 @@ WITH source AS (
     SELECT *
     FROM intermediate
     WHERE work_email != 't2test@gitlab.com'
+      AND LOWER(full_name) NOT LIKE '%greenhouse test%'
+      AND LOWER(full_name) NOT LIKE '%test profile%'
+      AND LOWER(full_name) != 'test-gitlab')
+      AND employee_id  NOT IN (42039, 42043)
     
 )
 
 SELECT *
 FROM final
-WHERE (LOWER(full_name) NOT LIKE '%greenhouse test%'
-            and LOWER(full_name) NOT LIKE '%test profile%'
-            and LOWER(full_name) != 'test-gitlab')
-        OR employee_id  NOT IN (42039, 42043)
