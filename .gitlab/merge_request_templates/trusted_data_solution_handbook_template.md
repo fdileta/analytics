@@ -24,7 +24,7 @@ The goal of this page:
 
 * Help you understand how to navigate through the [Dashboard](!update_here)
 * Help you understand the data models used to create the dashboard.
-* Have you asess your understanding by taking a certification most applicable to your role at GitLab.
+* Have you assess your understanding by taking a certification most applicable to your role at GitLab.
     * To learn more about how to use the dashboard, take the [Dashboard user certification](!update_here).
     * To learn more about developing Sisense dashboards, take the [Dashboard Developer certification](!Update_here)
 * And overall help everyone contribute!
