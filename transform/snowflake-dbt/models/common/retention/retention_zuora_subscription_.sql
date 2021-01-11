@@ -1,8 +1,8 @@
-with raw_mrr_totals_levelled AS (
+with raw_fct_mrr_totals_levelled AS (
 
-       SELECT * FROM {{ref('mrr_totals_levelled')}}
+       SELECT * FROM {{ref('fct_mrr_totals_levelled')}}
 
-), mrr_totals_levelled AS (
+), fct_mrr_totals_levelled AS (
 
       SELECT subscription_name, 
               subscription_name_slugify,
@@ -15,7 +15,7 @@ with raw_mrr_totals_levelled AS (
               months_since_zuora_subscription_cohort_start,
               quarters_since_zuora_subscription_cohort_start,
               sum(mrr) as mrr
-      FROM raw_mrr_totals_levelled
+      FROM raw_fct_mrr_totals_levelled
       {{ dbt_utils.group_by(n=10) }}
 
 ), current_arr_segmentation_all_levels AS (
@@ -26,7 +26,7 @@ with raw_mrr_totals_levelled AS (
 ), mapping AS (
       
        SELECT  subscription_name, sfdc_account_id
-       FROM mrr_totals_levelled
+       FROM fct_mrr_totals_levelled
        {{ dbt_utils.group_by(n=2) }}
 
 ), list AS ( --get all the subscription + their lineage + the month we're looking for MRR for (12 month in the future)
@@ -35,7 +35,7 @@ with raw_mrr_totals_levelled AS (
                      c.value::VARCHAR     AS subscriptions_in_lineage,
                      mrr_month            AS original_mrr_month,
                      dateadd('year', 1, mrr_month) AS retention_month
-       FROM mrr_totals_levelled,
+       FROM fct_mrr_totals_levelled,
        lateral flatten(input =>split(lineage, ',')) C
        {{ dbt_utils.group_by(n=4) }}
 
@@ -46,7 +46,7 @@ with raw_mrr_totals_levelled AS (
                original_mrr_month,
                sum(mrr) AS retention_mrr
        FROM list
-       INNER JOIN mrr_totals_levelled AS subs
+       INNER JOIN fct_mrr_totals_levelled AS subs
        ON retention_month = mrr_month
        AND subscriptions_in_lineage = subscription_name_slugify
        {{ dbt_utils.group_by(n=3) }}
@@ -58,11 +58,11 @@ with raw_mrr_totals_levelled AS (
                   THEN least(net_retention_mrr, mrr)
                   ELSE 0 END AS gross_retention_mrr,
               retention_month, 
-              mrr_totals_levelled.*
-       FROM mrr_totals_levelled
+              fct_mrr_totals_levelled.*
+       FROM fct_mrr_totals_levelled
        LEFT JOIN retention_subs
        ON subscription_name_slugify = original_sub
-       AND retention_subs.original_mrr_month = mrr_totals_levelled.mrr_month
+       AND retention_subs.original_mrr_month = fct_mrr_totals_levelled.mrr_month
 
 ), joined as (
 

@@ -1,6 +1,6 @@
-with mrr_totals_levelled AS (
+with fct_mrr_totals_levelled AS (
 
-       SELECT * FROM {{ref('mrr_totals_levelled')}}
+       SELECT * FROM {{ref('fct_mrr_totals_levelled')}}
 
 ), current_arr_segmentation_all_levels AS (
 
@@ -13,7 +13,7 @@ with mrr_totals_levelled AS (
               mrr_month as original_mrr_month,
               dateadd('year', 1, mrr_month) AS retention_month,
               sum(mrr) as mrr
-       FROM mrr_totals_levelled
+       FROM fct_mrr_totals_levelled
        GROUP BY 1, 2, 3
 
 ), retention_subs AS ( --find which of those subscriptions are real and group them by their sub you're comparing to.
@@ -58,8 +58,8 @@ SELECT finals.ultimate_parent_account_id as parent_account_id,
        datediff(quarter, parent_account_cohort_quarter, original_mrr_month) as quarters_since_parent_account_cohort_start,
        {{ churn_type('original_mrr', 'net_retention_mrr') }}
 FROM finals
-LEFT JOIN mrr_totals_levelled
-ON finals.ultimate_parent_account_id = mrr_totals_levelled.ultimate_parent_account_id
+LEFT JOIN fct_mrr_totals_levelled
+ON finals.ultimate_parent_account_id = fct_mrr_totals_levelled.ultimate_parent_account_id
 GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
 )
 

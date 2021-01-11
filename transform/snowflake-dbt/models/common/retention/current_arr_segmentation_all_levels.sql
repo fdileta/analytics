@@ -5,9 +5,9 @@
 WITH base AS (
     SELECT oldest_subscription_in_cohort as zuora_subscription_id,
             ultimate_parent_account_id as parent_account_id,
-          {{ dbt_utils.star(from=ref('mrr_totals_levelled'), 
+          {{ dbt_utils.star(from=ref('fct_mrr_totals_levelled'), 
             except=["oldest_subscription_in_cohort", "ultimate_parent_account_id"]) }}
-    FROM {{ref('mrr_totals_levelled')}}
+    FROM {{ref('fct_mrr_totals_levelled')}}
 
 {% for level in levels -%} 
 ), {{level}}_max_month as (

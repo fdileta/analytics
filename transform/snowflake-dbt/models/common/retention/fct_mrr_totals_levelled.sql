@@ -9,47 +9,31 @@ WITH sfdc_accounts_xf AS (
 ), joined AS (
 
     SELECT
-           replace_sfdc_account_id_with_master_record_id.country                            AS zuora_sold_to_country,
            replace_sfdc_account_id_with_master_record_id.account_number                     AS zuora_account_number,
            replace_sfdc_account_id_with_master_record_id.subscription_name_slugify,
            replace_sfdc_account_id_with_master_record_id.subscription_name,
-           replace_sfdc_account_id_with_master_record_id.oldest_subscription_in_cohort,
-           replace_sfdc_account_id_with_master_record_id.lineage,
-           replace_sfdc_account_id_with_master_record_id.mrr_month,
-           replace_sfdc_account_id_with_master_record_id.zuora_subscription_cohort_month,
-           replace_sfdc_account_id_with_master_record_id.zuora_subscription_cohort_quarter,
-           replace_sfdc_account_id_with_master_record_id.mrr,
-           replace_sfdc_account_id_with_master_record_id.months_since_zuora_subscription_cohort_start,
-           replace_sfdc_account_id_with_master_record_id.quarters_since_zuora_subscription_cohort_start,
            replace_sfdc_account_id_with_master_record_id.zuora_account_id,
-           replace_sfdc_account_id_with_master_record_id.zuora_account_name,
-           replace_sfdc_account_id_with_master_record_id.product_category,
-           replace_sfdc_account_id_with_master_record_id.delivery,
-           replace_sfdc_account_id_with_master_record_id.rate_plan_name,
-           replace_sfdc_account_id_with_master_record_id.service_type,
-           replace_sfdc_account_id_with_master_record_id.unit_of_measure,
-           replace_sfdc_account_id_with_master_record_id.quantity,
-           sfdc_accounts_xf.account_id                                      AS sfdc_account_id,
-           sfdc_accounts_xf.account_name                                    AS sfdc_account_name,
+           sfdc_accounts_xf.account_id                                              AS sfdc_account_id,
+           sfdc_accounts_xf.account_name                                            AS sfdc_account_name,
            sfdc_accounts_xf.ultimate_parent_account_id,
            sfdc_accounts_xf.ultimate_parent_account_name,
            min(zuora_subscription_cohort_month) OVER (
-              PARTITION BY zuora_account_id)                                AS zuora_account_cohort_month,
+              PARTITION BY zuora_account_id)                                        AS zuora_account_cohort_month,
            min(zuora_subscription_cohort_quarter) OVER (
-              PARTITION BY zuora_account_id)                                AS zuora_account_cohort_quarter,
+              PARTITION BY zuora_account_id)                                        AS zuora_account_cohort_quarter,
            min(zuora_subscription_cohort_month) OVER (
-              PARTITION BY sfdc_accounts_xf.account_id)                     AS sfdc_account_cohort_month,
+              PARTITION BY sfdc_accounts_xf.account_id)                             AS sfdc_account_cohort_month,
            min(zuora_subscription_cohort_quarter) OVER (
-              PARTITION BY sfdc_accounts_xf.account_id)                     AS sfdc_account_cohort_quarter,
+              PARTITION BY sfdc_accounts_xf.account_id)                             AS sfdc_account_cohort_quarter,
            min(zuora_subscription_cohort_month) OVER (
-              PARTITION BY ultimate_parent_account_id)                      AS parent_account_cohort_month,
+              PARTITION BY ultimate_parent_account_id)                              AS parent_account_cohort_month,
            min(zuora_subscription_cohort_quarter) OVER (
-              PARTITION BY ultimate_parent_account_id)                      AS parent_account_cohort_quarter
-    FROM replace_sfdc_account_id_with_master_record_id
+              PARTITION BY ultimate_parent_account_id)                              AS parent_account_cohort_quarter
+    FROM bridge_table
     LEFT JOIN sfdc_accounts_xf
-    ON sfdc_accounts_xf.account_id = replace_sfdc_account_id_with_master_record_id.sfdc_account_id
+    ON sfdc_accounts_xf.account_id = bridge_table.sfdc_account_id
 
-), mrr_totals_levelled AS (
+), fct_mrr_totals_levelled AS (
 
     SELECT *,
            datediff(month, zuora_account_cohort_month, mrr_month)      as months_since_zuora_account_cohort_start,
@@ -64,7 +48,7 @@ WITH sfdc_accounts_xf AS (
 
 
 {{ dbt_audit(
-    cte_ref="mrr_totals_levelled",
+    cte_ref="fct_mrr_totals_levelled",
     created_by="@paul_armstrong",
     updated_by="@paul_armstrong",
     created_date="2021-01-07",

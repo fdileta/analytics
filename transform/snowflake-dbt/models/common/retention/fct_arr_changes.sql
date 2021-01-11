@@ -1,4 +1,4 @@
-WITH mrr_totals_levelled AS (
+WITH fct_mrr_totals_levelled AS (
 
     SELECT *
     FROM {{ ref('fct_mrr_totals_levelled') }}
@@ -34,7 +34,7 @@ WITH mrr_totals_levelled AS (
        ))                                                                               AS product_ranking,
       SUM(quantity)                                                                     AS quantity,
       SUM(mrr*12)                                                                       AS arr
-    FROM mrr_totals_levelled
+    FROM fct_mrr_totals_levelled
     {{ dbt_utils.group_by(n=9) }}
 
 ), previous_next_month AS (--Calculate the previous and next month's values for the required fields to be used for analysis
@@ -52,7 +52,7 @@ WITH mrr_totals_levelled AS (
                                                                                                 AS next_month_arr_month
      FROM monthly_arr
 
-), combined_arr AS (--The mrr_totals_levelled model does not have a record for when a subscription churns. This CTE creates a churn record with $0 ARR.
+), combined_arr AS (--The fct_mrr_totals_levelled model does not have a record for when a subscription churns. This CTE creates a churn record with $0 ARR.
 
     SELECT
       arr_month,
