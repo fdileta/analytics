@@ -64,11 +64,11 @@ WITH usage_data AS (
       usage_data.zuora_subscription_id,
       usage_data.zuora_subscription_status,
       usage_data.zuora_crm_id,
-      'manage'                                                           AS stage_name,
-      DATEADD('days', -28, usage_data.created_at)                        AS period_start,
-      usage_data.created_at                                              AS period_end,
-      f.key                                                              AS usage_action_name,
-      f.value                                                            AS usage_action_count
+      'manage'                                                                 AS stage_name,
+      DATEADD('days', -28, DATE_TRUNC('week', unpacked_stage_json.created_at)) AS period_start,
+      DATE_TRUNC('week', unpacked_stage_json.created_at)                       AS period_end,
+      f.key                                                                    AS usage_action_name,
+      f.value                                                                  AS usage_action_count
 
     FROM usage_data,
       LATERAL FLATTEN (input => usage_data.raw_usage_data_payload, recursive => True, path => 'redis_hll_counters') f
