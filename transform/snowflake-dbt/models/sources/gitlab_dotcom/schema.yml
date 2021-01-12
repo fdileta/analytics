@@ -1816,30 +1816,6 @@ models:
         tests:
           - not_null
 
-  - name: gitlab_dotcom_user_custom_attributes_source
-    description: Base model for Gitlab.com user custom attributes
-    columns:
-      - name: user_id
-        tags: ["tdf","gitlab_dotcom"]
-        tests:
-          - not_null
-      - name: created_at
-        tags: ["tdf","gitlab_dotcom"]
-        tests:
-          - not_null
-      - name: updated_at
-        tags: ["tdf","gitlab_dotcom"]
-        tests:
-          - not_null
-      - name: user_custom_key
-        tags: ["tdf","gitlab_dotcom"]
-        tests:
-          - not_null
-      - name: user_custom_value
-        tags: ["tdf","gitlab_dotcom"]
-        tests:
-          - not_null
-
   - name: gitlab_dotcom_user_preferences_source
     description: Base model for Gitlab.com user_preferences
     columns:
