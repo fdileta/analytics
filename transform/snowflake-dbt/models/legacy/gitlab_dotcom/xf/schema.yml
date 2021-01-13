@@ -125,7 +125,7 @@ models:
           - not_null
           - unique
 
-  - name: gitlab_dotcom_user_custom_attributes_xf
+  - name: gitlab_dotcom_user_custom_attributes
     columns:
       - name: user_id
         tests:
