@@ -36,11 +36,35 @@ with zuora_mrr_totals AS (
     LEFT JOIN sfdc_deleted_accounts
     ON initial_join_to_sfdc.zuora_crm_id = sfdc_deleted_accounts.sfdc_account_id
 
+), final_table AS (
+
+    SELECT replace_sfdc_account_id_with_master_record_id.account_number AS zuora_account_number,
+           replace_sfdc_account_id_with_master_record_id.subscription_name_slugify,
+           replace_sfdc_account_id_with_master_record_id.subscription_name,
+           replace_sfdc_account_id_with_master_record_id.zuora_account_id,
+           sfdc_accounts_xf.account_id                                  AS sfdc_account_id,
+           sfdc_accounts_xf.account_name                                AS sfdc_account_name,
+           sfdc_accounts_xf.ultimate_parent_account_id,
+           sfdc_accounts_xf.ultimate_parent_account_name,
+           min(zuora_subscription_cohort_month) OVER (
+               PARTITION BY zuora_account_id)                           AS zuora_account_cohort_month,
+           min(zuora_subscription_cohort_quarter) OVER (
+               PARTITION BY zuora_account_id)                           AS zuora_account_cohort_quarter,
+           min(zuora_subscription_cohort_month) OVER (
+               PARTITION BY sfdc_accounts_xf.account_id)                AS sfdc_account_cohort_month,
+           min(zuora_subscription_cohort_quarter) OVER (
+               PARTITION BY sfdc_accounts_xf.account_id)                AS sfdc_account_cohort_quarter,
+           min(zuora_subscription_cohort_month) OVER (
+               PARTITION BY ultimate_parent_account_id)                 AS parent_account_cohort_month,
+           min(zuora_subscription_cohort_quarter) OVER (
+               PARTITION BY ultimate_parent_account_id)                 AS parent_account_cohort_quarter
+    FROM replace_sfdc_account_id_with_master_record_id
+             LEFT JOIN sfdc_accounts_xf
+                       ON sfdc_accounts_xf.account_id = replace_sfdc_account_id_with_master_record_id.sfdc_account_id
 )
 
-
 {{ dbt_audit(
-    cte_ref="replace_sfdc_account_id_with_master_record_id",
+    cte_ref="final_table",
     created_by="@paul_armstrong",
     updated_by="@paul_armstrong",
     created_date="2021-01-07",
