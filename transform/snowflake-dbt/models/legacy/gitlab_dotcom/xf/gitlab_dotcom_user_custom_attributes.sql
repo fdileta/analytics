@@ -1,3 +1,8 @@
+{{ config({
+    "schema": "legacy"
+    })
+}}
+
 WITH source AS (
 
     SELECT *
@@ -7,4 +12,3 @@ WITH source AS (
 
 SELECT *
 FROM source
-
