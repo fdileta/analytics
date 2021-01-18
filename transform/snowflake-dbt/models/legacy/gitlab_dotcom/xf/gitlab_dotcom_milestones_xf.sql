@@ -1,32 +1,28 @@
-{% set fields_to_mask = ['milestone_description', 'milestone_title'] %}
 
 WITH milestones AS (
 
     SELECT *
     FROM {{ref('gitlab_dotcom_milestones')}}
 
-),
+),projects AS (
 
--- A milestone joins to a namespace through EITHER a project or group
-projects AS (
-
+    -- A milestone joins to a namespace through EITHER a project or group
     SELECT *
     FROM {{ref('gitlab_dotcom_projects')}}
-),
 
-internal_namespaces AS (
+), internal_namespaces AS (
 
     SELECT
       namespace_id
     FROM {{ref('gitlab_dotcom_namespace_lineage')}}
     WHERE namespace_is_internal = True
-),
 
-final AS (
+), final AS (
 
     SELECT
       milestones.milestone_id,
-
+      milestones.milestone_title, 
+      milestones.milestone_description,
       {% for field in fields_to_mask %}
       IFF(internal_namespaces.namespace_id IS NULL,
           'private - masked', {{field}})                     AS {{field}},
@@ -47,6 +43,7 @@ final AS (
       LEFT JOIN internal_namespaces
         ON projects.namespace_id = internal_namespaces.namespace_id
         OR milestones.group_id = internal_namespaces.namespace_id
+        
 )
 
 SELECT *

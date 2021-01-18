@@ -1,22 +1,16 @@
-{% set fields_to_mask = ['namespace_name', 'namespace_path'] %}
-
 WITH namespaces AS (
 
     SELECT *
     FROM {{ref('gitlab_dotcom_namespaces')}}
 
-),
-
-members AS (
+), members AS (
 
     SELECT *
     FROM {{ref('gitlab_dotcom_members')}} members
     WHERE is_currently_valid = TRUE
       AND {{ filter_out_blocked_users('members', 'user_id') }}
 
-),
-
-projects AS (
+), projects AS (
 
     SELECT *
     FROM {{ref('gitlab_dotcom_projects')}}
@@ -39,17 +33,11 @@ projects AS (
       AND key_value = 'group'
   
 ), joined AS (
+
     SELECT
       namespaces.namespace_id,
-
-      {% for field in fields_to_mask %}
-      CASE
-        WHEN namespaces.visibility_level = 'public' OR namespace_is_internal THEN {{field}}
-        WHEN namespaces.visibility_level = 'internal' THEN 'internal - masked'
-        WHEN namespaces.visibility_level = 'private'  THEN 'private - masked'
-      END                                                              AS {{field}},
-      {% endfor %}
-
+      namespaces.namespace_name, 
+      namespaces.namespace_path,
       namespaces.owner_id,
       COALESCE(namespaces.namespace_type, 'Individual')                AS namespace_type,
       namespaces.has_avatar,
@@ -96,6 +84,7 @@ projects AS (
       LEFT JOIN creators
         ON namespaces.namespace_id = creators.group_id
     {{ dbt_utils.group_by(n=33) }}
+    
 )
 
 SELECT *

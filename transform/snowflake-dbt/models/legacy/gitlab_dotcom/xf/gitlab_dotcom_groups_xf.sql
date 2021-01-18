@@ -1,22 +1,16 @@
-{% set fields_to_mask = ['group_name', 'group_path'] %}
-
 WITH groups AS (
 
     SELECT *
     FROM {{ref('gitlab_dotcom_groups')}}
 
-),
-
-members AS (
+), members AS (
 
     SELECT *
     FROM {{ref('gitlab_dotcom_members')}} members
     WHERE is_currently_valid = TRUE 
       AND {{ filter_out_blocked_users('members', 'user_id') }}
 
-),
-
-projects AS (
+), projects AS (
 
     SELECT *
     FROM {{ref('gitlab_dotcom_projects')}}
@@ -30,15 +24,8 @@ projects AS (
 
     SELECT
       groups.group_id,
-
-      {% for field in fields_to_mask %}
-      CASE
-        WHEN groups.visibility_level = 'public' OR namespace_is_internal THEN groups.{{field}}
-        WHEN groups.visibility_level = 'internal' AND NOT namespace_is_internal THEN 'internal - masked'
-        WHEN groups.visibility_level = 'private'  AND NOT namespace_is_internal THEN 'private - masked'
-      END                                                               AS {{field}},
-      {% endfor %}
-
+      groups.group_name, 
+      groups.group_path,
       groups.owner_id,
       groups.has_avatar,
       groups.created_at                                                 AS group_created_at,

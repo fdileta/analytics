@@ -423,7 +423,7 @@ models:
         tests:
           - not_null
   - name: gitlab_dotcom_milestones_xf
-    description: This is a non-sensitive models of the milestones table. The "title" and "description" columns are masked for non-internal namespaces.
+    description: This is a non-sensitive models of the milestones table. 
     columns:
       - name: milestone_id
         tests:
