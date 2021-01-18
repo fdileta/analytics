@@ -1,6 +1,7 @@
-{{ config({
-    "materialized": "incremental",
-    "unique_key": "dim_usage_ping_id"
+{{ 
+    config({
+        "materialized": "incremental",
+        "unique_key": "dim_usage_ping_id"
     })
 }}
 
@@ -8,20 +9,26 @@
 
 WITH source AS (
 
-    SELECT 
-      id                                                                        AS dim_usage_ping_id, 
-      created_at                                                                AS ping_created_at,
-      *, 
-      {{ nohash_sensitive_columns('version_usage_data_source', 'source_ip') }}  AS ip_address_hash, 
-      OBJECT_CONSTRUCT(
-        {% for column in columns %}  
-          '{{ column.column | lower }}', {{ column.column | lower }}
-          {% if not loop.last %}
-            ,
-          {% endif %}
-        {% endfor %}
-      )                                                                         AS raw_usage_data_payload_reconstructed
-    FROM {{ ref('version_usage_data_source') }}
+    {% if is_incremental() %}
+
+      SELECT 
+        id                                                                        AS dim_usage_ping_id, 
+        created_at                                                                AS ping_created_at,
+        *, 
+        {{ nohash_sensitive_columns('version_usage_data_source', 'source_ip') }}  AS ip_address_hash, 
+        OBJECT_CONSTRUCT(
+          {% for column in columns %}  
+            '{{ column.column | lower }}', {{ column.column | lower }}
+            {% if not loop.last %}
+              ,
+            {% endif %}
+          {% endfor %}
+        )                                                                         AS raw_usage_data_payload_reconstructed
+      FROM {{ ref('version_usage_data_source') }}
+      WHERE ping_created_at > (SELECT MAX(ping_created_at) FROM {{ this }})
+      
+    {% endif %}
+
 
 ), raw_usage_data AS (
 
