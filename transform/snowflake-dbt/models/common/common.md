@@ -406,3 +406,35 @@ The grain of the table is a license_id.
 Information on the Enterprise Dimensional Model can be found in the [handbook](https://about.gitlab.com/handbook/business-ops/data-team/platform/edw/)
 
 {% enddocs %}
+
+
+{% docs fct_usage_metrics_mau_sm_mapped_subscriptions_by_instance_user_count %}
+
+This is a fact data model that representing the xmau metrics requested by the sales team, where we select the usage ping for that month based on the max instance_user_count. 
+
+There is only ever 1 usage ping per 1 subscription per month. 
+
+Information on the Enterprise Dimensional Model can be found in the [handbook](https://about.gitlab.com/handbook/business-ops/data-team/platform/edw/)
+
+{% enddocs %}
+
+{% docs fct_usage_metrics_mau_sm_mapped_subscriptions_by_latest %}
+
+This is a fact data model that representing the xmau metrics requested by the sales team, where we select the usage ping for that month based on the last usage ping in that month. 
+
+There is only ever 1 usage ping per 1 subscription per month. 
+
+Information on the Enterprise Dimensional Model can be found in the [handbook](https://about.gitlab.com/handbook/business-ops/data-team/platform/edw/)
+
+{% enddocs %}
+
+{% docs fct_usage_metrics_mau_sm_mapped_subscriptions_by_umau %}
+
+This is a fact data model that representing the xmau metrics requested by the sales team, where we select the usage ping for that month based on the max umau 28 day counter value. 
+
+There is only ever 1 usage ping per 1 subscription per month. 
+
+Information on the Enterprise Dimensional Model can be found in the [handbook](https://about.gitlab.com/handbook/business-ops/data-team/platform/edw/)
+
+{% enddocs %}
+

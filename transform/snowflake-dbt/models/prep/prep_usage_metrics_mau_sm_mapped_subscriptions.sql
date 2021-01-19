@@ -5,6 +5,16 @@
     })
 }}
 
+{%- set results = smau_gmau_metrics() -%}
+{% if execute %}
+    {# Return the first column #}
+    {% set xmaus = results.columns[0].values() %}
+    {% set xmaus_names = results.columns[1].values() %}
+{% else %}
+    {% set results_list = [] %}
+{% endif %}
+
+
 WITH prep_usage_ping AS (
 
     SELECT * 
@@ -46,7 +56,14 @@ WITH prep_usage_ping AS (
   
 ), usage_pings_with_license_md5 AS (
 
-    {{ sales_fy21_q1_requested_metrics() }}
+    SELECT 
+
+      {%- for result in results %}
+        {{xmaus}} AS {{xmaus_names}}_active
+        {{ "," if not loop.last }}
+      {% endfor %}
+
+    FROM prep_usage_ping
   
 ), usage_ping_mapped_to_subscription AS (
 
@@ -68,7 +85,7 @@ WITH prep_usage_ping AS (
     cte_ref="usage_ping_mapped_to_subscription",
     created_by="@kathleentam",
     updated_by="@kathleentam",
-    created_date="2021-01-11",
-    updated_date="2021-01-11"
+    created_date="2021-01-18",
+    updated_date="2021-01-18"
 ) }}
 
