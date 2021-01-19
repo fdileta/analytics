@@ -1,6 +1,10 @@
 version: 2
 
 macros:
+  - name: sales_fy21_q1_requested_metrics
+    description: '{{ doc("sales_fy21_q1_requested_metrics") }}'
+  - name: smau_gmau_metrics
+    description: '{{ doc("smau_gmau_metrics") }}'
   - name: stage_mapping
     description: '{{ doc("stage_mapping") }}'
-
+  
