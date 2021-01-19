@@ -19,11 +19,5 @@ WITH prep_usage_ping_subscription_mapped_sales_fy21_q1 AS (
 
 )
 
-{{ dbt_audit(
-    cte_ref="final",
-    created_by="@kathleentam",
-    updated_by="@kathleentam",
-    created_date="2021-01-18",
-    updated_date="2021-01-18"
-) }}
-
+SELECT * 
+FROM final
