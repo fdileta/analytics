@@ -9,8 +9,6 @@
 
 WITH source AS (
 
-    {% if is_incremental() %}
-
       SELECT 
         id                                                                        AS dim_usage_ping_id, 
         created_at                                                                AS ping_created_at,
@@ -25,9 +23,12 @@ WITH source AS (
           {% endfor %}
         )                                                                         AS raw_usage_data_payload_reconstructed
       FROM {{ ref('version_usage_data_source') }}
-      WHERE ping_created_at > (SELECT MAX(ping_created_at) FROM {{ this }})
+
+      {% if is_incremental() %}
+        
+        WHERE ping_created_at > (SELECT MAX(ping_created_at) FROM {{ this }})
       
-    {% endif %}
+      {% endif %}
 
 
 ), raw_usage_data AS (
