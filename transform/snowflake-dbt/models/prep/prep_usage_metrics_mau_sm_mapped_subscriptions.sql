@@ -1,8 +1,9 @@
-{{ config({
-    "materialized": "table"
+{{ 
+    config({
+        "materialized": "incremental",
+        "unique_key": "dim_usage_ping_id"
     })
 }}
-
 
 WITH prep_usage_ping AS (
 
