@@ -72,7 +72,6 @@ models:
         description: The name of the full usage ping path formatted to be a column name 
         tests:
           - not_null
-          - unique
       - name: full_ping_name_for_raw_usage_data_payload
         description: The name of the full usage ping path formatted to query the raw_usage_data_payload directly. 
         tests:
