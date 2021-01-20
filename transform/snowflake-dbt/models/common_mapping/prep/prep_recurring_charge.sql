@@ -1,13 +1,13 @@
 /* grain: one record per subscription per month */
 WITH dim_date AS (
 
-    SELECT *
-    FROM {{ ref('dim_date') }}
+  SELECT *
+  FROM {{ ref('dim_date') }}
 
 ), map_merged_crm_accounts AS (
 
-    SELECT *
-    FROM {{ ref('map_merged_crm_accounts') }}
+  SELECT *
+  FROM {{ ref('map_merged_crm_accounts') }}
 
 ), zuora_account AS (
 
