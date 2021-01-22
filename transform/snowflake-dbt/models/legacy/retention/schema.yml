@@ -147,47 +147,47 @@ models:
     description: '{{ doc("retention_parent_account_") }}'
     columns:
         - name: parent_account_id
-          tests:
-              - not_null
+          # tests:
+          #     - not_null
         - name: parent_account_name
-          tests:
-              - not_null
+          # tests:
+          #     - not_null
         - name: salesforce_account_id
           description: 'Used only for joining to SFDC in Looker'
-          tests:
-              - not_null
+          # tests:
+          #     - not_null
         - name: retention_month
-          tests:
-              - not_null
+          # tests:
+          #     - not_null
         - name: original_mrr
-          tests:
-              - not_null
+          # tests:
+          #     - not_null
         - name: net_retention_mrr
-          tests:
-              - not_null
+          # tests:
+          #     - not_null
         - name: gross_retention_mrr
-          tests:
-              - not_null
+          # tests:
+          #     - not_null
         - name: parent_account_cohort_month
-          tests:
-              - not_null
+          # tests:
+          #     - not_null
         - name: parent_account_cohort_quarter
-          tests:
-              - not_null
+          # tests:
+          #     - not_null
         - name: months_since_parent_account_cohort_start
-          tests:
-              - not_null
+          # tests:
+          #     - not_null
         - name: quarters_since_parent_account_cohort_start
-          tests:
-              - not_null
+          # tests:
+          #     - not_null
         - name: churn_type
           tests:
-              - not_null
+              # - not_null
               - accepted_values:
                       values: ['Maintained', 'Upgraded', 'Downgraded', 'Cancelled']
         - name: arr_segmentation
           tests:
-              - not_null
+              # - not_null
               - accepted_values:
                       values: ['5K to 50K', 'Under 5K', '50K to 100K','100K to 500K', '500K to 1M','1M and above']
   - name: retention_reasons_for_retention
