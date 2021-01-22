@@ -18,6 +18,7 @@ WITH mrr_totals AS (
            billing_account.billing_account_name                             AS zuora_account_name,
            billing_account.billing_account_name                             AS zuora_crm_id,
            crm_account.crm_account_id                                       AS sfdc_account_id,
+           crm_account.crm_account_name                                     AS sfdc_account_name,
            crm_account.ultimate_parent_account_id                           AS ultimate_parent_account_id,
            crm_account.ultimate_parent_account_name                         AS ultimate_parent_account_name,
            min(zuora_subscription_cohort_month) OVER (
