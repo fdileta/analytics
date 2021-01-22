@@ -1,14 +1,14 @@
 version: 2
 
 models:
-  - name: arr_changes_sfdc_account_monthly
+  - name: fct_arr_changes_sfdc_account_monthly
     columns:
         - name: primary_key
           tests:
               - not_null
               - unique
 
-  - name: current_arr_segmentation_all_levels
+  - name: fct_current_arr_segmentation_all_levels
     description: '{{ doc("current_arr_segmentation_all_levels") }}'
     columns:
         - name: id
@@ -143,7 +143,7 @@ models:
         - name: quarters_since_parent_account_cohort_start
           description: '{{ doc("fct_mrr_totals_levelled_col_quarters_since_parent_cohort_start") }}'
 
-  - name: retention_parent_account_
+  - name: fct_retention_parent_account_
     description: '{{ doc("retention_parent_account_") }}'
     columns:
         - name: parent_account_id
@@ -190,7 +190,7 @@ models:
               - not_null
               - accepted_values:
                       values: ['5K to 50K', 'Under 5K', '50K to 100K','100K to 500K', '500K to 1M','1M and above']
-  - name: retention_reasons_for_retention
+  - name: fct_retention_reasons_for_retention
     description: '{{ doc("retention_reasons_for_retention") }}'
     columns:
         - name: zuora_subscription_name
@@ -229,7 +229,7 @@ models:
         - name: rank_churn_type_month
           description: Ranks the months of the churn type by subscription with the first month of the churn type being ranked 1.
 
-  - name: retention_sfdc_account_
+  - name: fct_retention_sfdc_account_
     description: '{{ doc("retention_sfdc_account_") }}'
     columns:
         - name: sfdc_account_id
@@ -277,7 +277,7 @@ models:
               - accepted_values:
                       values: ['5K to 50K', 'Under 5K', '50K to 100K','100K to 500K', '500K to 1M','1M and above']
 
-  - name: retention_zuora_subscription_
+  - name: fct_retention_zuora_subscription_
     description: '{{ doc("retention_zuora_subscription_") }}'
     columns:
         - name: zuora_subscription_name
