@@ -145,10 +145,10 @@ models:
 
   - name: retention_parent_account_
     description: '{{ doc("retention_parent_account_") }}'
-    columns:
+    columns: # removing not null tests for https://gitlab.com/gitlab-data/analytics/-/issues/7633
         - name: parent_account_id
           # tests:
-          #     - not_null
+          #     - not_null 
         - name: parent_account_name
           # tests:
           #     - not_null
