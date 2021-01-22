@@ -4,7 +4,7 @@ with fct_mrr_totals_levelled AS (
 
 ), current_arr_segmentation_all_levels AS (
 
-       SELECT * FROM {{ref('current_arr_segmentation_all_levels')}}
+       SELECT * FROM {{ref('fct_current_arr_segmentation_all_levels')}}
        WHERE level_ = 'sfdc_account_id'
 
 ), list AS ( --get all the subscription + their lineage + the month we're looking for MRR for (12 month in the future)

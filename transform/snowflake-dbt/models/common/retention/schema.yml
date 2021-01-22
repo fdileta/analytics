@@ -1,7 +1,7 @@
 version: 2
 
 models:
-  - name: fct_arr_changes_sfdc_account_monthly
+  - name: fct_arr_changes
     columns:
         - name: primary_key
           tests:
