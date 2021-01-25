@@ -1,7 +1,7 @@
-{{ config({
+{# {{ config({
     "materialized": "ephemeral"
     })
-}}
+}} #}
 
 WITH source AS (
 
@@ -20,9 +20,10 @@ WITH source AS (
           THEN NULL
         WHEN percent_over_top_end_of_band LIKE '%'               
           THEN NULLIF(REPLACE(percent_over_top_end_of_band,'%',''),'') 
-        ELSE NULLIF(percent_over_top_end_of_band, '') END                       AS percent_over_top_end_of_band_cleaned,
-      dbt_valid_from::date                                                      AS valid_from,
-      dbt_valid_to::DATE                               AS valid_to
+        ELSE NULLIF(percent_over_top_end_of_band, '') END                           AS percent_over_top_end_of_band_cleaned,
+        percent_over_bottom_end_of_band,
+      dbt_valid_from::date                                                          AS valid_from,
+      dbt_valid_to::DATE                                                            AS valid_to
     FROM source
     WHERE percent_over_top_end_of_band IS NOT NULL
 
@@ -34,6 +35,7 @@ WITH source AS (
       IFF(CONTAINS(percent_over_top_end_of_band,'%') = True,
           ROUND(percent_over_top_end_of_band_cleaned/100::FLOAT, 4),
           ROUND(percent_over_top_end_of_band_cleaned::FLOAT, 4))                    AS deviation_from_comp_calc,
+    percent_over_bottom_end_of_band,      
     valid_from,
     valid_to
     FROM renamed
@@ -44,10 +46,11 @@ WITH source AS (
     employee_number,
     original_value,
     deviation_from_comp_calc,
+    percent_over_bottom_end_of_band,
     MIN(valid_from)                     AS valid_from,
     NULLIF(MAX(valid_to), CURRENT_DATE) AS valid_to
   FROM deduplicated
-  GROUP BY 1, 2, 3
+  GROUP BY 1, 2, 3, 4
 
 )
 

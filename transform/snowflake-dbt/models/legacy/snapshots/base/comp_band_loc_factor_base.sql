@@ -48,8 +48,9 @@ WITH source AS (
     employee_number,
     original_value,
     deviation_from_comp_calc,
-    MIN(valid_from)                     AS valid_from,
-    COALESCE(MAX(valid_to), '2020-05-20') AS valid_to
+    NULL                                    AS percent_over_bottom_end_of_band,
+    MIN(valid_from)                         AS valid_from,
+    COALESCE(MAX(valid_to), '2020-05-20')   AS valid_to
     ---last day we captured from this sheetload tab--
   FROM deduplicated
   GROUP BY 1, 2, 3

@@ -1,6 +1,16 @@
 version: 2
 
 models:
+  - name: comp_band_deviation_snapshots
+    description: This captures the percent outside of comp band and the percent over the bottom end of band.
+    columns:
+      - name: employee_number
+      - name: original_value
+      - name: deviation_from_comp_calc
+      - name: percent_over_bottom_end_of_band
+      - name: valid_from
+      - name: valid_to
+      
   - name: employee_location_factor_snapshots
     description: This captures changes in location factor for an employee. Starting 2020.03.24 data is captured from bamboohr instead of sheetload.
     columns:
