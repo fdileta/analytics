@@ -4,33 +4,68 @@
 
 WITH dim_billing_account AS (
 
-  SELECT *
-  FROM {{ ref('dim_billing_account') }}
+    SELECT *
+    FROM {{ ref('dim_billing_account') }}
 
 ), dim_crm_account AS (
 
-  SELECT *
-  FROM {{ ref('dim_crm_account') }}
+    SELECT *
+    FROM {{ ref('dim_crm_account') }}
+
+), dim_crm_sales_hierarchy_stamped AS (
+
+    SELECT *
+    FROM {{ ref('dim_crm_sales_hierarchy_stamped') }}
 
 ), dim_date AS (
 
-  SELECT *
-  FROM {{ ref('dim_date') }}
+    SELECT *
+    FROM {{ ref('dim_date') }}
+
+), dim_industry AS (
+
+    SELECT *
+    FROM {{ ref('dim_industry') }}
+
+), dim_opportunity_source AS (
+
+    SELECT *
+    FROM {{ ref('dim_opportunity_source') }}
+
+), dim_order_type AS (
+
+    SELECT *
+    FROM {{ ref('dim_order_type') }}
 
 ), dim_product_detail AS (
 
-  SELECT *
-  FROM {{ ref('dim_product_detail') }}
+    SELECT *
+    FROM {{ ref('dim_product_detail') }}
+
+), dim_purchase_channel AS (
+
+    SELECT *
+    FROM {{ ref('dim_purchase_channel') }}
+
+), dim_sales_segment AS (
+
+    SELECT *
+    FROM {{ ref('dim_sales_segment') }}
+
+), dim_sales_territory AS (
+
+    SELECT *
+    FROM {{ ref('dim_sales_territory') }}
 
 ), dim_subscription AS (
 
-  SELECT *
-  FROM {{ ref('dim_subscription') }}
+    SELECT *
+    FROM {{ ref('dim_subscription') }}
 
 ), fct_mrr AS (
 
-  SELECT *
-  FROM {{ ref('fct_mrr') }}
+    SELECT *
+    FROM {{ ref('fct_mrr') }}
 
 )
 
@@ -60,6 +95,18 @@ SELECT
   dim_crm_account.ultimate_parent_account_owner_team,
   dim_crm_account.ultimate_parent_territory,
 
+  -- shared dimension attributes
+  dim_order_type.order_type_name,
+  dim_opportunity_source.opportunity_source_name,
+  dim_purchase_channel.purchase_channel_name,
+  dim_sales_segment.sales_segment_name,
+  dim_sales_territory.sales_territory_name,
+  dim_industry.industry_name,
+  dim_crm_sales_hierarchy_sales_segment_stamped.sales_segment_name_stamped,
+  dim_crm_sales_hierarchy_location_region_stamped.location_region_name_stamped,
+  dim_crm_sales_hierarchy_sales_region_stamped.sales_region_name_stamped,
+  dim_crm_sales_hierarchy_sales_area_stamped.sales_area_name_stamped,
+
   --subscription info
   dim_subscription.subscription_name,
   dim_subscription.subscription_status,
@@ -88,3 +135,23 @@ SELECT
     ON dim_date.date_id = fct_mrr.dim_date_id
   LEFT JOIN dim_crm_account
     ON dim_billing_account.dim_crm_account_id = dim_crm_account.crm_account_id
+  LEFT JOIN dim_order_type
+    ON fct_mrr.dim_order_type_id = dim_order_type.dim_order_type_id
+  LEFT JOIN dim_opportunity_source
+    ON fct_mrr.dim_opportunity_source_id = dim_opportunity_source.dim_opportunity_source_id
+  LEFT JOIN dim_purchase_channel
+    ON fct_mrr.dim_purchase_channel_id = dim_purchase_channel.dim_purchase_channel_id
+  LEFT JOIN dim_sales_segment
+    ON fct_mrr.dim_sales_segment_id = dim_sales_segment.dim_sales_segment_id
+  LEFT JOIN dim_sales_territory
+    ON fct_mrr.dim_sales_territory_id = dim_sales_territory.dim_sales_territory_id
+  LEFT JOIN dim_industry
+    ON fct_mrr.dim_industry_id = dim_industry.dim_industry_id
+  LEFT JOIN dim_crm_sales_hierarchy_stamped AS dim_crm_sales_hierarchy_sales_segment_stamped
+    ON fct_mrr.dim_crm_sales_hierarchy_sales_segment_stamped_id = dim_crm_sales_hierarchy_sales_segment_stamped.dim_crm_sales_hierarchy_sales_segment_stamped_id
+  LEFT JOIN dim_crm_sales_hierarchy_stamped AS dim_crm_sales_hierarchy_location_region_stamped
+    ON fct_mrr.dim_crm_sales_hierarchy_location_region_stamped_id = dim_crm_sales_hierarchy_location_region_stamped.dim_crm_sales_hierarchy_location_region_stamped_id
+  LEFT JOIN dim_crm_sales_hierarchy_stamped AS dim_crm_sales_hierarchy_sales_region_stamped
+    ON fct_mrr.dim_crm_sales_hierarchy_sales_region_stamped_id = dim_crm_sales_hierarchy_sales_region_stamped.dim_crm_sales_hierarchy_sales_region_stamped_id
+  LEFT JOIN dim_crm_sales_hierarchy_stamped AS dim_crm_sales_hierarchy_sales_area_stamped
+    ON fct_mrr.dim_crm_sales_hierarchy_sales_area_stamped_id = dim_crm_sales_hierarchy_sales_area_stamped.dim_crm_sales_hierarchy_sales_area_stamped_id

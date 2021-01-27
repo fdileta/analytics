@@ -3,6 +3,11 @@ WITH crm_account_dimensions AS (
     SELECT *
     FROM {{ ref('map_crm_account') }}
 
+), crm_sales_hierarchy_stamped AS (
+
+    SELECT *
+    FROM {{ ref('prep_crm_sales_hierarchy_stamped') }}
+
 ), order_type AS (
 
     SELECT *
@@ -26,7 +31,7 @@ WITH crm_account_dimensions AS (
 ), sfdc_opportunity AS (
 
     SELECT *
-    FROM {{ ref('sfdc_opportunity') }}
+    FROM {{ ref('sfdc_opportunity_source') }}
 
 ), opportunity_fields AS(
 
@@ -38,7 +43,11 @@ WITH crm_account_dimensions AS (
       deal_path,
       order_type_stamped                                        AS order_type,
       sales_segment,
-      sales_qualified_source
+      sales_qualified_source,
+      user_segment_stamped,
+      user_geo_stamped,
+      user_region_stamped,
+      user_area_stamped
 
     FROM sfdc_opportunity
 
@@ -56,7 +65,11 @@ WITH crm_account_dimensions AS (
       COALESCE(crm_account_dimensions.dim_geo_sub_region_id, MD5(-1))                                    AS dim_geo_sub_region_id,
       COALESCE(crm_account_dimensions.dim_geo_area_id, MD5(-1))                                          AS dim_geo_area_id,
       COALESCE(crm_account_dimensions.dim_sales_territory_id, MD5(-1))                                   AS dim_sales_territory_id,
-      COALESCE(crm_account_dimensions.dim_industry_id, MD5(-1))                                          AS dim_industry_id
+      COALESCE(crm_account_dimensions.dim_industry_id, MD5(-1))                                          AS dim_industry_id,
+      sales_hierarchy_sales_segment.dim_crm_sales_hierarchy_sales_segment_stamped_id                     AS dim_crm_sales_hierarchy_sales_segment_stamped_id,
+      sales_hierarchy_location_region.dim_crm_sales_hierarchy_location_region_stamped_id                 AS dim_crm_sales_hierarchy_location_region_stamped_id,
+      sales_hierarchy_sales_region.dim_crm_sales_hierarchy_sales_region_stamped_id                       AS dim_crm_sales_hierarchy_sales_region_stamped_id,
+      sales_hierarchy_sales_area.dim_crm_sales_hierarchy_sales_area_stamped_id                           AS dim_crm_sales_hierarchy_sales_area_stamped_id
 
     FROM opportunity_fields
     LEFT JOIN crm_account_dimensions
@@ -69,6 +82,14 @@ WITH crm_account_dimensions AS (
       ON opportunity_fields.deal_path = purchase_channel.purchase_channel_name
     LEFT JOIN sales_segment
       ON opportunity_fields.sales_segment = sales_segment.sales_segment_name
+    LEFT JOIN crm_sales_hierarchy_stamped AS sales_hierarchy_sales_segment
+      ON opportunity_fields.user_segment_stamped = sales_hierarchy_sales_segment.sales_segment_name_stamped
+    LEFT JOIN crm_sales_hierarchy_stamped AS sales_hierarchy_location_region
+      ON opportunity_fields.user_geo_stamped = sales_hierarchy_location_region.location_region_name_stamped
+    LEFT JOIN crm_sales_hierarchy_stamped AS sales_hierarchy_sales_region
+      ON opportunity_fields.user_region_stamped = sales_hierarchy_sales_region.sales_region_name_stamped
+    LEFT JOIN crm_sales_hierarchy_stamped AS sales_hierarchy_sales_area
+      ON opportunity_fields.user_area_stamped = sales_hierarchy_sales_area.sales_area_name_stamped
 
 )
 
