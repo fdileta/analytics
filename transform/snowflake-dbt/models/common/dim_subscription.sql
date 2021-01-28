@@ -3,35 +3,46 @@ WITH subscription AS (
     SELECT *
     FROM {{ ref('prep_subscription') }}
 
+), subscription_lineage AS (
+
+    SELECT *
+    FROM {{ ref('prep_subscription_lineage') }}
+
 ), final AS (
 
   SELECT
     --ids & keys
-    dim_subscription_id,
-    dim_crm_account_id,
-    dim_billing_account_id,
-    dim_crm_person_id_invoice_owner,
-    dim_crm_opportunity_id,
-    dim_subscription_id_original,
-    dim_subscription_id_previous,
-    amendment_id,
+    s.dim_subscription_id,
+    s.dim_crm_account_id,
+    s.dim_billing_account_id,
+    s.dim_crm_person_id_invoice_owner,
+    s.dim_crm_opportunity_id,
+    s.dim_subscription_id_original,
+    s.dim_subscription_id_previous,
+    s.amendment_id,
 
     --info
-    subscription_name,
-    subscription_name_slugify,
-    subscription_status,
-    subscription_version,
-    is_auto_renew,
-    zuora_renewal_subscription_name,
-    zuora_renewal_subscription_name_slugify,
-    renewal_term,
-    renewal_term_period_type,
-    subscription_start_date,
-    subscription_end_date,
-    subscription_sales_type,
-    subscription_start_month,
-    subscription_end_month
-  FROM subscription
+    s.subscription_name,
+    s.subscription_name_slugify,
+    s.subscription_status,
+    s.subscription_version,
+    s.is_auto_renew,
+    s.zuora_renewal_subscription_name,
+    s.zuora_renewal_subscription_name_slugify,
+    s.renewal_term,
+    s.renewal_term_period_type,
+    s.subscription_start_date,
+    s.subscription_end_date,
+    s.subscription_sales_type,
+    s.subscription_start_month,
+    s.subscription_end_month,
+    sl.lineage,
+    sl.oldest_subscription_in_cohort,
+    sl.cohort_month,
+    sl.cohort_quarter,
+    sl.cohort_year
+  FROM subscription s
+  LEFT JOIN subscription_lineage sl on sl.dim_subscription_id = s.dim_subscription_id
 
 )
 
