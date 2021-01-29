@@ -20,11 +20,19 @@ WITH dates AS (
 
 ), joined AS (
 
-     SELECT
-           mrr_totals.*,
+      SELECT
+           mrr_totals.mrr_id,
+           mrr_totals.dim_date_id,
+           mrr_totals.dim_billing_account_id,
+           mrr_totals.dim_crm_account_id,
+           mrr_totals.dim_subscription_id,
+           mrr_totals.dim_product_detail_id,
+           mrr_totals.mrr,
+           mrr_totals.arr,
+           mrr_totals.quantity,
+           mrr_totals.unit_of_measure,
            billing_account.dim_billing_account_id                           AS billing_account_id,
            billing_account.billing_account_name                             AS billing_account_name,
-           billing_account.billing_account_name                             AS billing_crm_id,
            crm_account.crm_account_id                                       AS sfdc_account_id,
            crm_account.crm_account_name                                     AS sfdc_account_name,
            crm_account.ultimate_parent_account_id                           AS ultimate_parent_account_id,
