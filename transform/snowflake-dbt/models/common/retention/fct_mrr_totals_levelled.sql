@@ -51,12 +51,12 @@ WITH dates AS (
 ), final_table AS (
 
    SELECT joined.*,
-      datediff(month, billing_account_cohort_month, mrr_month) as months_since_billing_account_cohort_start,
-      datediff(quarter, billing_account_cohort_quarter, mrr_month) as quarters_since_billing_account_cohort_start,
-      datediff(month, sfdc_account_cohort_month, mrr_month) as months_since_sfdc_account_cohort_start,
-      datediff(quarter, sfdc_account_cohort_quarter, mrr_month) as quarters_since_sfdc_account_cohort_start,
-      datediff(month, parent_account_cohort_month, mrr_month) as months_since_parent_account_cohort_start,
-      datediff(quarter, parent_account_cohort_quarter, mrr_month) as quarters_since_parent_account_cohort_start
+      datediff(month, billing_account_cohort_month, dates.date_day)     AS months_since_billing_account_cohort_start,
+      datediff(quarter, billing_account_cohort_quarter, dates.date_day) AS quarters_since_billing_account_cohort_start,
+      datediff(month, sfdc_account_cohort_month, dates.date_day)        AS months_since_sfdc_account_cohort_start,
+      datediff(quarter, sfdc_account_cohort_quarter, dates.date_day)    AS quarters_since_sfdc_account_cohort_start,
+      datediff(month, parent_account_cohort_month, dates.date_day)      AS months_since_parent_account_cohort_start,
+      datediff(quarter, parent_account_cohort_quarter, dates.date_day)  AS quarters_since_parent_account_cohort_start
     FROM joined
     JOIN dates ON dates.date_id = joined.dim_date_id
 
