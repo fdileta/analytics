@@ -1,43 +1,25 @@
-WITH dim_billing_account AS (
+{{ simple_cte([
+    ('dim_billing_account','dim_billing_account'),
+    ('dim_crm_account','dim_crm_account'),
+    ('dim_date','dim_date'),
+    ('dim_product_detail','dim_product_detail'),
+    ('dim_subscription','dim_subscription'),
+    ('fct_mrr', 'fct_mrr')
+]) }}
 
-    SELECT *
-    FROM {{ ref('dim_billing_account') }}
-
-), dim_crm_account AS (
-
-    SELECT *
-    FROM {{ ref('dim_crm_account') }}
-
-), dim_date AS (
-
-    SELECT *
-    FROM {{ ref('dim_date') }}
-
-), dim_product_detail AS (
-
-    SELECT *
-    FROM {{ ref('dim_product_detail') }}
-
-), dim_subscription AS (
-
-    SELECT *
-    FROM {{ ref('dim_subscription') }}
-
-), fct_mrr AS (
-
-    SELECT *
-    FROM {{ ref('fct_mrr') }}
-
-), mart_arr AS (
+, mart_arr AS (
 
     SELECT
-      dim_date.date_actual                                                            AS arr_month,
-      IFF(is_first_day_of_last_month_of_fiscal_quarter, fiscal_quarter_name_fy, NULL) AS fiscal_quarter_name_fy,
-      IFF(is_first_day_of_last_month_of_fiscal_year, fiscal_year, NULL)               AS fiscal_year,
+      dim_date.date_actual                                                                          AS arr_month,
+      IFF(is_first_day_of_last_month_of_fiscal_quarter, fiscal_quarter_name_fy, NULL)               AS fiscal_quarter_name_fy,
+      IFF(is_first_day_of_last_month_of_fiscal_year, fiscal_year, NULL)                             AS fiscal_year,
       dim_crm_account.ultimate_parent_account_name,
       dim_crm_account.ultimate_parent_account_id,
-      dim_product_detail.product_tier_name                                            AS product_category,
-      dim_product_detail.product_delivery_type                                        AS delivery,
+      COALESCE(dim_crm_account.merged_to_account_id, dim_crm_account.crm_account_id)                AS crm_id,
+      dim_subscription.subscription_name,
+      dim_subscription.dim_subscription_id                                                          AS subscription_id,
+      dim_product_detail.product_tier_name                                                          AS product_category,
+      dim_product_detail.product_delivery_type                                                      AS delivery,
       dim_product_detail.product_ranking,
       fct_mrr.mrr,
       fct_mrr.quantity
@@ -58,6 +40,9 @@ WITH dim_billing_account AS (
     SELECT
       ultimate_parent_account_name,
       ultimate_parent_account_id,
+      crm_id,
+      subscription_name,
+      subscription_id,
       product_category,
       delivery,
       product_ranking,
@@ -65,17 +50,20 @@ WITH dim_billing_account AS (
       --add 1 month to generate churn month
       DATEADD('month',1,MAX(arr_month))   AS date_month_end
     FROM mart_arr
-    {{ dbt_utils.group_by(n=5) }}
+    {{ dbt_utils.group_by(n=8) }}
 
 ), base AS (
 
     SELECT
       ultimate_parent_account_name,
       ultimate_parent_account_id,
+      crm_id,
+      subscription_name,
+      subscription_id,
       product_category,
       delivery,
       product_ranking,
-      dim_date.date_actual         AS arr_month,
+      dim_date.date_actual AS arr_month,
       dim_date.fiscal_quarter_name_fy,
       dim_date.fiscal_year
     FROM max_min_month
@@ -86,32 +74,35 @@ WITH dim_billing_account AS (
       AND dim_date.date_actual <=  max_min_month.date_month_end
       AND day_of_month = 1
 
-), monthly_arr_parent_level AS (
+), monthly_arr_subscription_level AS (
 
     SELECT
       base.arr_month,
       base.ultimate_parent_account_name,
       base.ultimate_parent_account_id,
-      base.product_category                                                                  AS product_category,
-      base.delivery                                                                          AS delivery,
-      base.product_ranking                                                                   AS product_ranking,
-      SUM(ZEROIFNULL(quantity))                                                              AS quantity,
-      SUM(ZEROIFNULL(mrr)*12)                                                                AS arr
+      base.crm_id,
+      base.subscription_name,
+      base.subscription_id,
+      base.product_category,
+      base.delivery,
+      base.product_ranking,
+      SUM(ZEROIFNULL(quantity))                                                               AS quantity,
+      SUM(ZEROIFNULL(mrr)*12)                                                                 AS arr
     FROM base
     LEFT JOIN mart_arr
       ON base.arr_month = mart_arr.arr_month
-      AND base.ultimate_parent_account_id = mart_arr.ultimate_parent_account_id
+      AND base.subscription_id = mart_arr.subscription_id
       AND base.product_category = mart_arr.product_category
-    {{ dbt_utils.group_by(n=6) }}
+    {{ dbt_utils.group_by(n=9) }}
 
 ), prior_month AS (
 
     SELECT
-      monthly_arr_parent_level.*,
-      COALESCE(LAG(quantity) OVER (PARTITION BY ultimate_parent_account_id, product_category ORDER BY arr_month),0) AS previous_quantity,
-      COALESCE(LAG(arr) OVER (PARTITION BY ultimate_parent_account_id, product_category ORDER BY arr_month),0)      AS previous_arr,
-      ROW_NUMBER() OVER (PARTITION BY ultimate_parent_account_id, product_category ORDER BY arr_month)              AS row_number
-    FROM monthly_arr_parent_level
+      monthly_arr_subscription_level.*,
+      COALESCE(LAG(quantity) OVER (PARTITION BY subscription_id, product_category ORDER BY arr_month),0) AS previous_quantity,
+      COALESCE(LAG(arr) OVER (PARTITION BY subscription_id, product_category ORDER BY arr_month),0) AS previous_arr,
+      ROW_NUMBER() OVER (PARTITION BY subscription_id, product_category ORDER BY arr_month) AS row_number
+    FROM monthly_arr_subscription_level
 
 ), type_of_arr_change AS (
 
@@ -124,7 +115,7 @@ WITH dim_billing_account AS (
 
     SELECT
       arr_month,
-      ultimate_parent_account_id,
+      subscription_id,
       product_category,
       previous_arr      AS beg_arr,
       previous_quantity AS beg_quantity
@@ -134,7 +125,7 @@ WITH dim_billing_account AS (
 
     SELECT
       arr_month,
-      ultimate_parent_account_id,
+      subscription_id,
       product_category,
       {{ reason_for_arr_change_seat_change('quantity', 'previous_quantity', 'arr', 'previous_arr') }},
       {{ reason_for_quantity_change_seat_change('quantity', 'previous_quantity') }}
@@ -144,7 +135,7 @@ WITH dim_billing_account AS (
 
     SELECT
       arr_month,
-      ultimate_parent_account_id,
+      subscription_id,
       product_category,
       {{ reason_for_arr_change_price_change('product_category', 'product_category', 'quantity', 'previous_quantity', 'arr', 'previous_arr', 'product_ranking',' product_ranking') }}
     FROM type_of_arr_change
@@ -153,7 +144,7 @@ WITH dim_billing_account AS (
 
     SELECT
       arr_month,
-      ultimate_parent_account_id,
+      subscription_id,
       product_category,
       arr                   AS end_arr,
       quantity              AS end_quantity
@@ -163,7 +154,7 @@ WITH dim_billing_account AS (
 
     SELECT
       arr_month,
-      ultimate_parent_account_id,
+      subscription_id,
       product_category,
       {{ annual_price_per_seat_change('quantity', 'previous_quantity', 'arr', 'previous_arr') }}
     FROM type_of_arr_change
@@ -171,12 +162,14 @@ WITH dim_billing_account AS (
 ), combined AS (
 
     SELECT
-      {{ dbt_utils.surrogate_key(['type_of_arr_change.arr_month', 'type_of_arr_change.ultimate_parent_account_id',
-        'type_of_arr_change.product_category']) }}
+      {{ dbt_utils.surrogate_key(['type_of_arr_change.arr_month', 'type_of_arr_change.subscription_id','type_of_arr_change.product_category']) }}
                                                                     AS primary_key,
       type_of_arr_change.arr_month,
       type_of_arr_change.ultimate_parent_account_name,
       type_of_arr_change.ultimate_parent_account_id,
+      type_of_arr_change.crm_id,
+      type_of_arr_change.subscription_name,
+      type_of_arr_change.subscription_id,
       type_of_arr_change.product_category,
       type_of_arr_change.delivery,
       type_of_arr_change.product_ranking,
@@ -191,23 +184,23 @@ WITH dim_billing_account AS (
       annual_price_per_seat_change.annual_price_per_seat_change
     FROM type_of_arr_change
     LEFT JOIN reason_for_arr_change_beg
-      ON type_of_arr_change.ultimate_parent_account_id = reason_for_arr_change_beg.ultimate_parent_account_id
+      ON type_of_arr_change.subscription_id = reason_for_arr_change_beg.subscription_id
       AND type_of_arr_change.arr_month = reason_for_arr_change_beg.arr_month
       AND type_of_arr_change.product_category = reason_for_arr_change_beg.product_category
     LEFT JOIN reason_for_arr_change_seat_change
-      ON type_of_arr_change.ultimate_parent_account_id = reason_for_arr_change_seat_change.ultimate_parent_account_id
+      ON type_of_arr_change.subscription_id = reason_for_arr_change_seat_change.subscription_id
       AND type_of_arr_change.arr_month = reason_for_arr_change_seat_change.arr_month
       AND type_of_arr_change.product_category = reason_for_arr_change_seat_change.product_category
     LEFT JOIN reason_for_arr_change_price_change
-      ON type_of_arr_change.ultimate_parent_account_id = reason_for_arr_change_price_change.ultimate_parent_account_id
+      ON type_of_arr_change.subscription_id = reason_for_arr_change_price_change.subscription_id
       AND type_of_arr_change.arr_month = reason_for_arr_change_price_change.arr_month
       AND type_of_arr_change.product_category = reason_for_arr_change_price_change.product_category
     LEFT JOIN reason_for_arr_change_end
-      ON type_of_arr_change.ultimate_parent_account_id = reason_for_arr_change_end.ultimate_parent_account_id
+      ON type_of_arr_change.subscription_id = reason_for_arr_change_end.subscription_id
       AND type_of_arr_change.arr_month = reason_for_arr_change_end.arr_month
       AND type_of_arr_change.product_category = reason_for_arr_change_end.product_category
     LEFT JOIN annual_price_per_seat_change
-      ON type_of_arr_change.ultimate_parent_account_id = annual_price_per_seat_change.ultimate_parent_account_id
+      ON type_of_arr_change.subscription_id = annual_price_per_seat_change.subscription_id
       AND type_of_arr_change.arr_month = annual_price_per_seat_change.arr_month
       AND type_of_arr_change.product_category = annual_price_per_seat_change.product_category
     WHERE type_of_arr_change.arr_month < DATE_TRUNC('month',CURRENT_DATE)
