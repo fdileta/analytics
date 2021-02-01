@@ -48,7 +48,7 @@ on-run-end:
 # ======
 seeds:
   +enabled: true
-  +database: "{{ env_var('SNOWFLAKE_TRANSFORM_DATABASE') }}" #ANALYTICS
+  +database: "{{ env_var('SNOWFLAKE_PROD_DATABASE') }}" #PROD
   +schema: legacy
   +quote_columns: False
 
@@ -56,7 +56,7 @@ seeds:
     gitlab_release_schedule:
       +column_types:
         major_minor_version: varchar
-  
+
   data_tests:
     +database: "{{ env_var('SNOWFLAKE_PREP_DATABASE') }}" #PREP
     +schema: tdf
@@ -67,7 +67,7 @@ seeds:
 vars:
 
   datasiren:
-    'datasiren:sensorlist': ['datasiren_transform_db_email_column_name_sensor']
+    'datasiren:schema_name': 'datasiren'
 
   warehouse_name: "{{ env_var('SNOWFLAKE_TRANSFORM_WAREHOUSE') }}"
   valid_at: '{{ run_started_at.strftime("%Y-%m-%d %H:%M:%S%z") }}'
@@ -89,8 +89,9 @@ vars:
 # Model Configs
 # ==================
 models:
-  +database: "{{ env_var('SNOWFLAKE_TRANSFORM_DATABASE') }}" # ANALYTICS, redundant, but good to be explicit
+  +database: "{{ env_var('SNOWFLAKE_PROD_DATABASE') }}" # PROD
   +schema: legacy  # Top level override since profiles defaults to PREP
+  +copy_grants: true # Maintain any existing Permifrost grants
 
   # ------------------
   # Snowplow Package https://hub.getdbt.com/fishtown-analytics/snowplow/latest/
@@ -116,7 +117,7 @@ models:
     +database: "{{ env_var('SNOWFLAKE_PREP_DATABASE') }}" #PREP
     +schema: datasiren
     +tags: ["datasiren"]
-    
+
   # ==================
   # GitLab Models
   # ==================
@@ -134,6 +135,10 @@ models:
         +materialized: table
         +schema: airflow
 
+      bamboohr:
+        +materialized: table
+        +schema: bamboohr
+
       customers:
         +schema: customers
         sensitive:
@@ -141,6 +146,8 @@ models:
           secure: true
 
       datasiren:
+        +full_refresh: false
+        +materialized: incremental
         +schema: datasiren
         +tags: ["datasiren"]
 
@@ -149,12 +156,17 @@ models:
         +schema: date
 
       dbt:
-        +materialized: table
+        +materialized: incremental
         +schema: dbt
         +tags: ["dbt"]
 
+      discourse:
+        +materialized: table
+        +schema: discourse
+        +tags: ["discourse", "social"]
+
       engineering:
-        +database: "{{ env_var('SNOWFLAKE_TRANSFORM_DATABASE') }}" # ANALYTICS
+        +database: "{{ env_var('SNOWFLAKE_PROD_DATABASE') }}" # PROD
         +materialized: table
 
       gcp_billing:
@@ -167,7 +179,7 @@ models:
       gitlab_dotcom:
         +materialized: table
         +schema: gitlab_dotcom
-      
+
       gitlab_ops:
         +materialized: table
         +schema: gitlab_ops
@@ -241,17 +253,44 @@ models:
         +tags: ["zuora"]
 
     # ------------------
-    # Staging
+    # Common
     # ------------------
-    staging:
+    common:
       +materialized: table
+      +schema: common
+      sensitive:
+        +database: "{{ env_var('SNOWFLAKE_PREP_DATABASE') }}" #PREP
+        +schema: sensitive
+        secure: true
+
+    common_mapping:
+      +materialized: table
+      +schema: common_mapping
+
+    # ------------------
+    # Legacy (formerly Staging)
+    # ------------------
+    legacy:
+      +materialized: table
+
+      bamboohr:
+        sensitive:
+          +database: "{{ env_var('SNOWFLAKE_PREP_DATABASE') }}" #PREP
+          +schema: sensitive
+          secure: true
+
+      datasiren:
+        +schema: workspace_data
+        +materialized: view
+        +tags: ["datasiren"]
 
       date:
         +materialized: view
 
-      dbt:
-        +schema: workspace_data
-        +tags: ["dbt"]
+      discourse:
+        +database: "{{ env_var('SNOWFLAKE_PREP_DATABASE') }}" #PREP
+        +schema: preparation
+        +tags: ["discourse", "social"]
 
       gitlab_dotcom:
         +tags: ["product"]
@@ -261,6 +300,9 @@ models:
           +schema: sensitive
         source_view:
           +materialized: view
+        staging:
+          +database: "{{ env_var('SNOWFLAKE_PREP_DATABASE') }}" #PREP
+          +schema: preparation
 
       gitlab_ops:
         source_view:
@@ -278,6 +320,13 @@ models:
       license:
         +materialized: view
 
+      poc:
+        +tags: ["poc"]
+        +enabled: true
+
+      smau_events:
+        +tags: ["product"]
+
       snowflake:
         +materialized: view
 
@@ -293,6 +342,25 @@ models:
       trusted_data_framework:
         +tags: ["tdf"]
 
+    prep:
+        +database: "{{ env_var('SNOWFLAKE_PREP_DATABASE') }}" #PREP
+        +materialized: table
+        +schema: preparation
+
+    # ------------------
+    # Workspaces
+    # ------------------
+    workspaces:
+      +tags: ["workspace"]
+
+      workspace_data:
+        +schema: workspace_data
+
+        dbt:
+          +tags: ["dbt"]
+
+      workspace_marketing:
+        +schema: workspace_marketing
 
     # ------------------
     # Marts
@@ -311,31 +379,9 @@ models:
     # ------------------
     # Legacy Structure
     # ------------------
-    bamboohr:
-      +database: "{{ env_var('SNOWFLAKE_PREP_DATABASE') }}" #PREP
-      +schema: sensitive
-      secure: true
-      base:
-        +materialized: table
-      rpt:
-        +database: "{{ env_var('SNOWFLAKE_TRANSFORM_DATABASE') }}"
-
 
     covid19:
       +schema: covid19
-
-    poc:
-      +tags: ["poc"]
-      +enabled: true
-      +materialized: table
-
-    retention:
-      +materialized: table
-
-    smau_events:
-      +tags: ["product"]
-      +materialized: table
-
 
     # ------------------
     # Trusted Data Framework

@@ -13,6 +13,9 @@ editor,dev
 gitaly,dev
 gitter,dev
 ecosystem,dev
+product planning,dev
+optimize,dev
+code review,dev
 static analysis,secure
 dynamic analysis,secure
 composition analysis,secure
@@ -24,9 +27,13 @@ vulnerability management,secure
 configure,ops
 apm,ops
 health,ops
+monitor,ops
+verify,ops
 continuous integration,ops
 testing,ops
 runner,ops
+pipeline authoring,ops
+release,ops
 release management,ops
 progressive delivery,ops
 package,ops
@@ -37,14 +44,19 @@ threat management,threat management
 fulfillment,fulfillment
 purchase,fulfillment
 provision,fulfillment
+license,fulfillment
+utilization,fulfillment
 telemetry,growth
 acquisition,growth
 conversion,growth
 expansion,growth
 retention,growth
+activation,growth
+adoption,growth
+product analytics,growth
 database,enablement
 distribution,enablement
 geo,enablement
 memory,enablement
 global search,enablement
-product planning,dev
+

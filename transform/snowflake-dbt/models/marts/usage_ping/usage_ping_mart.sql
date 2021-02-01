@@ -1,7 +1,7 @@
-WITH dim_billing_accounts AS (
+WITH dim_billing_account AS (
 
     SELECT *
-    FROM {{ ref('dim_billing_accounts') }}
+    FROM {{ ref('dim_billing_account') }}
 
 ), dim_crm_account AS (
 
@@ -18,10 +18,10 @@ WITH dim_billing_accounts AS (
     SELECT *
     FROM {{ ref('dim_location') }}
 
-), dim_product_details AS (
+), dim_product_detail AS (
 
     SELECT *
-    FROM {{ ref('dim_product_details') }}
+    FROM {{ ref('dim_product_detail') }}
 
 ), fct_usage_ping_payloads AS (
 
@@ -34,17 +34,17 @@ WITH dim_billing_accounts AS (
       usage_ping_id,
       f.value AS product_details_id
     FROM fct_usage_ping_payloads,
-      LATERAL FLATTEN(input => fct_usage_ping_payloads.array_product_details_id) AS f  
+      LATERAL FLATTEN(input => fct_usage_ping_payloads.array_product_details_id) AS f
 
 ), product_details AS (
 
     SELECT
       usage_ping_id,
       ARRAY_AGG(DISTINCT product_rate_plan_name) AS product_rate_plans,
-      ARRAY_AGG(DISTINCT product_category)       AS product_categories
+      ARRAY_AGG(DISTINCT product_tier_name)      AS product_categories
     FROM flattened
-    LEFT JOIN dim_product_details
-      ON flattened.product_details_id = dim_product_details.product_details_id  
+    LEFT JOIN dim_product_detail
+      ON flattened.product_details_id = dim_product_detail.dim_product_detail_id
     GROUP BY 1
 
 ), joined AS (
@@ -53,7 +53,7 @@ WITH dim_billing_accounts AS (
       fct_usage_ping_payloads.*,
       dim_crm_account.crm_account_id,
       dim_crm_account.crm_account_name,
-      dim_crm_account.crm_account_country,
+      dim_crm_account.crm_account_billing_country,
       dim_crm_account.ultimate_parent_account_id,
       dim_crm_account.ultimate_parent_account_segment,
       dim_crm_account.ultimate_parent_billing_country,
@@ -68,16 +68,16 @@ WITH dim_billing_accounts AS (
       product_details.product_rate_plans,
       product_details.product_categories
     FROM fct_usage_ping_payloads
-    LEFT JOIN dim_billing_accounts
-      ON fct_usage_ping_payloads.account_id = dim_billing_accounts.billing_account_id
+    LEFT JOIN dim_billing_account
+      ON fct_usage_ping_payloads.account_id = dim_billing_account.dim_billing_account_id
     LEFT JOIN dim_crm_account
-      ON dim_billing_accounts.crm_account_id = dim_crm_account.crm_account_id
+      ON dim_billing_account.dim_crm_account_id = dim_crm_account.crm_account_id
     LEFT JOIN dim_date
       ON fct_usage_ping_payloads.date_id = dim_date.date_id
     LEFT JOIN dim_location
-      ON fct_usage_ping_payloads.location_id = dim_location.location_id
+      ON fct_usage_ping_payloads.location_id = dim_location.dim_location_id
     LEFT JOIN product_details
-      ON fct_usage_ping_payloads.usage_ping_id = product_details.usage_ping_id       
+      ON fct_usage_ping_payloads.usage_ping_id = product_details.usage_ping_id
 
 ), renamed AS (
 
@@ -91,12 +91,12 @@ WITH dim_billing_accounts AS (
       -- date info
       date_id,
       created_at              AS ping_created_at,
-      recorded_at             AS ping_recorded_at,    
+      recorded_at             AS ping_recorded_at,
       date_actual             AS ping_date,
       first_day_of_month      AS ping_month,
       fiscal_quarter_name_fy  AS ping_fiscal_quarter,
       IFF(ROW_NUMBER() OVER (
-          PARTITION BY uuid, ping_month 
+          PARTITION BY uuid, ping_month
           ORDER BY usage_ping_id DESC
           ) = 1, TRUE, FALSE) AS is_last_ping_in_month,
       IFF(ROW_NUMBER() OVER (
@@ -107,8 +107,8 @@ WITH dim_billing_accounts AS (
       -- customer info
       account_id,
       crm_account_id,
-      crm_account_name, 
-      crm_account_country,
+      crm_account_name,
+      crm_account_billing_country,
       ultimate_parent_account_id,
       ultimate_parent_billing_country,
       ultimate_parent_industry,
@@ -121,7 +121,7 @@ WITH dim_billing_accounts AS (
       is_trial                AS ping_is_trial_license,
       product_tier            AS ping_product_tier,
       product_categories,
-      product_rate_plans, 
+      product_rate_plans,
       subscription_id,
 
       -- location info
@@ -137,7 +137,7 @@ WITH dim_billing_accounts AS (
       is_pre_release,
       instance_user_count
     FROM joined
-    WHERE hostname NOT IN ('staging.gitlab.com', 'dr.gitlab.com')  
+    WHERE hostname NOT IN ('staging.gitlab.com', 'dr.gitlab.com')
 
 )
 

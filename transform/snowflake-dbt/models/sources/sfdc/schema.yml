@@ -231,6 +231,31 @@ models:
         tags: ["tdf", "sfdc"]
         tests:
           - not_null
+
+  - name: sfdc_opportunity_split_source
+    description: Source model for SFDC Opportunity Splits
+    columns:
+      - name: opportunity_split_id
+        tags: [ "tdf", "sfdc" ]
+        tests:
+          - not_null
+
+  - name: sfdc_opportunity_split_type_source
+    description: Source model for SFDC Opportunity Split types
+    columns:
+      - name: opportunity_split_type_id
+        tags: [ "tdf", "sfdc" ]
+        tests:
+          - not_null
+
+  - name: sfdc_opportunity_team_member_source
+    description: Source model for SFDC Opportunity Team Members
+    columns:
+      - name: opportunity_team_member_id
+        tags: [ "tdf", "sfdc" ]
+        tests:
+          - not_null
+
   - name: sfdc_opportunity_stage_source
     description: Source model for SFDC Opportunity Stages
     columns:
@@ -319,6 +344,24 @@ models:
     description: Source model for SFDC custom object representing a quote amendment from Zuora
     columns:
       - name: zqu_quote_amendment_id
+        tags: ["tdf", "sfdc"]
+        tests:
+          - not_null
+          - unique
+
+  - name: sfdc_zqu_quote_rate_plan_source
+    description: Source model for SFDC custom object representing a quote rate plan from Zuora
+    columns:
+      - name: zqu_quote_rate_plan_id
+        tags: ["tdf", "sfdc"]
+        tests:
+          - not_null
+          - unique
+
+  - name: sfdc_zqu_quote_rate_plan_charge_source
+    description: Source model for SFDC custom object representing a quote rate plan charge from Zuora
+    columns:
+      - name: zqu_quote_rate_plan_charge_id
         tags: ["tdf", "sfdc"]
         tests:
           - not_null

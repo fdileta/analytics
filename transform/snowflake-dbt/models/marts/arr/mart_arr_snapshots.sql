@@ -5,10 +5,10 @@
     })
 }}
 
-WITH dim_billing_accounts AS (
+WITH dim_billing_account AS (
 
     SELECT *
-    FROM {{ ref('dim_billing_accounts') }}
+    FROM {{ ref('dim_billing_account') }}
 
 ), dim_crm_account AS (
 
@@ -20,10 +20,10 @@ WITH dim_billing_accounts AS (
     SELECT *
     FROM {{ ref('dim_date') }}
 
-), dim_product_details AS (
+), dim_product_detail AS (
 
     SELECT *
-    FROM {{ ref('dim_product_details') }}
+    FROM {{ ref('dim_product_detail') }}
 
 ), dim_subscriptions_snapshots AS (
 
@@ -75,11 +75,11 @@ WITH dim_billing_accounts AS (
       dim_subscriptions_snapshots.subscription_end_month,
 
       --account info
-      dim_billing_accounts.billing_account_id                                          AS zuora_account_id,
-      dim_billing_accounts.sold_to_country                                             AS zuora_sold_to_country,
-      dim_billing_accounts.billing_account_name                                        AS zuora_account_name,
-      dim_billing_accounts.billing_account_number                                      AS zuora_account_number,
-      COALESCE(dim_crm_account.merged_to_account_id, dim_crm_account.crm_account_id) AS crm_id,
+      dim_billing_account.dim_billing_account_id                                        AS zuora_account_id,
+      dim_billing_account.sold_to_country                                               AS zuora_sold_to_country,
+      dim_billing_account.billing_account_name                                          AS zuora_account_name,
+      dim_billing_account.billing_account_number                                        AS zuora_account_number,
+      COALESCE(dim_crm_account.merged_to_account_id, dim_crm_account.crm_account_id)    AS crm_id,
       dim_crm_account.ultimate_parent_account_id,
       dim_crm_account.ultimate_parent_account_name,
       dim_crm_account.ultimate_parent_billing_country,
@@ -94,10 +94,10 @@ WITH dim_billing_accounts AS (
       dim_subscriptions_snapshots.subscription_sales_type,
 
       --product info
-      dim_product_details.product_category,
-      dim_product_details.delivery,
-      dim_product_details.service_type,
-      dim_product_details.product_rate_plan_name                                        AS rate_plan_name,
+      dim_product_detail.product_tier_name                                             AS product_category,
+      dim_product_detail.product_delivery_type                                         AS delivery,
+      dim_product_detail.service_type,
+      dim_product_detail.product_rate_plan_name                                        AS rate_plan_name,
       --  not needed as all charges in fct_mrr are recurring
       --  fct_mrr.charge_type,
       fct_mrr_snapshots.unit_of_measure,
@@ -109,16 +109,16 @@ WITH dim_billing_accounts AS (
     INNER JOIN dim_subscriptions_snapshots
       ON dim_subscriptions_snapshots.subscription_id = fct_mrr_snapshots.subscription_id
       AND dim_subscriptions_snapshots.snapshot_id = fct_mrr_snapshots.snapshot_id
-    INNER JOIN dim_product_details
-      ON dim_product_details.product_details_id = fct_mrr_snapshots.product_details_id
-    INNER JOIN dim_billing_accounts
-      ON dim_billing_accounts.billing_account_id= fct_mrr_snapshots.billing_account_id
+    INNER JOIN dim_product_detail
+      ON dim_product_detail.dim_product_detail_id = fct_mrr_snapshots.product_details_id
+    INNER JOIN dim_billing_account
+      ON dim_billing_account.dim_billing_account_id = fct_mrr_snapshots.billing_account_id
     INNER JOIN dim_date AS arr_month
       ON arr_month.date_id = fct_mrr_snapshots.date_id
     INNER JOIN dim_date AS snapshot_dates
       ON snapshot_dates.date_id = fct_mrr_snapshots.snapshot_id
     LEFT JOIN dim_crm_account
-        ON dim_billing_accounts.crm_account_id = dim_crm_account.crm_account_id
+        ON dim_billing_account.dim_crm_account_id = dim_crm_account.crm_account_id
 
 )
 

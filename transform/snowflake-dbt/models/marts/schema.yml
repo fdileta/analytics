@@ -21,8 +21,34 @@ models:
       - name: primary_key
         tests:
           - not_null
-          - unique
         tags: ["tdf", "mart", "arr"]
+
+  - name: mart_crm_opportunity
+    description: Model with single pane of glass sales and marketing metrics.
+    columns:
+      - name: dim_crm_opportunity_id
+        tests:
+            - not_null
+            - unique
+        tags: ["tdf", "mart", "sales_funnel"]
+
+  - name: mart_crm_person
+    description: Model with person and MQL business logic.
+    columns:
+      - name: dim_crm_person_id
+        tests:
+            - not_null
+            - unique
+        tags: ["tdf", "mart", "sales_funnel"]
+
+  - name: mart_sales_funnel_target
+    description: Model with Sales targets used for planning the go to market Sales and Marketing motion.
+    columns:
+      - name: sales_funnel_target_id
+        tests:
+            - not_null
+            - unique
+        tags: ["tdf", "mart", "sales_funnel"]
 
   - name: mart_discount_arr
     description: Model with Invoiced ARR used to calculate discounts across various dimensions.
@@ -51,6 +77,27 @@ models:
           - unique
         tags: ["tdf", "mart", "arr"]
 
+  - name: mart_delta_arr_parent_product_month
+    description: "Mart table by month pursuant to the ARR Analysis Framework at the parent customer || product category level"
+    columns:
+      - name: primary_key
+        tests:
+          - not_null
+          - unique
+        tags: ["tdf", "mart", "arr"]
+      - name: product_category
+        tests:
+          - not_null
+        tags: ["tdf", "mart", "arr"]
+      - name: delivery
+        tests:
+          - not_null
+        tags: ["tdf", "mart", "arr"]
+      - name: product_ranking
+        tests:
+          - not_null
+        tags: ["tdf", "mart", "arr"]
+
   - name: mart_delta_arr_subscription_month
     description: "Mart table by month purusant to the ARR Analysis Framework at the subscription level"
     columns:
@@ -62,6 +109,15 @@ models:
 
   - name: mart_retention_parent_account
     description: "Mart table to support drillable retention analysis"
+
+  - name: mart_retention_parent_account_product
+    description: "Mart table to support retention analysis at the ultimate_parent_account || product level."
+    columns:
+      - name: primary_key
+        tests:
+          - not_null
+          - unique
+        tags: ["tdf", "mart", "arr"]
 
   - name: usage_ping_mart
     description: '{{ doc("usage_ping_mart") }}'

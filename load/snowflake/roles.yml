@@ -5,8 +5,6 @@ version: "1.0"
 # ==========================================
 databases:
   # Production
-    - analytics:
-        shared: no
     - covid19:
         shared: yes    
     - prep:
@@ -24,95 +22,74 @@ databases:
     - testing_db:
         shared: no
 
-    - dtownsend_analytics:
-        shared: no
     - dtownsend_prod:
         shared: no
     - dtownsend_prep:
         shared: no
 
-    - ianschweickart_analytics:
-        shared: no
     - ianschweickart_prod:
         shared: no
     - ianschweickart_prep:
         shared: no
 
-    - iweeks_analytics:
-        shared: no
     - iweeks_prod:
         shared: no
     - iweeks_prep:
         shared: no
         
-    - jpeguero_analytics:
-        shared: no
     - jpeguero_prod:
         shared: no
     - jpeguero_prep:
         shared: no
         
-    - jstark_analytics:
-        shared: no
     - jstark_prod:
         shared: no
     - jstark_prep:
         shared: no
         
-    - ktam_analytics:
-        shared: no
     - ktam_prod:
         shared: no
     - ktam_prep:
         shared: no
         
-    - michellecooper_analytics:
-        shared: no
     - michellecooper_prod:
         shared: no
     - michellecooper_prep:
         shared: no
         
-    - mpeychet_analytics:
-        shared: no
     - mpeychet_prod:
         shared: no
     - mpeychet_prep:
         shared: no
         
-    - mwalker_analytics:
-        shared: no
     - mwalker_prod:
         shared: no
     - mwalker_prep:
         shared: no
         
-    - nfiguera_analytics:
-        shared: no
     - nfiguera_prod:
         shared: no
     - nfiguera_prep:
         shared: no
         
-    - parmstrong_analytics:
-        shared: no
     - parmstrong_prod:
         shared: no
     - parmstrong_prep:
         shared: no
         
-    - pluthra_analytics:
-        shared: no
     - pluthra_prod:
         shared: no
     - pluthra_prep:
         shared: no
   
-    - rheannamistry_analytics:
-        shared: no
     - rheannamistry_prod:
         shared: no
     - rheannamistry_prep:
+        shared: no
+
+    - rparker_prod:
+        shared: no
+    - rparker_prep:
         shared: no
 
     - snalamaru_analytics:
@@ -122,15 +99,11 @@ databases:
     - snalamaru_prep:
         shared: no
   
-    - trevorromero_analytics:
-        shared: no
     - trevorromero_prod:
         shared: no
     - trevorromero_prep:
         shared: no
 
-    - tmurphy_analytics:
-        shared: no
     - tmurphy_prod:
         shared: no
     - tmurphy_prep:
@@ -173,40 +146,34 @@ roles:
         privileges:
             databases:
                 read:
-                    - analytics
                     - prep
                     - prod
                     - raw
                     - snowflake
                     - testing_db
                 write:
-                    - analytics
                     - prep
                     - prod
                     - raw
                     - testing_db
             schemas:
                 read:
-                    - analytics.*
                     - prep.*
                     - prod.*
                     - raw.*
                     - testing_db.*
                 write:
-                    - analytics.*
                     - prep.*
                     - prod.*
                     - raw.*
                     - testing_db.*
             tables:
                 read:
-                    - analytics.*.*
                     - prep.*.*
                     - prod.*.*
                     - raw.*.*
                     - testing_db.*.*
                 write:
-                    - analytics.*.*
                     - prep.*.*
                     - prod.*.*
                     - raw.*.*
@@ -215,7 +182,26 @@ roles:
 # ==========================================
 # Functional Roles
 # ==========================================
-    - analyst_core:
+    ## For all Data Team analysts or Decisive Data
+    - data_team_analyst:
+        member_of:
+          - analyst_core
+          - gitlab_dotcom
+          - qualtrics 
+        privileges:
+            databases:
+                read:
+                    - prep
+            schemas:
+                read:
+                    - prep.*
+            tables:
+                read:
+                    - prep.sensitive.bdg_marketing_contact_role 
+                    - prep.sensitive.dim_marketing_contact
+
+    ## For all analyst Roles 
+    - analyst_core:  
         warehouses:
             - analyst_xs
             - analyst_l
@@ -305,6 +291,7 @@ roles:
     - analyst_finance:
         warehouses:
             - analyst_xs
+            - analyst_l
         member_of:
             - analyst_core
             - boneyard
@@ -363,7 +350,7 @@ roles:
             - analyst_xs
         member_of:
             - analyst_core
-            - bamboohr
+            - bamboohr_analytics
             - boneyard
             - covid19
             - dbt_analytics
@@ -440,8 +427,10 @@ roles:
             - analyst_xs
         member_of:
             - analyst_core
+            - bamboohr_analytics
             - boneyard
             - covid19
+            - customers_db
             - dbt_analytics
             - db_dumps
             - gitlab_data_yaml
@@ -456,6 +445,7 @@ roles:
             - snowplow
             - version_db
             - zuora
+            - data_team_analyst
 
     - engineer:
         member_of:
@@ -472,34 +462,28 @@ roles:
         privileges:
             databases:
                 read:
-                    - analytics
                     - prep
                     - prod
                     - raw
                 write:
-                    - analytics
                     - prep
                     - prod
                     - raw
             schemas:
                 read:
-                    - analytics.*
                     - prep.*
                     - prod.*
                     - raw.*
                 write:
-                    - analytics.*
                     - prep.*
                     - prod.*
                     - raw.*
             tables:
                 read:
-                    - analytics.*.*
                     - prep.*.*
                     - prod.*.*
                     - raw.*.*
                 write:
-                    - analytics.*.*
                     - prep.*.*
                     - prod.*.*
                     - raw.*.*
@@ -549,24 +533,24 @@ roles:
         privileges:
             databases:
                 read:
-                    - analytics
+                    - prod
                     - raw
                 write:
-                    - analytics
+                    - prod
                     - raw
             schemas:
                 read:
-                    - analytics.boneyard
+                    - prod.boneyard
                     - raw.*
                 write:
-                    - analytics.boneyard
+                    - prod.boneyard
                     - raw.*
             tables:
                 read:
-                    - analytics.boneyard.*
+                    - prod.boneyard.*
                     - raw.*.*
                 write:
-                    - analytics.boneyard.*
+                    - prod.boneyard.*
                     - raw.*.*
 
     - people_operations:
@@ -574,7 +558,7 @@ roles:
             - analyst_xs
         member_of: 
             - analyst_core
-            - bamboohr
+            - bamboohr_analytics
             - boneyard
             - gitlab_data_yaml
             - gitlab_dotcom
@@ -623,7 +607,6 @@ roles:
         privileges:
             databases:
                 read:
-                    - analytics
                     - prep
                     - prod
                     - raw
@@ -632,7 +615,6 @@ roles:
                     - testing_db
             schemas:
                 read:
-                    - analytics.*
                     - prep.*
                     - prod.*
                     - raw.*
@@ -640,7 +622,6 @@ roles:
                     - testing_db.*
             tables:
                 read:
-                    - analytics.*.*
                     - prep.*.*
                     - prod.*.*
                     - raw.*.*
@@ -657,15 +638,15 @@ roles:
         privileges:
             databases:
                 read:
-                    - analytics
+                    - prod
                     - prep
             schemas:
                 read:
-                    - analytics.covid19
+                    - prod.covid19
                     - prep.airflow
             tables:
                 read:
-                    - analytics.covid19.covid19_cases
+                    - prod.covid19.covid19_cases
                     - prep.airflow.airflow_dag
                     - prep.airflow.airflow_dag_run
 
@@ -680,6 +661,8 @@ roles:
     - transformer: # For automated jobs
         warehouses:
             - airflow_testing_l
+            - engineer_xl
+            - merge_request_l
             - merge_request_xs
             - merge_request_xl
             - transforming_s
@@ -692,30 +675,26 @@ roles:
             - snowflake_db
         owns:
             schemas:
-                - analytics.analytics_clones
-                - analytics.common
-                - analytics.common_mapping
-                - analytics.common_mart_marketing
-                - analytics.common_mart_sales
-                - analytics.legacy
+                - prod.common
+                - prod.common_mapping
+                - prod.common_mart_marketing
+                - prod.common_mart_sales
+                - prod.legacy
                 - prep.sensitive
             tables:
-                - analytics.analytics_clones.*
-                - analytics.common.*
-                - analytics.common_mapping.*
-                - analytics.common_mart_marketing.*
-                - analytics.common_mart_sales.*
-                - analytics.legacy.*
+                - prod.common.*
+                - prod.common_mapping.*
+                - prod.common_mart_marketing.*
+                - prod.common_mart_sales.*
+                - prod.legacy.*
                 - prep.sensitive.*
         privileges:
             databases:
                 read:
-                    - analytics
                     - prep
                     - prod
                     - raw
                 write:
-                    - analytics
                     - prep
                     - prod
                     - raw
@@ -723,7 +702,6 @@ roles:
                 read:
                     - raw.*
                 write:
-                    - analytics.*
                     - prep.*
                     - prod.*
                     - raw.snapshots
@@ -731,7 +709,6 @@ roles:
                 read:
                     - raw.*.*
                 write:
-                    - analytics.*.*
                     - prep.*.*
                     - prod.*.*
                     - raw.snapshots.*
@@ -739,50 +716,64 @@ roles:
 # ==========================================
 # Object Roles
 # ==========================================
+    - bamboohr_analytics:
+        warehouses:
+            - analyst_xs
+        privileges:
+            databases:
+                read:
+                    - prod
+                    - prep
+            schemas:
+                read:
+                    - prod.common
+                    - prod.legacy
+            tables:
+                read:
+                    - prod.common.*
+                    - prod.legacy.*
+                    - prep.sensitive.employee_directory
+                    - prep.sensitive.employee_directory_intermediate
+                    - prep.sensitive.employee_locality
+                    - prep.sensitive.employee_location_factor_snapshots
+                    - prep.sensitive.bamboohr_job_role
+                    - prep.sensitive.bamboohr_locality
+                    - prep.sensitive.bamboohr_headcount_intermediate
+
     - bamboohr:
         warehouses:
             - analyst_xs
         privileges:
             databases:
                 read:
-                    - analytics
-                    - prep
-            schemas:
-                read:
-                    - analytics.common
-                    - analytics.legacy
-                    - prep.sensitive
-            tables:
-                read:
-                    - analytics.common.*
-                    - analytics.legacy.*
-                    - prep.sensitive.employee_*
-                    - prep.sensitive.bamboohr_directory
-                    - prep.sensitive.bamboohr_job_info
-                    - prep.sensitive.bamboohr_job_role
-                    - prep.sensitive.bamboohr_locality
-                    - prep.sensitive.bamboohr_headcount_intermediate
-
-    - bamboohr_raw:
-        warehouses:
-            - analyst_xs
-        privileges:
-            databases:
-                read:
-                    - analytics
+                    - prod
                     - prep
                     - raw
             schemas:
                 read:
-                    - analytics.legacy
+                    - prep.bamboohr
                     - prep.sensitive
                     - raw.bamboohr
 
             tables:
                 read:
-                    - analytics.legacy.*
-                    - prep.sensitive.employee_*
-                    - prep.sensitive.bamboohr_*
+                    - prep.bamboohr.*
+                    - prep.sensitive.employee_directory
+                    - prep.sensitive.employee_directory_intermediate
+                    - prep.sensitive.employee_locality
+                    - prep.sensitive.employee_location_factor_snapshots
+                    - prep.sensitive.bamboohr_base_mapping
+                    - prep.sensitive.bamboohr_budget_vs_actual
+                    - prep.sensitive.bamboohr_directionary_bonuses_xf
+                    - prep.sensitive.bamboohr_employment_status_xf
+                    - prep.sensitive.bamboohr_engineering_division
+                    - prep.sensitive.bamboohr_headcount_intermediate
+                    - prep.sensitive.bamboohr_id_employee_number_mapping
+                    - prep.sensitive.bamboohr_job_role
+                    - prep.sensitive.bamboohr_locality
+                    - prep.sensitive.bamboohr_missing_emergency_contact_alert
+                    - prep.sensitive.bamboohr_promotions_xf
+                    - prep.sensitive.bamboohr_promotion_rate
                     - raw.bamboohr.*
 
     - boneyard:
@@ -791,34 +782,33 @@ roles:
         privileges:
             databases:
                 read:
-                    - analytics
+                    - prod
             schemas:
                 read:
-                    - analytics.boneyard
+                    - prod.boneyard
             tables:
                 read:
-                    - analytics.boneyard.*
+                    - prod.boneyard.*
 
     - covid19:
         privileges:
             databases:
                 read:
-                    - analytics
+                    - prod
                     - covid19
             schemas:
                 read:
-                    - analytics.covid19
+                    - prod.covid19
                     - covid19.public
             tables:
                 read:
-                    - analytics.covid19.*
+                    - prod.covid19.*
                     - covid19.public.jhu_covid_19
 
     - customers_db:
         privileges:
             databases:
                 read:
-                    - analytics
                     - prep
             schemas:
                 read:
@@ -833,31 +823,34 @@ roles:
         privileges:
             databases:
                 read:
-                    - analytics
+                    - prod
             schemas:
                 read:
-                    - analytics.common
-                    - analytics.common_mapping
-                    - analytics.common_mart_marketing
-                    - analytics.common_mart_sales
+                    - prod.common
+                    - prod.common_mapping
+                    - prod.common_mart_marketing
+                    - prod.common_mart_sales
             tables:
                 read:
-                    - analytics.common.*
-                    - analytics.common_mapping.*
-                    - analytics.common_mart_marketing.*
-                    - analytics.common_mart_sales.*
+                    - prod.common.*
+                    - prod.common_mapping.*
+                    - prod.common_mart_marketing.*
+                    - prod.common_mart_sales.*
 
     - date:
         privileges:
             databases:
                 read:
-                    - analytics
+                    - prod
+                    - prep
             schemas:
                 read:
-                    - analytics.date
+                    - prod.common
+                    - prep.date
             tables:
                 read:
-                    - analytics.date.*
+                    - prod.common.dim_date
+                    - prep.date.*
 
     - db_dumps:
         privileges:
@@ -867,11 +860,9 @@ roles:
             schemas:
                 read:
                     - raw.license_db_dump
-                    - raw.version_db_dump_stitch
             tables:
                 read:
                     - raw.license_db_dump.*
-                    - raw.version_db_dump_stitch.*
 
     - dbt_analytics:
         warehouses:
@@ -879,28 +870,32 @@ roles:
         privileges:
             databases:
                 read:
-                    - analytics
+                    - prod
                     - prep
                     - raw
             schemas:
                 read:
-                    - analytics.common
-                    - analytics.common_mapping
-                    - analytics.common_mart_marketing
-                    - analytics.common_mart_sales
-                    - analytics.legacy
-                    - analytics.workspace_data
+                    - prod.common
+                    - prod.common_mapping
+                    - prod.common_mart_marketing
+                    - prod.common_mart_sales
+                    - prod.legacy
+                    - prod.workspace_data
+                    - prod.workspace_marketing
                     - prep.dbt
+                    - prep.preparation
                     - raw.dbt
             tables:
                 read:
-                    - analytics.common.*
-                    - analytics.common_mapping.*
-                    - analytics.common_mart_marketing.*
-                    - analytics.common_mart_sales.*
-                    - analytics.legacy.*
-                    - analytics.workspace_data.*
+                    - prod.common.*
+                    - prod.common_mapping.*
+                    - prod.common_mart_marketing.*
+                    - prod.common_mart_sales.*
+                    - prod.legacy.*
+                    - prod.workspace_data.*
+                    - prod.workspace_marketing.*
                     - prep.dbt.*
+                    - prep.preparation.*
                     - raw.dbt.*
 
     - dbt_analytics_clones:
@@ -909,13 +904,13 @@ roles:
         privileges:
             databases:
                 read:
-                    - analytics
+                    - raw
             schemas:
                 read:
-                    - analytics.analytics_clones
+                    - raw.full_table_clones
             tables:
                 read:
-                    - analytics.analytics_clones.*
+                    - raw.full_table_clones.*
 
     - dbt_analytics_sensitive:
         warehouses:
@@ -942,6 +937,22 @@ roles:
             tables:
                 read:
                     - raw.discourse.*
+
+    - gainsight:
+        warehouses:
+            - gainsight_xs
+        privileges:
+            databases:
+                read:
+                    - prep
+                    - prod
+            schemas:
+                read:
+                    - prep.preparation
+            tables:
+                read:
+                    - prep.preparation.prep_usage_ping_saas_dates
+                    - prep.preparation.prep_usage_ping_no_license_key
 
     - gcp_billing:
         warehouses:
@@ -988,11 +999,203 @@ roles:
             schemas:
                 read:
                     - prep.gitlab_dotcom
+                    - prep.sensitive
                     - raw.tap_postgres
             tables:
                 read:
                     - prep.gitlab_dotcom.*
-                    - raw.tap_postgres.gitlab_db*
+                    - prep.sensitive.gitlab_dotcom_audit_event_details
+                    - prep.sensitive.gitlab_dotcom_audit_event_details_pii
+                    - prep.sensitive.gitlab_dotcom_environments
+                    - prep.sensitive.gitlab_dotcom_epics
+                    - prep.sensitive.gitlab_dotcom_identities
+                    - prep.sensitive.gitlab_dotcom_issues
+                    - prep.sensitive.gitlab_dotcom_labels
+                    - prep.sensitive.gitlab_dotcom_merge_requests
+                    - prep.sensitive.gitlab_dotcom_milestones
+                    - prep.sensitive.gitlab_dotcom_namespaces
+                    - prep.sensitive.gitlab_dotcom_notes
+                    - prep.sensitive.gitlab_dotcom_projects
+                    - prep.sensitive.gitlab_dotcom_system_note_metadata
+                    - prep.sensitive.gitlab_dotcom_users
+                    - raw.tap_postgres.gitlab_db_alerts_service_data
+                    - raw.tap_postgres.gitlab_db_alert_management_alerts
+                    - raw.tap_postgres.gitlab_db_alert_management_alert_assignees
+                    - raw.tap_postgres.gitlab_db_approvals
+                    - raw.tap_postgres.gitlab_db_approvals_errors
+                    - raw.tap_postgres.gitlab_db_approvals_validate
+                    - raw.tap_postgres.gitlab_db_approval_merge_request_rules
+                    - raw.tap_postgres.gitlab_db_approver_groups
+                    - raw.tap_postgres.gitlab_db_audit_events
+                    - raw.tap_postgres.gitlab_db_award_emoji
+                    - raw.tap_postgres.gitlab_db_boards
+                    - raw.tap_postgres.gitlab_db_board_assignees
+                    - raw.tap_postgres.gitlab_db_board_labels
+                    - raw.tap_postgres.gitlab_db_ci_builds
+                    - raw.tap_postgres.gitlab_db_ci_builds_runner_session
+                    - raw.tap_postgres.gitlab_db_ci_build_trace_chunks
+                    - raw.tap_postgres.gitlab_db_ci_build_trace_section_names
+                    - raw.tap_postgres.gitlab_db_ci_group_variables
+                    - raw.tap_postgres.gitlab_db_ci_job_artifacts
+                    - raw.tap_postgres.gitlab_db_ci_job_artifacts_errors
+                    - raw.tap_postgres.gitlab_db_ci_job_artifacts_validate
+                    - raw.tap_postgres.gitlab_db_ci_pipelines
+                    - raw.tap_postgres.gitlab_db_ci_pipeline_chat_data
+                    - raw.tap_postgres.gitlab_db_ci_pipeline_schedules
+                    - raw.tap_postgres.gitlab_db_ci_pipeline_schedules_errors
+                    - raw.tap_postgres.gitlab_db_ci_pipeline_schedules_validate
+                    - raw.tap_postgres.gitlab_db_ci_pipeline_schedule_variables
+                    - raw.tap_postgres.gitlab_db_ci_pipeline_schedule_variables_errors
+                    - raw.tap_postgres.gitlab_db_ci_pipeline_schedule_variables_validate
+                    - raw.tap_postgres.gitlab_db_ci_pipeline_variables
+                    - raw.tap_postgres.gitlab_db_ci_platform_metrics
+                    - raw.tap_postgres.gitlab_db_ci_runners
+                    - raw.tap_postgres.gitlab_db_ci_runner_projects
+                    - raw.tap_postgres.gitlab_db_ci_stages
+                    - raw.tap_postgres.gitlab_db_ci_triggers
+                    - raw.tap_postgres.gitlab_db_ci_trigger_requests
+                    - raw.tap_postgres.gitlab_db_ci_variables
+                    - raw.tap_postgres.gitlab_db_clusters
+                    - raw.tap_postgres.gitlab_db_clusters_applications_cert_managers
+                    - raw.tap_postgres.gitlab_db_clusters_applications_crossplane
+                    - raw.tap_postgres.gitlab_db_clusters_applications_elastic_stacks
+                    - raw.tap_postgres.gitlab_db_clusters_applications_helm
+                    - raw.tap_postgres.gitlab_db_clusters_applications_ingress
+                    - raw.tap_postgres.gitlab_db_clusters_applications_jupyter
+                    - raw.tap_postgres.gitlab_db_clusters_applications_knative
+                    - raw.tap_postgres.gitlab_db_clusters_applications_prometheus
+                    - raw.tap_postgres.gitlab_db_clusters_applications_runners
+                    - raw.tap_postgres.gitlab_db_clusters_kubernetes_namespaces
+                    - raw.tap_postgres.gitlab_db_clusters_kubernetes_namespaces_validate
+                    - raw.tap_postgres.gitlab_db_cluster_groups
+                    - raw.tap_postgres.gitlab_db_cluster_projects
+                    - raw.tap_postgres.gitlab_db_columns
+                    - raw.tap_postgres.gitlab_db_deployments
+                    - raw.tap_postgres.gitlab_db_deployments_errors
+                    - raw.tap_postgres.gitlab_db_deployments_validate
+                    - raw.tap_postgres.gitlab_db_deployment_merge_requests
+                    - raw.tap_postgres.gitlab_db_design_management_designs
+                    - raw.tap_postgres.gitlab_db_design_management_designs_versions
+                    - raw.tap_postgres.gitlab_db_design_management_versions
+                    - raw.tap_postgres.gitlab_db_elasticsearch_indexed_namespaces
+                    - raw.tap_postgres.gitlab_db_emails
+                    - raw.tap_postgres.gitlab_db_emails_errors
+                    - raw.tap_postgres.gitlab_db_emails_validate
+                    - raw.tap_postgres.gitlab_db_environments
+                    - raw.tap_postgres.gitlab_db_environments_errors
+                    - raw.tap_postgres.gitlab_db_environments_validate
+                    - raw.tap_postgres.gitlab_db_epics
+                    - raw.tap_postgres.gitlab_db_epics_errors
+                    - raw.tap_postgres.gitlab_db_epics_validate
+                    - raw.tap_postgres.gitlab_db_epic_issues
+                    - raw.tap_postgres.gitlab_db_epic_metrics
+                    - raw.tap_postgres.gitlab_db_epic_metrics_errors
+                    - raw.tap_postgres.gitlab_db_epic_metrics_validate
+                    - raw.tap_postgres.gitlab_db_events
+                    - raw.tap_postgres.gitlab_db_experiments
+                    - raw.tap_postgres.gitlab_db_experiment_users
+                    - raw.tap_postgres.gitlab_db_gitlab_subscriptions
+                    - raw.tap_postgres.gitlab_db_gitlab_subscription_histories
+                    - raw.tap_postgres.gitlab_db_group_group_links
+                    - raw.tap_postgres.gitlab_db_identities
+                    - raw.tap_postgres.gitlab_db_issues
+                    - raw.tap_postgres.gitlab_db_issue_assignees
+                    - raw.tap_postgres.gitlab_db_issue_links
+                    - raw.tap_postgres.gitlab_db_issue_metrics
+                    - raw.tap_postgres.gitlab_db_keys
+                    - raw.tap_postgres.gitlab_db_labels
+                    - raw.tap_postgres.gitlab_db_label_links
+                    - raw.tap_postgres.gitlab_db_label_priorities
+                    - raw.tap_postgres.gitlab_db_lfs_objects_projects
+                    - raw.tap_postgres.gitlab_db_licenses
+                    - raw.tap_postgres.gitlab_db_lists
+                    - raw.tap_postgres.gitlab_db_members
+                    - raw.tap_postgres.gitlab_db_merge_requests
+                    - raw.tap_postgres.gitlab_db_merge_requests_closing_issues
+                    - raw.tap_postgres.gitlab_db_merge_request_diffs
+                    - raw.tap_postgres.gitlab_db_merge_request_metrics
+                    - raw.tap_postgres.gitlab_db_milestones
+                    - raw.tap_postgres.gitlab_db_namespaces
+                    - raw.tap_postgres.gitlab_db_namespace_root_storage_statistics
+                    - raw.tap_postgres.gitlab_db_namespace_statistics
+                    - raw.tap_postgres.gitlab_db_notes
+                    - raw.tap_postgres.gitlab_db_notification_settings
+                    - raw.tap_postgres.gitlab_db_oauth_access_tokens
+                    - raw.tap_postgres.gitlab_db_packages_build_infos
+                    - raw.tap_postgres.gitlab_db_packages_dependencies
+                    - raw.tap_postgres.gitlab_db_packages_dependency_links
+                    - raw.tap_postgres.gitlab_db_packages_packages
+                    - raw.tap_postgres.gitlab_db_packages_package_files
+                    - raw.tap_postgres.gitlab_db_packages_tags
+                    - raw.tap_postgres.gitlab_db_pages_domains
+                    - raw.tap_postgres.gitlab_db_plans
+                    - raw.tap_postgres.gitlab_db_programming_languages
+                    - raw.tap_postgres.gitlab_db_projects
+                    - raw.tap_postgres.gitlab_db_project_authorizations
+                    - raw.tap_postgres.gitlab_db_project_auto_devops
+                    - raw.tap_postgres.gitlab_db_project_custom_attributes
+                    - raw.tap_postgres.gitlab_db_project_daily_statistics
+                    - raw.tap_postgres.gitlab_db_project_features
+                    - raw.tap_postgres.gitlab_db_project_group_links
+                    - raw.tap_postgres.gitlab_db_project_import_data
+                    - raw.tap_postgres.gitlab_db_project_mirror_data
+                    - raw.tap_postgres.gitlab_db_project_repository_states
+                    - raw.tap_postgres.gitlab_db_project_statistics
+                    - raw.tap_postgres.gitlab_db_prometheus_alerts
+                    - raw.tap_postgres.gitlab_db_protected_branches
+                    - raw.tap_postgres.gitlab_db_protected_environments
+                    - raw.tap_postgres.gitlab_db_push_rules
+                    - raw.tap_postgres.gitlab_db_releases
+                    - raw.tap_postgres.gitlab_db_repository_languages
+                    - raw.tap_postgres.gitlab_db_requirements
+                    - raw.tap_postgres.gitlab_db_requirements_management_test_reports
+                    - raw.tap_postgres.gitlab_db_resource_label_events
+                    - raw.tap_postgres.gitlab_db_resource_milestone_events
+                    - raw.tap_postgres.gitlab_db_resource_weight_events
+                    - raw.tap_postgres.gitlab_db_routes
+                    - raw.tap_postgres.gitlab_db_saml_providers
+                    - raw.tap_postgres.gitlab_db_services
+                    - raw.tap_postgres.gitlab_db_snippets
+                    - raw.tap_postgres.gitlab_db_sprints
+                    - raw.tap_postgres.gitlab_db_subscriptions
+                    - raw.tap_postgres.gitlab_db_system_note_metadata
+                    - raw.tap_postgres.gitlab_db_terraform_states
+                    - raw.tap_postgres.gitlab_db_timelogs
+                    - raw.tap_postgres.gitlab_db_todos
+                    - raw.tap_postgres.gitlab_db_todos_errors
+                    - raw.tap_postgres.gitlab_db_todos_validate
+                    - raw.tap_postgres.gitlab_db_users
+                    - raw.tap_postgres.gitlab_db_users_errors
+                    - raw.tap_postgres.gitlab_db_users_validate
+                    - raw.tap_postgres.gitlab_db_user_custom_attributes
+                    - raw.tap_postgres.gitlab_db_user_preferences
+                    - raw.tap_postgres.gitlab_db_user_preferences_validate
+                    - raw.tap_postgres.gitlab_db_vulnerabilities
+                    - raw.tap_postgres.gitlab_db_vulnerabilities_errors
+                    - raw.tap_postgres.gitlab_db_vulnerabilities_validate
+                    - raw.tap_postgres.gitlab_db_vulnerability_feedback
+                    - raw.tap_postgres.gitlab_db_vulnerability_feedback_errors
+                    - raw.tap_postgres.gitlab_db_vulnerability_feedback_validate
+                    - raw.tap_postgres.gitlab_db_vulnerability_identifiers
+                    - raw.tap_postgres.gitlab_db_vulnerability_identifiers_errors
+                    - raw.tap_postgres.gitlab_db_vulnerability_identifiers_validate
+                    - raw.tap_postgres.gitlab_db_vulnerability_issue_links
+                    - raw.tap_postgres.gitlab_db_vulnerability_issue_links_errors
+                    - raw.tap_postgres.gitlab_db_vulnerability_issue_links_validate
+                    - raw.tap_postgres.gitlab_db_vulnerability_occurrences
+                    - raw.tap_postgres.gitlab_db_vulnerability_occurrence_identifiers
+                    - raw.tap_postgres.gitlab_db_vulnerability_occurrence_identifiers_errors
+                    - raw.tap_postgres.gitlab_db_vulnerability_occurrence_identifiers_validate
+                    - raw.tap_postgres.gitlab_db_vulnerability_occurrence_pipelines
+                    - raw.tap_postgres.gitlab_db_vulnerability_occurrence_pipelines_errors
+                    - raw.tap_postgres.gitlab_db_vulnerability_occurrence_pipelines_validate
+                    - raw.tap_postgres.gitlab_db_vulnerability_scanners
+                    - raw.tap_postgres.gitlab_db_vulnerability_scanners_errors
+                    - raw.tap_postgres.gitlab_db_vulnerability_scanners_validate
+                    - raw.tap_postgres.gitlab_db_web_hooks
+                    - raw.tap_postgres.gitlab_db_web_hooks_errors
+                    - raw.tap_postgres.gitlab_db_web_hooks_validate
+                    - raw.tap_postgres.gitlab_db_web_hook_logs
 
     - google_analytics_360:
         warehouses:
@@ -1026,7 +1229,17 @@ roles:
             tables:
                 read:
                     - prep.greenhouse.*
+                    - prep.sensitive.greenhouse_diversity_intermediate
+                    - prep.sensitive.greenhouse_hires
+                    - prep.sensitive.greenhouse_locations_cleaned_intermediate
+                    - prep.sensitive.greenhouse_location_factors
+                    - prep.sensitive.greenhouse_recruiting_xf
+                    - prep.sensitive.greenhouse_sourcer
+                    - prep.sensitive.greenhouse_sourcer_base
+                    - prep.sensitive.greenhouse_sourcer_metrics
+                    - prep.sensitive.greenhouse_stage_intermediate
                     - raw.greenhouse.*
+
 
     - handbook:
         warehouses:
@@ -1054,10 +1267,12 @@ roles:
             schemas:
                 read:
                     - prep.license_db
+                    - raw.license_db
                     - raw.license_db_dump
             tables:
                 read:
                     - prep.license_db.*
+                    - raw.license_db.*
                     - raw.license_db_dump.*
 
     - keyhole_twitter:
@@ -1107,7 +1322,10 @@ roles:
             tables:
                 read:
                     - prep.netsuite.*
-                    - prep.sensitive.netsuite_*
+                    - prep.sensitive.netsuite_entity_pii
+                    - prep.sensitive.netsuite_subsidiaries_pii
+                    - prep.sensitive.netsuite_transaction_lines_pii
+                    - prep.sensitive.netsuite_vendors_pii
                     - raw.netsuite_fivetran.*
 
     - postgres_pipeline:
@@ -1156,7 +1374,11 @@ roles:
                     - raw.qualtrics
             tables:
                 read:
-                    - prep.sensitive.qualtrics_*
+                    - prep.sensitive.qualtrics_api_formatted_contacts
+                    - prep.sensitive.qualtrics_contact_mailing_send
+                    - prep.sensitive.qualtrics_mailing_contacts
+                    - prep.sensitive.qualtrics_nps_answers
+                    - prep.sensitive.qualtrics_nps_survey_responses
                     - raw.qualtrics.*
 
     - pmg:
@@ -1205,7 +1427,18 @@ roles:
                     - raw.sheetload
             tables:
                 read:
-                    - prep.sensitive.sheetload_*
+                    - prep.sensitive.sheetload_ally_certificate_source
+                    - prep.sensitive.sheetload_communication_certificate_source
+                    - prep.sensitive.sheetload_compensation_certificate_source
+                    - prep.sensitive.sheetload_employee_location_factor
+                    - prep.sensitive.sheetload_ic_collaboration_competency_source
+                    - prep.sensitive.sheetload_ic_dib_comptency_source
+                    - prep.sensitive.sheetload_ic_efficiency_competency_source
+                    - prep.sensitive.sheetload_ic_iteration_competency_source
+                    - prep.sensitive.sheetload_ic_results_competency_source
+                    - prep.sensitive.sheetload_ic_transparency_competency_source
+                    - prep.sensitive.sheetload_osat_source
+                    - prep.sensitive.sheetload_values_certificate_source
                     - prep.sheetload.*
                     - raw.sheetload.*  
 
@@ -1428,7 +1661,12 @@ roles:
     - alcurtis:
         member_of:
             - analyst_finance
-            - bamboohr
+            - bamboohr_analytics
+        warehouses:
+            - analyst_xs
+
+    - alpcohen:
+        member_of: []
         warehouses:
             - analyst_xs
 
@@ -1441,19 +1679,20 @@ roles:
     - amurray:
         member_of:
             - analyst_finance
-            - bamboohr
+            - bamboohr_analytics
         warehouses:
             - analyst_xs 
 
     - bmenegocci:
         member_of:
-            - bamboohr
+            - analyst_finance
+            - bamboohr_analytics
         warehouses:
             - analyst_xs
 
     - brittany:
         member_of:
-            - bamboohr_raw
+            - bamboohr
         warehouses:
             - analyst_xs
 
@@ -1470,7 +1709,7 @@ roles:
     - cmestel:
         member_of:
             - analyst_finance
-            - bamboohr
+            - bamboohr_analytics
         warehouses:
             - analyst_xs
 
@@ -1513,43 +1752,34 @@ roles:
             - analyst_engineering
         owns:
             databases:
-                - dtownsend_analytics
                 - dtownsend_prep
                 - dtownsend_prod
             schemas:
-                - dtownsend_analytics.*
                 - dtownsend_prep.*
                 - dtownsend_prod.*
             tables:
-                - dtownsend_analytics.*.*
                 - dtownsend_prep.*.*
                 - dtownsend_prod.*.*
         privileges:
             databases:
                 read:
-                    - dtownsend_analytics
                     - dtownsend_prep
                     - dtownsend_prod
                 write:
-                    - dtownsend_analytics
                     - dtownsend_prep
                     - dtownsend_prod
             schemas:
                 read:
-                    - dtownsend_analytics.*
                     - dtownsend_prep.*
                     - dtownsend_prod.*
                 write:
-                    - dtownsend_analytics.*
                     - dtownsend_prep.*
                     - dtownsend_prod.*
             tables:
                 read:
-                    - dtownsend_analytics.*.*
                     - dtownsend_prep.*.*
                     - dtownsend_prod.*.*
                 write:
-                    - dtownsend_analytics.*.*
                     - dtownsend_prep.*.*
                     - dtownsend_prod.*.*
 
@@ -1602,7 +1832,7 @@ roles:
     - fkurniadi:
         member_of:
             - analyst_finance
-            - bamboohr
+            - bamboohr_analytics
         warehouses:
             - analyst_xs        
 
@@ -1613,6 +1843,7 @@ roles:
             - transformer
         warehouses:
             - loading
+            - merge_request_l
             - merge_request_xs
             - merge_request_xl
             - reporting
@@ -1636,43 +1867,34 @@ roles:
             - analyst_xs
         owns:
             databases:
-                - ianschweickart_analytics
                 - ianschweickart_prep
                 - ianschweickart_prod
             schemas:
-                - ianschweickart_analytics.*
                 - ianschweickart_prep.*
                 - ianschweickart_prod.*
             tables:
-                - ianschweickart_analytics.*.*
                 - ianschweickart_prep.*.*
                 - ianschweickart_prod.*.*
         privileges:
             databases:
                 read:
-                    - ianschweickart_analytics
                     - ianschweickart_prep
                     - ianschweickart_prod
                 write:
-                    - ianschweickart_analytics
                     - ianschweickart_prep
                     - ianschweickart_prod
             schemas:
                 read:
-                    - ianschweickart_analytics.*
                     - ianschweickart_prep.*
                     - ianschweickart_prod.*
                 write:
-                    - ianschweickart_analytics.*
                     - ianschweickart_prep.*
                     - ianschweickart_prod.*
             tables:
                 read:
-                    - ianschweickart_analytics.*.*
                     - ianschweickart_prep.*.*
                     - ianschweickart_prod.*.*
                 write:
-                    - ianschweickart_analytics.*.*
                     - ianschweickart_prep.*.*
                     - ianschweickart_prod.*.*           
 
@@ -1685,49 +1907,41 @@ roles:
     - iweeks:
         member_of:
             - analyst_finance
-            - bamboohr
+            - bamboohr_analytics
             - customers_db
+            - data_team_analyst
         warehouses:
             - analyst_xs
         owns:
             databases:
-                - iweeks_analytics
                 - iweeks_prep
                 - iweeks_prod
             schemas:
-                - iweeks_analytics.*
                 - iweeks_prep.*
                 - iweeks_prod.*
             tables:
-                - iweeks_analytics.*.*
                 - iweeks_prep.*.*
                 - iweeks_prod.*.*
         privileges:
             databases:
                 read:
-                    - iweeks_analytics
                     - iweeks_prep
                     - iweeks_prod
                 write:
-                    - iweeks_analytics
                     - iweeks_prep
                     - iweeks_prod
             schemas:
                 read:
-                    - iweeks_analytics.*
                     - iweeks_prep.*
                     - iweeks_prod.*
                 write:
-                    - iweeks_analytics.*
                     - iweeks_prep.*
                     - iweeks_prod.*
             tables:
                 read:
-                    - iweeks_analytics.*.*
                     - iweeks_prep.*.*
                     - iweeks_prod.*.*
                 write:
-                    - iweeks_analytics.*.*
                     - iweeks_prep.*.*
                     - iweeks_prod.*.*
             
@@ -1749,47 +1963,39 @@ roles:
             - customers_db
             - netsuite
             - static_admin
+            - data_team_analyst
         warehouses:
             - analyst_xs
         owns:
             databases:
-                - jpeguero_analytics
                 - jpeguero_prep
                 - jpeguero_prod
             schemas:
-                - jpeguero_analytics.*
                 - jpeguero_prep.*
                 - jpeguero_prod.*
             tables:
-                - jpeguero_analytics.*.*
                 - jpeguero_prep.*.*
                 - jpeguero_prod.*.*
         privileges:
             databases:
                 read:
-                    - jpeguero_analytics
                     - jpeguero_prep
                     - jpeguero_prod
                 write:
-                    - jpeguero_analytics
                     - jpeguero_prep
                     - jpeguero_prod
             schemas:
                 read:
-                    - jpeguero_analytics.*
                     - jpeguero_prep.*
                     - jpeguero_prod.*
                 write:
-                    - jpeguero_analytics.*
                     - jpeguero_prep.*
                     - jpeguero_prod.*
             tables:
                 read:
-                    - jpeguero_analytics.*.*
                     - jpeguero_prep.*.*
                     - jpeguero_prod.*.*
                 write:
-                    - jpeguero_analytics.*.*
                     - jpeguero_prep.*.*
                     - jpeguero_prod.*.*
 
@@ -1809,46 +2015,44 @@ roles:
             - reporting
         owns:
             databases:
-                - jstark_analytics
                 - jstark_prep
                 - jstark_prod
             schemas:
-                - jstark_analytics.*
                 - jstark_prep.*
                 - jstark_prod.*
             tables:
-                - jstark_analytics.*.*
                 - jstark_prep.*.*
                 - jstark_prod.*.*
         privileges:
             databases:
                 read:
-                    - jstark_analytics
                     - jstark_prep
                     - jstark_prod
                 write:
-                    - jstark_analytics
                     - jstark_prep
                     - jstark_prod
             schemas:
                 read:
-                    - jstark_analytics.*
                     - jstark_prep.*
                     - jstark_prod.*
                 write:
-                    - jstark_analytics.*
                     - jstark_prep.*
                     - jstark_prod.*
             tables:
                 read:
-                    - jstark_analytics.*.*
                     - jstark_prep.*.*
                     - jstark_prod.*.*
                 write:
-                    - jstark_analytics.*.*
                     - jstark_prep.*.*
                     - jstark_prod.*.*
     
+    - jshen:
+        member_of:
+            - analyst_finance
+            - bamboohr_analytics
+        warehouses:
+            - analyst_xs
+
     - jurbanc:
         warehouses:
             - reporting
@@ -1868,6 +2072,7 @@ roles:
         member_of:
             - analyst_engineering
             - customers_db
+            - data_team_analyst
         warehouses:
             - analyst_xs
 
@@ -1883,6 +2088,7 @@ roles:
             - data_manager
             - dbt_analytics_sensitive
             - greenhouse
+            - data_team_analyst
         warehouses:
             - engineer_xs
             - engineer_xl
@@ -1890,43 +2096,34 @@ roles:
             - reporting
         owns:
             databases:
-                - ktam_analytics
                 - ktam_prep
                 - ktam_prod
             schemas:
-                - ktam_analytics.*
                 - ktam_prep.*
                 - ktam_prod.*
             tables:
-                - ktam_analytics.*.*
                 - ktam_prep.*.*
                 - ktam_prod.*.*
         privileges:
             databases:
                 read:
-                    - ktam_analytics
                     - ktam_prep
                     - ktam_prod
                 write:
-                    - ktam_analytics
                     - ktam_prep
                     - ktam_prod
             schemas:
                 read:
-                    - ktam_analytics.*
                     - ktam_prep.*
                     - ktam_prod.*
                 write:
-                    - ktam_analytics.*
                     - ktam_prep.*
                     - ktam_prod.*
             tables:
                 read:
-                    - ktam_analytics.*.*
                     - ktam_prep.*.*
                     - ktam_prod.*.*
                 write:
-                    - ktam_analytics.*.*
                     - ktam_prep.*.*
                     - ktam_prod.*.*
 
@@ -1967,43 +2164,34 @@ roles:
             - analyst_xs
         owns:
             databases:
-                - michellecooper_analytics
                 - michellecooper_prep
                 - michellecooper_prod
             schemas:
-                - michellecooper_analytics.*
                 - michellecooper_prep.*
                 - michellecooper_prod.*
             tables:
-                - michellecooper_analytics.*.*
                 - michellecooper_prep.*.*
                 - michellecooper_prod.*.*
         privileges:
             databases:
                 read:
-                    - michellecooper_analytics
                     - michellecooper_prep
                     - michellecooper_prod
                 write:
-                    - michellecooper_analytics
                     - michellecooper_prep
                     - michellecooper_prod
             schemas:
                 read:
-                    - michellecooper_analytics.*
                     - michellecooper_prep.*
                     - michellecooper_prod.*
                 write:
-                    - michellecooper_analytics.*
                     - michellecooper_prep.*
                     - michellecooper_prod.*
             tables:
                 read:
-                    - michellecooper_analytics.*.*
                     - michellecooper_prep.*.*
                     - michellecooper_prod.*.*
                 write:
-                    - michellecooper_analytics.*.*
                     - michellecooper_prep.*.*
                     - michellecooper_prod.*.*
 
@@ -2014,49 +2202,41 @@ roles:
     - mpeychet:
         member_of:
             - analyst_growth
+            - data_team_analyst
         warehouses:
             - analyst_xs
             - analyst_l
             - analyst_xl
         owns:
             databases:
-                - mpeychet_analytics
                 - mpeychet_prep
                 - mpeychet_prod
             schemas:
-                - mpeychet_analytics.*
                 - mpeychet_prep.*
                 - mpeychet_prod.*
             tables:
-                - mpeychet_analytics.*.*
                 - mpeychet_prep.*.*
                 - mpeychet_prod.*.*
         privileges:
             databases:
                 read:
-                    - mpeychet_analytics
                     - mpeychet_prep
                     - mpeychet_prod
                 write:
-                    - mpeychet_analytics
                     - mpeychet_prep
                     - mpeychet_prod
             schemas:
                 read:
-                    - mpeychet_analytics.*
                     - mpeychet_prep.*
                     - mpeychet_prod.*
                 write:
-                    - mpeychet_analytics.*
                     - mpeychet_prep.*
                     - mpeychet_prod.*
             tables:
                 read:
-                    - mpeychet_analytics.*.*
                     - mpeychet_prep.*.*
                     - mpeychet_prod.*.*
                 write:
-                    - mpeychet_analytics.*.*
                     - mpeychet_prep.*.*
                     - mpeychet_prod.*.*
 
@@ -2083,49 +2263,46 @@ roles:
             - reporting
         owns:
             databases:
-                - mwalker_analytics
                 - mwalker_prep
                 - mwalker_prod
             schemas:
-                - mwalker_analytics.*
                 - mwalker_prep.*
                 - mwalker_prod.*
             tables:
-                - mwalker_analytics.*.*
                 - mwalker_prep.*.*
                 - mwalker_prod.*.*
         privileges:
             databases:
                 read:
-                    - mwalker_analytics
                     - mwalker_prep
                     - mwalker_prod
                 write:
-                    - mwalker_analytics
                     - mwalker_prep
                     - mwalker_prod
             schemas:
                 read:
-                    - mwalker_analytics.*
                     - mwalker_prep.*
                     - mwalker_prod.*
                 write:
-                    - mwalker_analytics.*
                     - mwalker_prep.*
                     - mwalker_prod.*
             tables:
                 read:
-                    - mwalker_analytics.*.*
                     - mwalker_prep.*.*
                     - mwalker_prod.*.*
                 write:
-                    - mwalker_analytics.*.*
                     - mwalker_prep.*.*
                     - mwalker_prod.*.*
 
+    - mwawrzyniak:
+        member_of:
+            - analyst_growth
+        warehouses:
+            - analyst_xs
+
     - mwilkins:
         member_of:
-            - bamboohr_raw
+            - bamboohr
         warehouses:
             - analyst_xs
 
@@ -2136,45 +2313,42 @@ roles:
             - analyst_xs
         owns:
             databases:
-                - nfiguera_analytics
                 - nfiguera_prep
                 - nfiguera_prod
             schemas:
-                - nfiguera_analytics.*
                 - nfiguera_prep.*
                 - nfiguera_prod.*
             tables:
-                - nfiguera_analytics.*.*
                 - nfiguera_prep.*.*
                 - nfiguera_prod.*.*
         privileges:
             databases:
                 read:
-                    - nfiguera_analytics
                     - nfiguera_prep
                     - nfiguera_prod
                 write:
-                    - nfiguera_analytics
                     - nfiguera_prep
                     - nfiguera_prod
             schemas:
                 read:
-                    - nfiguera_analytics.*
                     - nfiguera_prep.*
                     - nfiguera_prod.*
                 write:
-                    - nfiguera_analytics.*
                     - nfiguera_prep.*
                     - nfiguera_prod.*
             tables:
                 read:
-                    - nfiguera_analytics.*.*
                     - nfiguera_prep.*.*
                     - nfiguera_prod.*.*
                 write:
-                    - nfiguera_analytics.*.*
                     - nfiguera_prep.*.*
                     - nfiguera_prod.*.*
+
+    - ngalang:
+        member_of:
+            - analyst_growth
+        warehouses:
+            - analyst_xs
 
     - parmstrong:
         member_of:
@@ -2186,43 +2360,34 @@ roles:
             - reporting
         owns:
             databases:
-                - parmstrong_analytics
                 - parmstrong_prep
                 - parmstrong_prod
             schemas:
-                - parmstrong_analytics.*
                 - parmstrong_prep.*
                 - parmstrong_prod.*
             tables:
-                - parmstrong_analytics.*.*
                 - parmstrong_prep.*.*
                 - parmstrong_prod.*.*
         privileges:
             databases:
                 read:
-                    - parmstrong_analytics
                     - parmstrong_prep
                     - parmstrong_prod
                 write:
-                    - parmstrong_analytics
                     - parmstrong_prep
                     - parmstrong_prod
             schemas:
                 read:
-                    - parmstrong_analytics.*
                     - parmstrong_prep.*
                     - parmstrong_prod.*
                 write:
-                    - parmstrong_analytics.*
                     - parmstrong_prep.*
                     - parmstrong_prod.*
             tables:
                 read:
-                    - parmstrong_analytics.*.*
                     - parmstrong_prep.*.*
                     - parmstrong_prod.*.*
                 write:
-                    - parmstrong_analytics.*.*
                     - parmstrong_prep.*.*
                     - parmstrong_prod.*.*
 
@@ -2241,51 +2406,43 @@ roles:
     - pluthra:
         member_of:
             - analyst_people
-            - bamboohr_raw
+            - bamboohr
             - customers_db
             - qualtrics
             - qualtrics_sensitive
+            - data_team_analyst
         warehouses:
             - analyst_xs
         owns:
             databases:
-                - pluthra_analytics
                 - pluthra_prep
                 - pluthra_prod
             schemas:
-                - pluthra_analytics.*
                 - pluthra_prep.*
                 - pluthra_prod.*
             tables:
-                - pluthra_analytics.*.*
                 - pluthra_prep.*.*
                 - pluthra_prod.*.*
         privileges:
             databases:
                 read:
-                    - pluthra_analytics
                     - pluthra_prep
                     - pluthra_prod
                 write:
-                    - pluthra_analytics
                     - pluthra_prep
                     - pluthra_prod
             schemas:
                 read:
-                    - pluthra_analytics.*
                     - pluthra_prep.*
                     - pluthra_prod.*
                 write:
-                    - pluthra_analytics.*
                     - pluthra_prep.*
                     - pluthra_prod.*
             tables:
                 read:
-                    - pluthra_analytics.*.*
                     - pluthra_prep.*.*
                     - pluthra_prod.*.*
                 write:
-                    - pluthra_analytics.*.*
                     - pluthra_prep.*.*
                     - pluthra_prod.*.*
 
@@ -2296,43 +2453,34 @@ roles:
             - analyst_xs
         owns:
             databases:
-                - rheannamistry_analytics
                 - rheannamistry_prep
                 - rheannamistry_prod
             schemas:
-                - rheannamistry_analytics.*
                 - rheannamistry_prep.*
                 - rheannamistry_prod.*
             tables:
-                - rheannamistry_analytics.*.*
                 - rheannamistry_prep.*.*
                 - rheannamistry_prod.*.*
         privileges:
             databases:
                 read:
-                    - rheannamistry_analytics
                     - rheannamistry_prep
                     - rheannamistry_prod
                 write:
-                    - rheannamistry_analytics
                     - rheannamistry_prep
                     - rheannamistry_prod
             schemas:
                 read:
-                    - rheannamistry_analytics.*
                     - rheannamistry_prep.*
                     - rheannamistry_prod.*
                 write:
-                    - rheannamistry_analytics.*
                     - rheannamistry_prep.*
                     - rheannamistry_prod.*
             tables:
                 read:
-                    - rheannamistry_analytics.*.*
                     - rheannamistry_prep.*.*
                     - rheannamistry_prod.*.*
                 write:
-                    - rheannamistry_analytics.*.*
                     - rheannamistry_prep.*.*
                     - rheannamistry_prod.*.*
 
@@ -2348,6 +2496,38 @@ roles:
             - analyst_core
         warehouses:
             - analyst_xs
+        owns:
+            databases:
+                - rparker_prep
+                - rparker_prod
+            schemas:
+                - rparker_prep.*
+                - rparker_prod.*
+            tables:
+                - rparker_prep.*.*
+                - rparker_prod.*.*
+        privileges:
+            databases:
+                read:
+                    - rparker_prep
+                    - rparker_prod
+                write:
+                    - rparker_prep
+                    - rparker_prod
+            schemas:
+                read:
+                    - rparker_prep.*
+                    - rparker_prod.*
+                write:
+                    - rparker_prep.*
+                    - rparker_prod.*
+            tables:
+                read:
+                    - rparker_prep.*.*
+                    - rparker_prod.*.*
+                write:
+                    - rparker_prep.*.*
+                    - rparker_prod.*.*
 
     - sawezec:
         member_of:
@@ -2372,49 +2552,48 @@ roles:
             - reporting
         owns:
             databases:
-                - snalamaru_analytics
                 - snalamaru_prep
                 - snalamaru_prod
             schemas:
-                - snalamaru_analytics.*
                 - snalamaru_prep.*
                 - snalamaru_prod.*
             tables:
-                - snalamaru_analytics.*.*
                 - snalamaru_prep.*.*
                 - snalamaru_prod.*.*
         privileges:
             databases:
                 read:
-                    - snalamaru_analytics
                     - snalamaru_prep
                     - snalamaru_prod
                 write:
-                    - snalamaru_analytics
                     - snalamaru_prep
                     - snalamaru_prod
             schemas:
                 read:
-                    - snalamaru_analytics.*
                     - snalamaru_prep.*
                     - snalamaru_prod.*
                 write:
-                    - snalamaru_analytics.*
                     - snalamaru_prep.*
                     - snalamaru_prod.*
             tables:
                 read:
-                    - snalamaru_analytics.*.*
                     - snalamaru_prep.*.*
                     - snalamaru_prod.*.*
                 write:
-                    - snalamaru_analytics.*.*
                     - snalamaru_prep.*.*
                     - snalamaru_prod.*.*
 
     - ssichak:
         warehouses:
             - reporting
+
+    - statimatla:
+        member_of:
+            - analyst_finance
+            - bamboohr_analytics
+            - customers_db
+        warehouses:
+            - analyst_xs
 
     - stitch:
         warehouses:
@@ -2430,7 +2609,6 @@ roles:
                     - raw.license_db_dump
                     - raw.salesforce_stitch
                     - raw.stitch_google_sheets
-                    - raw.version_db_dump_stitch
                     - raw.zendesk_stitch
                     - raw.zendesk_community_relations_stitch
                     - raw.zuora_stitch
@@ -2438,7 +2616,6 @@ roles:
                     - raw.license_db_dump
                     - raw.salesforce_stitch
                     - raw.stitch_google_sheets
-                    - raw.version_db_dump_stitch
                     - raw.zendesk_stitch
                     - raw.zendesk_community_relations_stitch
                     - raw.zuora_stitch
@@ -2447,7 +2624,6 @@ roles:
                     - raw.license_db_dump.*
                     - raw.salesforce_stitch.*
                     - raw.stitch_google_sheets.*
-                    - raw.version_db_dump_stitch.*
                     - raw.zendesk_stitch.*
                     - raw.zendesk_community_relations_stitch.*
                     - raw.zuora_stitch.*
@@ -2455,7 +2631,6 @@ roles:
                     - raw.license_db_dump.*
                     - raw.salesforce_stitch.*
                     - raw.stitch_google_sheets.*
-                    - raw.version_db_dump_stitch.*
                     - raw.zendesk_stitch.*
                     - raw.zendesk_community_relations_stitch.*
                     - raw.zuora_stitch.*
@@ -2489,47 +2664,38 @@ roles:
 
     - tmurphy:
         member_of:
-            - bamboohr_raw
+            - bamboohr
             - engineer
         owns:
             databases:
-                - tmurphy_analytics
                 - tmurphy_prep
                 - tmurphy_prod
             schemas:
-                - tmurphy_analytics.*
                 - tmurphy_prep.*
                 - tmurphy_prod.*
             tables:
-                - tmurphy_analytics.*.*
                 - tmurphy_prep.*.*
                 - tmurphy_prod.*.*
         privileges:
             databases:
                 read:
-                    - tmurphy_analytics
                     - tmurphy_prep
                     - tmurphy_prod
                 write:
-                    - tmurphy_analytics
                     - tmurphy_prep
                     - tmurphy_prod
             schemas:
                 read:
-                    - tmurphy_analytics.*
                     - tmurphy_prep.*
                     - tmurphy_prod.*
                 write:
-                    - tmurphy_analytics.*
                     - tmurphy_prep.*
                     - tmurphy_prod.*
             tables:
                 read:
-                    - tmurphy_analytics.*.*
                     - tmurphy_prep.*.*
                     - tmurphy_prod.*.*
                 write:
-                    - tmurphy_analytics.*.*
                     - tmurphy_prep.*.*
                     - tmurphy_prod.*.*
         warehouses:
@@ -2546,43 +2712,34 @@ roles:
             - analyst_xs
         owns:
             databases:
-                - trevorromero_analytics
                 - trevorromero_prep
                 - trevorromero_prod
             schemas:
-                - trevorromero_analytics.*
                 - trevorromero_prep.*
                 - trevorromero_prod.*
             tables:
-                - trevorromero_analytics.*.*
                 - trevorromero_prep.*.*
                 - trevorromero_prod.*.*
         privileges:
             databases:
                 read:
-                    - trevorromero_analytics
                     - trevorromero_prep
                     - trevorromero_prod
                 write:
-                    - trevorromero_analytics
                     - trevorromero_prep
                     - trevorromero_prod
             schemas:
                 read:
-                    - trevorromero_analytics.*
                     - trevorromero_prep.*
                     - trevorromero_prod.*
                 write:
-                    - trevorromero_analytics.*
                     - trevorromero_prep.*
                     - trevorromero_prod.*
             tables:
                 read:
-                    - trevorromero_analytics.*.*
                     - trevorromero_prep.*.*
                     - trevorromero_prod.*.*
                 write:
-                    - trevorromero_analytics.*.*
                     - trevorromero_prep.*.*
                     - trevorromero_prod.*.*
 
@@ -2600,7 +2757,7 @@ roles:
     - ysun:
         member_of:
             - analyst_finance
-            - bamboohr
+            - bamboohr_analytics
         warehouses:
             - analyst_xs  
 
@@ -2653,6 +2810,11 @@ users:
         can_login: yes
         member_of:
             - alcurtis
+
+    - alpcohen:
+        can_login: yes
+        member_of:
+            - alpcohen
 
     - amihaila:
         can_login: yes
@@ -2761,6 +2923,11 @@ users:
         member_of:
             - fkurniadi
 
+    - gainsight:
+        can_login: yes
+        member_of:
+            - gainsight
+
     - gitlab_ci:
         can_login: yes
         member_of:
@@ -2818,6 +2985,11 @@ users:
             - jsalazar
             - securityadmin
 
+    - jshen:
+        can_login: yes
+        member_of:
+            - jshen
+
     - jstark:
         can_login: yes
         member_of:
@@ -2872,6 +3044,10 @@ users:
         member_of:
             - lvandensteen
 
+    - mbergeron:
+        can_login: no
+        member_of: []
+
     - mdewji:
         can_login: yes
         member_of:
@@ -2922,10 +3098,20 @@ users:
         member_of:
             - mwalker
 
+    - mwawrzyniak:
+        can_login: yes
+        member_of:
+            - mwawrzyniak
+
     - nfiguera:
         can_login: yes
         member_of:
             - nfiguera
+
+    - ngalang:
+        can_login: yes
+        member_of:
+            - ngalang
 
     - parmstrong:
         can_login: yes
@@ -2993,6 +3179,11 @@ users:
         member_of:
             - sawezec
 
+    - securitybotsnowflakeapi:
+        can_login: yes
+        member_of:
+            - securityadmin
+
     - skerr:
         can_login: yes
         member_of:
@@ -3011,6 +3202,11 @@ users:
         can_login: yes
         member_of:
             - ssichak
+
+    - statimatla:
+        can_login: yes
+        member_of:
+            - statimatla
 
     - stitch:
         can_login: yes
@@ -3094,11 +3290,17 @@ warehouses:
     - fivetran_warehouse:
         size: x-small
 
+    - gainsight_xs:
+        size: x-small
+
     - gitlab_postgres:
         size: x-small
 
     - loading:
         size: x-small
+
+    - merge_request_l:
+        size: large
 
     - merge_request_xl:
         size: x-large
