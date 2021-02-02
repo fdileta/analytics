@@ -8,14 +8,14 @@
 WITH source AS (
 
   SELECT *
-  FROM {{ source('gitlab_dotcom', 'merge_requests') }}
+  FROM {{ ref('gitlab_dotcom_merge_requests_dedupe_source') }}
+
   
     {% if is_incremental() %}
 
     WHERE updated_at >= (SELECT MAX(updated_at) FROM {{this}})
 
     {% endif %}
-  QUALIFY ROW_NUMBER() OVER (PARTITION BY id ORDER BY updated_at DESC) = 1
 
 ), renamed AS (
 
