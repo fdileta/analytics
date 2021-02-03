@@ -1,0 +1,1 @@
+SELECT namespace_id, TO_DATE(CURRENT_DATE) AS run_day,  COUNT(projects.id) AS counter_value  FROM {{ref('gitlab_dotcom_projects_dedupe_source')}} AS projects  LEFT JOIN {{ref('gitlab_dotcom_namespaces_dedupe_source')}} AS namespaces ON namespaces.id = projects.namespace_id WHERE projects.service_desk_enabled = TRUE GROUP BY 1
