@@ -6,14 +6,14 @@ with raw_fct_mrr_totals_levelled AS (
 
       SELECT subscription_name, 
               subscription_name_slugify,
-              sfdc_account_id,
+              dim_crm_account_id,
               oldest_subscription_in_cohort,
-              lineage,
-              mrr_month,
-              zuora_subscription_cohort_month,
-              zuora_subscription_cohort_quarter,
-              months_since_zuora_subscription_cohort_start,
-              quarters_since_zuora_subscription_cohort_start,
+              subscription_lineage,
+              to_date(cast(dim_date_id as varchar), 'YYYYMMDD')     AS  mrr_month,
+              billing_account_cohort_month,
+              billing_account_cohort_quarter,
+              months_since_billing_account_cohort_start,
+              quarters_since_billing_account_cohort_start,
               sum(mrr) as mrr
       FROM raw_fct_mrr_totals_levelled
       {{ dbt_utils.group_by(n=10) }}
@@ -21,11 +21,11 @@ with raw_fct_mrr_totals_levelled AS (
 ), current_arr_segmentation_all_levels AS (
 
        SELECT * FROM {{ref('fct_current_arr_segmentation_all_levels')}}
-       WHERE level_ = 'zuora_subscription_id'
+       WHERE level_ = 'dim_subscription_id'
 
 ), mapping AS (
       
-       SELECT  subscription_name, sfdc_account_id
+       SELECT  subscription_name, dim_crm_account_id
        FROM fct_mrr_totals_levelled
        {{ dbt_utils.group_by(n=2) }}
 
@@ -36,7 +36,7 @@ with raw_fct_mrr_totals_levelled AS (
                      mrr_month            AS original_mrr_month,
                      dateadd('year', 1, mrr_month) AS retention_month
        FROM fct_mrr_totals_levelled,
-       lateral flatten(input =>split(lineage, ',')) C
+       lateral flatten(input =>split(subscription_lineage, ',')) C
        {{ dbt_utils.group_by(n=4) }}
 
 ), retention_subs AS ( --find which of those subscriptions are real and group them by their sub you're comparing to.
@@ -68,15 +68,15 @@ with raw_fct_mrr_totals_levelled AS (
 
       SELECT finals.subscription_name             AS zuora_subscription_name,
              finals.oldest_subscription_in_cohort AS zuora_subscription_id,
-             mapping.sfdc_account_id              AS salesforce_account_id,
+             mapping.dim_crm_account_id              AS salesforce_account_id,
              dateadd('year', 1, finals.mrr_month) AS retention_month, --THIS IS THE RETENTION MONTH, NOT THE MRR MONTH!!
              finals.mrr                           AS original_mrr,
              finals.net_retention_mrr,
              finals.gross_retention_mrr,
-             finals.zuora_subscription_cohort_month,
-             finals.zuora_subscription_cohort_quarter,
-             finals.months_since_zuora_subscription_cohort_start,
-             finals.quarters_since_zuora_subscription_cohort_start,
+             finals.billing_account_cohort_month,
+             finals.billing_account_cohort_quarter,
+             finals.months_since_billing_account_cohort_start,
+             finals.quarters_since_billing_account_cohort_start,
              {{ churn_type('original_mrr', 'net_retention_mrr') }}
       FROM finals
       LEFT JOIN mapping

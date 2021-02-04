@@ -1,11 +1,13 @@
 with fct_mrr_totals_levelled AS (
 
-       SELECT * FROM {{ref('fct_mrr_totals_levelled')}}
+       SELECT *,
+              to_date(cast(dim_date_id as varchar), 'YYYYMMDD')     AS  mrr_month
+       FROM {{ref('fct_mrr_totals_levelled')}}
 
 ), current_arr_segmentation_all_levels AS (
 
        SELECT * FROM {{ref('fct_current_arr_segmentation_all_levels')}}
-       WHERE level_ = 'parent_account_id'
+       WHERE level_ = 'ultimate_parent_account_id'
 
 ), list AS ( --get all the subscription + their lineage + the month we're looking for MRR for (12 month in the future)
 

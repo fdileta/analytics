@@ -1,15 +1,17 @@
 with fct_mrr_totals_levelled AS (
 
-       SELECT * FROM {{ref('fct_mrr_totals_levelled')}}
+       SELECT *,
+              to_date(cast(dim_date_id as varchar), 'YYYYMMDD')     AS  mrr_month
+       FROM {{ref('fct_mrr_totals_levelled')}}
 
 ), current_arr_segmentation_all_levels AS (
 
        SELECT * FROM {{ref('fct_current_arr_segmentation_all_levels')}}
-       WHERE level_ = 'sfdc_account_id'
+       WHERE level_ = 'dim_crm_account_id'
 
 ), list AS ( --get all the subscription + their lineage + the month we're looking for MRR for (12 month in the future)
 
-       SELECT sfdc_account_id,
+       SELECT dim_crm_account_id,
               mrr_month as original_mrr_month,
               dateadd('year', 1, mrr_month) AS retention_month,
               sum(mrr) as mrr
@@ -18,7 +20,7 @@ with fct_mrr_totals_levelled AS (
 
 ), retention_subs AS ( --find which of those subscriptions are real and group them by their sub you're comparing to.
 
-       SELECT list.sfdc_account_id,
+       SELECT list.dim_crm_account_id,
                list.retention_month,
                list.original_mrr_month,
                sum(list.mrr) AS original_mrr,
@@ -26,12 +28,12 @@ with fct_mrr_totals_levelled AS (
        FROM list
        LEFT JOIN list AS future
        ON list.retention_month = future.original_mrr_month
-       AND list.sfdc_account_id = future.sfdc_account_id
+       AND list.dim_crm_account_id = future.dim_crm_account_id
        GROUP BY 1, 2, 3
 
 ), finals AS (
 
-       SELECT sfdc_account_id,
+       SELECT dim_crm_account_id,
               retention_mrr,
               coalesce(retention_mrr, 0) AS net_retention_mrr,
               CASE WHEN net_retention_mrr > 0
@@ -44,8 +46,8 @@ with fct_mrr_totals_levelled AS (
 
 ), joined as(
 
-        SELECT finals.sfdc_account_id,
-               finals.sfdc_account_id as salesforce_account_id,
+        SELECT finals.dim_crm_account_id,
+               finals.dim_crm_account_id as salesforce_account_id,
                sfdc_account_name,
                dateadd('year', 1, finals.original_mrr_month) AS retention_month, --THIS IS THE RETENTION MONTH, NOT THE MRR MONTH!!
                original_mrr,
@@ -58,7 +60,7 @@ with fct_mrr_totals_levelled AS (
                {{ churn_type('original_mrr', 'net_retention_mrr') }}
         FROM finals
         LEFT JOIN fct_mrr_totals_levelled
-        ON finals.sfdc_account_id = fct_mrr_totals_levelled.sfdc_account_id
+        ON finals.dim_crm_account_id = fct_mrr_totals_levelled.dim_crm_account_id
         GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
 
 )
@@ -67,7 +69,7 @@ SELECT joined.*,
         current_arr_segmentation_all_levels.arr_segmentation
 FROM joined
 LEFT JOIN current_arr_segmentation_all_levels
-ON joined.sfdc_account_id = current_arr_segmentation_all_levels.id
+ON joined.dim_crm_account_id = current_arr_segmentation_all_levels.id
 WHERE retention_month <= dateadd(month, -1, CURRENT_DATE)
 
 --
