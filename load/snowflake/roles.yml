@@ -354,7 +354,6 @@ roles:
             - boneyard
             - covid19
             - dbt_analytics
-            - dbt_analytics_sensitive
             - gitlab_data_yaml
             - gitlab_dotcom
             - greenhouse
@@ -739,6 +738,23 @@ roles:
                     - prep.sensitive.bamboohr_job_role
                     - prep.sensitive.bamboohr_locality
                     - prep.sensitive.bamboohr_headcount_intermediate
+
+    - bamboohr_analytics_id_mapping:
+        warehouses:
+            - analyst_xs
+            - 
+        privileges:
+            databases:
+                read:
+                    - prod
+                    - prep
+        schemas:
+                read:
+                    - prod.common
+                    - prod.legacy
+            tables:
+                read:
+
 
     - bamboohr:
         warehouses:
