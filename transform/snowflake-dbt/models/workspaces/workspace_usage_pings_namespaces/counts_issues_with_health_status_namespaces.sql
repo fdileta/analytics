@@ -1,1 +1,13 @@
-SELECT namespace_id, TO_DATE(CURRENT_DATE) AS run_day,  COUNT(issues.id) AS counter_value  FROM {{ref('gitlab_dotcom_issues_dedupe_source')}} AS issues  LEFT JOIN {{ref('gitlab_dotcom_projects_dedupe_source')}} AS projects ON projects.id = issues.project_id  LEFT JOIN {{ref('gitlab_dotcom_namespaces_dedupe_source')}} AS namespaces ON projects.namespace_id = namespaces.id WHERE issues.health_status IS NOT NULL GROUP BY 1
+SELECT
+    namespace_id,
+    TO_DATE(CURRENT_DATE) AS run_day,
+    COUNT(gitlab_dotcom_issues_dedupe_source.id) AS counter_value
+FROM
+    {{ref('gitlab_dotcom_issues_dedupe_source')}}
+LEFT JOIN
+    {{ref('gitlab_dotcom_projects_dedupe_source')}} ON
+        gitlab_dotcom_projects_dedupe_source.id = gitlab_dotcom_issues_dedupe_source.project_id
+LEFT JOIN
+    {{ref('gitlab_dotcom_namespaces_dedupe_source')}} ON
+        gitlab_dotcom_projects_dedupe_source.namespace_id = gitlab_dotcom_namespaces_dedupe_source.id
+WHERE gitlab_dotcom_issues_dedupe_source.health_status IS NOT NULL GROUP BY 1

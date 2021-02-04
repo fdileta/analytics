@@ -1,1 +1,10 @@
-SELECT 'usage_activity_by_stage.manage.projects_imported.gitlab_project' AS counter_name,  COUNT(DISTINCT projects.creator_id) AS counter_value, TO_DATE(CURRENT_DATE) AS run_day,   FROM {{ref('gitlab_dotcom_projects_dedupe_source')}} AS projects WHERE projects.import_type = 'gitlab_project' AND projects.import_type IS NOT NULL
+SELECT
+    'usage_activity_by_stage.manage.projects_imported.gitlab_project' AS counter_name,
+    COUNT(
+        DISTINCT gitlab_dotcom_projects_dedupe_source.creator_id
+    ) AS counter_value,
+    TO_DATE(CURRENT_DATE) AS run_day
+FROM
+    {{ref('gitlab_dotcom_projects_dedupe_source')}}
+WHERE
+    gitlab_dotcom_projects_dedupe_source.import_type = 'gitlab_project' AND gitlab_dotcom_projects_dedupe_source.import_type IS NOT NULL

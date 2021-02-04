@@ -1,1 +1,15 @@
-SELECT namespace_id, TO_DATE(CURRENT_DATE) AS run_day,  COUNT(DISTINCT merge_requests.author_id) AS counter_value  FROM {{ref('gitlab_dotcom_merge_requests_dedupe_source')}} AS merge_requests LEFT JOIN {{ref('gitlab_dotcom_projects_dedupe_source')}} AS projects ON projects.id = merge_requests.target_project_id  LEFT JOIN {{ref('gitlab_dotcom_namespaces_dedupe_source')}} AS namespaces ON projects.namespace_id = namespaces.id  GROUP BY 1
+SELECT
+    namespace_id,
+    TO_DATE(CURRENT_DATE) AS run_day,
+    COUNT(
+        DISTINCT gitlab_dotcom_merge_requests_dedupe_source.author_id
+    ) AS counter_value
+FROM
+    {{ref('gitlab_dotcom_merge_requests_dedupe_source')}}
+LEFT JOIN
+    {{ref('gitlab_dotcom_projects_dedupe_source')}} ON
+        gitlab_dotcom_projects_dedupe_source.id = gitlab_dotcom_merge_requests_dedupe_source.target_project_id
+LEFT JOIN
+    {{ref('gitlab_dotcom_namespaces_dedupe_source')}} ON
+        gitlab_dotcom_projects_dedupe_source.namespace_id = gitlab_dotcom_namespaces_dedupe_source.id
+GROUP BY 1
