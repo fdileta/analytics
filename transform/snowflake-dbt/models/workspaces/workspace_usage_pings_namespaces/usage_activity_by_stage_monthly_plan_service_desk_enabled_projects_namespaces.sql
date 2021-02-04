@@ -1,14 +1,15 @@
 SELECT
-    namespace_id,
-    TO_DATE(CURRENT_DATE) AS run_day,
-    COUNT(
-        DISTINCT gitlab_dotcom_projects_dedupe_source.creator_id
-    ) AS counter_value
+  namespaces_xf.namespace_id,
+  TO_DATE(CURRENT_DATE) AS run_day,
+  COUNT(DISTINCT projects.creator_id) AS counter_value
 FROM
-    {{ref('gitlab_dotcom_projects_dedupe_source')}}
+  {{ref('gitlab_dotcom_projects_dedupe_source')}} AS projects
 LEFT JOIN
-    {{ref('gitlab_dotcom_namespaces_dedupe_source')}} ON
-        gitlab_dotcom_namespaces_dedupe_source.id = gitlab_dotcom_projects_dedupe_source.namespace_id
+  {{ref('gitlab_dotcom_namespaces_dedupe_source')}} AS namespaces ON
+    namespaces.id = projects.namespace_id
+LEFT JOIN
+  {{ref('gitlab_dotcom_namespaces_xf')}} AS namespaces_xf ON
+    namespaces.id = namespaces_xf.namespace_id
 WHERE
-    gitlab_dotcom_projects_dedupe_source.service_desk_enabled = TRUE AND gitlab_dotcom_projects_dedupe_source.created_at BETWEEN '2020-11-17 19:22:32.723497' AND '2020-12-15 19:22:32.723560'
+  projects.service_desk_enabled = TRUE AND projects.created_at BETWEEN '2020-11-17 19:22:32.723497' AND '2020-12-15 19:22:32.723560'
 GROUP BY 1

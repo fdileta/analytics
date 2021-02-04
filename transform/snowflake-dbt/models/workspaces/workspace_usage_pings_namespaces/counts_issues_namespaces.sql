@@ -1,13 +1,16 @@
 SELECT
-    namespace_id,
-    TO_DATE(CURRENT_DATE) AS run_day,
-    COUNT(gitlab_dotcom_issues_dedupe_source.id) AS counter_value
+  namespaces_xf.namespace_id,
+  TO_DATE(CURRENT_DATE) AS run_day,
+  COUNT(issues.id) AS counter_value
 FROM
-    {{ref('gitlab_dotcom_issues_dedupe_source')}}
+  {{ref('gitlab_dotcom_issues_dedupe_source')}} AS issues
 LEFT JOIN
-    {{ref('gitlab_dotcom_projects_dedupe_source')}} ON
-        gitlab_dotcom_projects_dedupe_source.id = gitlab_dotcom_issues_dedupe_source.project_id
+  {{ref('gitlab_dotcom_projects_dedupe_source')}} AS projects ON
+    projects.id = issues.project_id
 LEFT JOIN
-    {{ref('gitlab_dotcom_namespaces_dedupe_source')}} ON
-        gitlab_dotcom_projects_dedupe_source.namespace_id = gitlab_dotcom_namespaces_dedupe_source.id
+  {{ref('gitlab_dotcom_namespaces_dedupe_source')}} AS namespaces ON
+    projects.namespace_id = namespaces.id
+LEFT JOIN
+  {{ref('gitlab_dotcom_namespaces_xf')}} AS namespaces_xf ON
+    namespaces.id = namespaces_xf.namespace_id
 GROUP BY 1
