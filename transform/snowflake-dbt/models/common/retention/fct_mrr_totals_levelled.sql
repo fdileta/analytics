@@ -42,6 +42,10 @@ WITH dates AS (
            crm_account.crm_account_name                                     AS sfdc_account_name,
            crm_account.ultimate_parent_account_id                           AS ultimate_parent_account_id,
            crm_account.ultimate_parent_account_name                         AS ultimate_parent_account_name,
+           subscription.subscription_name                                   AS subscription_name,
+           subscription.subscription_name_slugify                           AS subscription_name_slugify,
+           subscription.oldest_subscription_in_cohort                       AS oldest_subscription_in_cohort,
+           subscription.lineage                                             AS subscription_lineage,
            min(subscription.cohort_month) OVER (
               PARTITION BY billing_account.dim_billing_account_id)          AS billing_account_cohort_month,
            min(subscription.cohort_quarter) OVER (

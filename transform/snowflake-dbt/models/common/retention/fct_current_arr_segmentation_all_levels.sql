@@ -1,10 +1,11 @@
-{% set levels = ['zuora_subscription_id',
-                  'sfdc_account_id',
-                  'parent_account_id'] %}
+{% set levels = ['dim_subscription_id',
+                  'dim_crm_account_id',
+                  'ultimate_parent_account_id'] %}
 
 WITH base AS (
-    SELECT oldest_subscription_in_cohort as zuora_subscription_id,
-            ultimate_parent_account_id as parent_account_id,
+    SELECT  oldest_subscription_in_cohort                        AS zuora_subscription_id,
+            ultimate_parent_account_id                           AS parent_account_id,
+            to_date(cast(dim_date_id as varchar), 'YYYYMMDD')    AS mrr_month,
           {{ dbt_utils.star(from=ref('fct_mrr_totals_levelled'), 
             except=["oldest_subscription_in_cohort", "ultimate_parent_account_id"]) }}
     FROM {{ref('fct_mrr_totals_levelled')}}
@@ -13,7 +14,7 @@ WITH base AS (
 ), {{level}}_max_month as (
 
     SELECT max(mrr_month) as most_recent_mrr_month,
-              {{ level }}  AS id
+           {{ level }}  AS id
     FROM base
     WHERE mrr_month < dateadd(month, -1, CURRENT_DATE)
     GROUP BY 2

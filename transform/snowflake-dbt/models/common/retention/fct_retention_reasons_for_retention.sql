@@ -9,14 +9,15 @@ WITH raw_fct_mrr_totals_levelled AS (
     SELECT 
         subscription_name,
         subscription_name_slugify,
-        sfdc_account_id,
+        dim_crm_account_id,
         oldest_subscription_in_cohort,
-        lineage,
-        mrr_month,
-        zuora_subscription_cohort_month,
-        zuora_subscription_cohort_quarter,
-        months_since_zuora_subscription_cohort_start,
-        quarters_since_zuora_subscription_cohort_start,
+        subscription_lineage,
+        to_date(cast(dim_date_id as varchar), 'YYYYMMDD')                                 AS mrr_month,
+        -- Must change these to "Subscription_cohort etc"
+        billing_account_cohort_month,
+        billing_account_cohort_quarter,
+        months_since_billing_account_cohort_start,
+        quarters_since_billing_account_cohort_start,
 
         ARRAY_AGG(DISTINCT product_category) WITHIN GROUP (ORDER BY product_category ASC) AS original_product_category,
         ARRAY_AGG(DISTINCT delivery) WITHIN GROUP (ORDER BY delivery ASC)                 AS original_delivery,
@@ -46,7 +47,7 @@ WITH raw_fct_mrr_totals_levelled AS (
         mrr_month                       AS original_mrr_month,
         DATEADD('year', 1, mrr_month)   AS retention_month
     FROM fct_mrr_totals_levelled,
-    LATERAL FLATTEN(input =>SPLIT(lineage, ',')) C
+    LATERAL FLATTEN(input =>SPLIT(subscription_lineage, ',')) C
     {{ dbt_utils.group_by(n=4) }}
 
 ), retention_subs AS ( --find which of those subscriptions are real and group them by their sub you're comparing to.

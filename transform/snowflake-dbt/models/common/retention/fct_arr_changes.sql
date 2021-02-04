@@ -11,7 +11,8 @@ WITH fct_mrr_totals_levelled AS (
 ), monthly_arr AS (--Create a base data set of ARR and Customer Attributes to be used for the model
 
     SELECT
-      dim_date_id                                                                       AS arr_month,
+      dim_date_id                                                                       AS dim_date_id,
+      to_date(cast(dim_date_id as varchar), 'YYYYMMDD')                                 AS arr_month,
       months_since_sfdc_account_cohort_start,
       quarters_since_sfdc_account_cohort_start,
       sfdc_account_cohort_quarter,
@@ -35,7 +36,7 @@ WITH fct_mrr_totals_levelled AS (
       SUM(quantity)                                                                     AS quantity,
       SUM(mrr*12)                                                                       AS arr
     FROM fct_mrr_totals_levelled
-    {{ dbt_utils.group_by(n=9) }}
+    {{ dbt_utils.group_by(n=10) }}
 
 ), previous_next_month AS (--Calculate the previous and next month's values for the required fields to be used for analysis
 
