@@ -18,6 +18,11 @@ WITH dates AS (
 
     SELECT * FROM {{ ref('dim_crm_account') }}
 
+), rate_plan AS (
+
+    -- need to move this into a dim
+    SELECT * FROM {{ ref('zuora_rate_plan') }}
+
 ), joined AS (
 
       SELECT
@@ -31,6 +36,7 @@ WITH dates AS (
            mrr_totals.arr,
            mrr_totals.quantity,
            mrr_totals.unit_of_measure,
+           rate_plan.product_category,
            billing_account.billing_account_name                             AS billing_account_name,
            crm_account.crm_account_name                                     AS sfdc_account_name,
            crm_account.ultimate_parent_account_id                           AS ultimate_parent_account_id,
@@ -52,7 +58,11 @@ WITH dates AS (
     ON billing_account.dim_billing_account_id = mrr_totals.dim_billing_account_id
     LEFT JOIN crm_account
     ON crm_account.crm_account_id = billing_account.dim_crm_account_id
-    LEFT JOIN subscription ON subscription.dim_subscription_id = mrr_totals.dim_subscription_id
+    LEFT JOIN subscription
+    ON subscription.dim_subscription_id = mrr_totals.dim_subscription_id
+    LEFT JOIN rate_plan
+    ON rate_plan.subscription_id = mrr_totals.dim_subscription_id
+    -- AND rate_plan.product_id = mrr_totals.dim_product_detail_id
 
 ), final_table AS (
 
