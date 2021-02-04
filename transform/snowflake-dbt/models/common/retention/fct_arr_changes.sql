@@ -11,7 +11,7 @@ WITH fct_mrr_totals_levelled AS (
 ), monthly_arr AS (--Create a base data set of ARR and Customer Attributes to be used for the model
 
     SELECT
-      mrr_month                                                                          AS arr_month,
+      dim_date_id                                                                       AS arr_month,
       months_since_sfdc_account_cohort_start,
       quarters_since_sfdc_account_cohort_start,
       sfdc_account_cohort_quarter,
@@ -19,7 +19,7 @@ WITH fct_mrr_totals_levelled AS (
       ultimate_parent_account_name,
       ultimate_parent_account_id,
       sfdc_account_name,
-      sfdc_account_id,
+      dim_crm_account_id,
       ARRAY_AGG(DISTINCT product_category) WITHIN GROUP (ORDER BY product_category ASC) AS product_category,
       ARRAY_AGG(DISTINCT delivery) WITHIN GROUP (ORDER BY delivery ASC)                 AS delivery,
       MAX(DECODE(product_category,   --Need to account for the 'other' categories
@@ -41,14 +41,14 @@ WITH fct_mrr_totals_levelled AS (
 
     SELECT
       monthly_arr.*,
-       LAG(product_category) OVER (PARTITION BY sfdc_account_id ORDER BY arr_month)             AS previous_month_product_category,
-       LAG(delivery) OVER (PARTITION BY sfdc_account_id ORDER BY arr_month)                     AS previous_month_delivery,
-       COALESCE(LAG(product_ranking) OVER (PARTITION BY sfdc_account_id ORDER BY arr_month),0)  AS previous_month_product_ranking,
-       COALESCE(LAG(quantity) OVER (PARTITION BY sfdc_account_id ORDER BY arr_month),0)         AS previous_month_quantity,
-       COALESCE(LAG(arr) OVER (PARTITION BY sfdc_account_id ORDER BY arr_month),0)              AS previous_month_arr,
-       COALESCE(LEAD(quantity) OVER (PARTITION BY sfdc_account_id ORDER BY arr_month),0)        AS next_month_quantity,
-       COALESCE(LEAD(arr) OVER (PARTITION BY sfdc_account_id ORDER BY arr_month),0)             AS next_month_arr,
-       COALESCE(LEAD(arr_month) OVER (PARTITION BY sfdc_account_id ORDER BY arr_month),DATEADD('month',1,arr_month))
+       LAG(product_category) OVER (PARTITION BY dim_crm_account_id ORDER BY arr_month)             AS previous_month_product_category,
+       LAG(delivery) OVER (PARTITION BY dim_crm_account_id ORDER BY arr_month)                     AS previous_month_delivery,
+       COALESCE(LAG(product_ranking) OVER (PARTITION BY dim_crm_account_id ORDER BY arr_month),0)  AS previous_month_product_ranking,
+       COALESCE(LAG(quantity) OVER (PARTITION BY dim_crm_account_id ORDER BY arr_month),0)         AS previous_month_quantity,
+       COALESCE(LAG(arr) OVER (PARTITION BY dim_crm_account_id ORDER BY arr_month),0)              AS previous_month_arr,
+       COALESCE(LEAD(quantity) OVER (PARTITION BY dim_crm_account_id ORDER BY arr_month),0)        AS next_month_quantity,
+       COALESCE(LEAD(arr) OVER (PARTITION BY dim_crm_account_id ORDER BY arr_month),0)             AS next_month_arr,
+       COALESCE(LEAD(arr_month) OVER (PARTITION BY dim_crm_account_id ORDER BY arr_month),DATEADD('month',1,arr_month))
                                                                                                 AS next_month_arr_month
      FROM monthly_arr
 
@@ -60,7 +60,7 @@ WITH fct_mrr_totals_levelled AS (
       quarters_since_sfdc_account_cohort_start,
       ultimate_parent_account_name,
       sfdc_account_name,
-      sfdc_account_id,
+      dim_crm_account_id,
       product_category,
       previous_month_product_category,
       delivery,
@@ -81,7 +81,7 @@ WITH fct_mrr_totals_levelled AS (
       datediff(quarter, sfdc_account_cohort_quarter, next_month_arr_month) AS quarters_since_sfdc_account_cohort_start,
       ultimate_parent_account_name,
       sfdc_account_name,
-      sfdc_account_id,
+      dim_crm_account_id,
       NULL                                                                 AS product_category,
       previous_month_product_category,
       NULL                                                                 AS delivery,
@@ -118,7 +118,7 @@ WITH fct_mrr_totals_levelled AS (
 
     SELECT
       arr_month,
-      sfdc_account_id,
+      dim_crm_account_id,
       previous_month_arr      AS beg_arr,
       previous_month_quantity AS beg_quantity
     FROM type_of_arr_change
@@ -127,7 +127,7 @@ WITH fct_mrr_totals_levelled AS (
 
     SELECT
       arr_month,
-      sfdc_account_id,
+      dim_crm_account_id,
       CASE
         WHEN previous_month_quantity != quantity AND previous_month_quantity > 0
           THEN ZEROIFNULL(previous_month_arr/NULLIF(previous_month_quantity,0) * (quantity - previous_month_quantity))
@@ -148,7 +148,7 @@ WITH fct_mrr_totals_levelled AS (
 
     SELECT
       arr_month,
-      sfdc_account_id,
+      dim_crm_account_id,
       CASE
         WHEN previous_month_product_category = product_category
           THEN quantity * (arr/NULLIF(quantity,0) - previous_month_arr/NULLIF(previous_month_quantity,0))
@@ -162,7 +162,7 @@ WITH fct_mrr_totals_levelled AS (
 
     SELECT
       arr_month,
-      sfdc_account_id,
+      dim_crm_account_id,
       CASE
         WHEN previous_month_product_ranking != product_ranking
         THEN ZEROIFNULL(quantity * (arr/NULLIF(quantity,0) - previous_month_arr/NULLIF(previous_month_quantity,0)))
@@ -174,7 +174,7 @@ WITH fct_mrr_totals_levelled AS (
 
     SELECT
       arr_month,
-      sfdc_account_id,
+      dim_crm_account_id,
       arr                     AS end_arr,
       quantity                AS end_quantity
     FROM type_of_arr_change
@@ -183,7 +183,7 @@ WITH fct_mrr_totals_levelled AS (
 
   SELECT
     arr_month,
-    sfdc_account_id,
+    dim_crm_account_id,
     ZEROIFNULL(( arr / NULLIF(quantity,0) ) - ( previous_month_arr / NULLIF(previous_month_quantity,0))) AS annual_price_per_seat_change
   FROM type_of_arr_change
 
@@ -191,7 +191,7 @@ WITH fct_mrr_totals_levelled AS (
 
     SELECT DISTINCT
       type_of_arr_change.arr_month,
-      type_of_arr_change.sfdc_account_id,
+      type_of_arr_change.dim_crm_account_id,
       CASE
         WHEN sfdc_accounts_xf.account_segment = 'Unknown'
         THEN 'SMB'
@@ -209,19 +209,19 @@ WITH fct_mrr_totals_levelled AS (
       END                                        AS account_employee_count
     FROM type_of_arr_change
     LEFT JOIN sfdc_accounts_xf
-      ON type_of_arr_change.sfdc_account_id = sfdc_accounts_xf.account_id
+      ON type_of_arr_change.dim_crm_account_id = sfdc_accounts_xf.account_id
     ORDER BY 1,4,5
 
 ), final AS (
 
     SELECT
-      {{ dbt_utils.surrogate_key(['type_of_arr_change.arr_month', 'type_of_arr_change.sfdc_account_id']) }} AS primary_key,
+      {{ dbt_utils.surrogate_key(['type_of_arr_change.arr_month', 'type_of_arr_change.dim_crm_account_id']) }} AS primary_key,
       type_of_arr_change.arr_month,
       type_of_arr_change.months_since_sfdc_account_cohort_start,
       type_of_arr_change.quarters_since_sfdc_account_cohort_start,
       type_of_arr_change.ultimate_parent_account_name,
       type_of_arr_change.sfdc_account_name,
-      type_of_arr_change.sfdc_account_id,
+      type_of_arr_change.dim_crm_account_id,
       account_info.account_segment,
       account_info.account_industry,
       account_info.account_employee_count,
@@ -243,25 +243,25 @@ WITH fct_mrr_totals_levelled AS (
       annual_price_per_seat_change.annual_price_per_seat_change
     FROM type_of_arr_change
     LEFT JOIN  account_info
-      ON type_of_arr_change.sfdc_account_id = account_info.sfdc_account_id
+      ON type_of_arr_change.dim_crm_account_id = account_info.dim_crm_account_id
       AND type_of_arr_change.arr_month = account_info.arr_month
     LEFT JOIN reason_for_arr_change_beg
-      ON type_of_arr_change.sfdc_account_id = reason_for_arr_change_beg.sfdc_account_id
+      ON type_of_arr_change.dim_crm_account_id = reason_for_arr_change_beg.dim_crm_account_id
       AND type_of_arr_change.arr_month = reason_for_arr_change_beg.arr_month
     LEFT JOIN reason_for_arr_change_seat_change
-      ON type_of_arr_change.sfdc_account_id = reason_for_arr_change_seat_change.sfdc_account_id
+      ON type_of_arr_change.dim_crm_account_id = reason_for_arr_change_seat_change.dim_crm_account_id
       AND type_of_arr_change.arr_month = reason_for_arr_change_seat_change.arr_month
     LEFT JOIN reason_for_arr_change_price_change
-      ON type_of_arr_change.sfdc_account_id = reason_for_arr_change_price_change.sfdc_account_id
+      ON type_of_arr_change.dim_crm_account_id = reason_for_arr_change_price_change.dim_crm_account_id
       AND type_of_arr_change.arr_month = reason_for_arr_change_price_change.arr_month
     LEFT JOIN reason_for_arr_change_tier_change
-      ON type_of_arr_change.sfdc_account_id = reason_for_arr_change_tier_change.sfdc_account_id
+      ON type_of_arr_change.dim_crm_account_id = reason_for_arr_change_tier_change.dim_crm_account_id
       AND type_of_arr_change.arr_month = reason_for_arr_change_tier_change.arr_month
     LEFT JOIN reason_for_arr_change_end
-      ON type_of_arr_change.sfdc_account_id = reason_for_arr_change_end.sfdc_account_id
+      ON type_of_arr_change.dim_crm_account_id = reason_for_arr_change_end.dim_crm_account_id
       AND type_of_arr_change.arr_month = reason_for_arr_change_end.arr_month
     LEFT JOIN annual_price_per_seat_change
-      ON type_of_arr_change.sfdc_account_id = annual_price_per_seat_change.sfdc_account_id
+      ON type_of_arr_change.dim_crm_account_id = annual_price_per_seat_change.dim_crm_account_id
       AND type_of_arr_change.arr_month = annual_price_per_seat_change.arr_month
 
 )
