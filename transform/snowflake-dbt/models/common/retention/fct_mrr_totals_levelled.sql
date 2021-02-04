@@ -37,6 +37,7 @@ WITH dates AS (
            mrr_totals.quantity,
            mrr_totals.unit_of_measure,
            rate_plan.product_category,
+           rate_plan.delivery,
            billing_account.billing_account_name                             AS billing_account_name,
            crm_account.crm_account_name                                     AS sfdc_account_name,
            crm_account.ultimate_parent_account_id                           AS ultimate_parent_account_id,
