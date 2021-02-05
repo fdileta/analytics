@@ -21,7 +21,7 @@ models:
           tests:
               - not_null
               - accepted_values:
-                      values: ['zuora_subscription_id', 'sfdc_account_id', 'parent_account_id']
+                      values: ['dim_subscription_id', 'dim_crm_account_id', 'parent_account_id']
         - name: arr
           description: "Annual Recurring Revenue (MRR * 12) for most recent month for which this is MRR that is not in the future."
           tests:
@@ -43,7 +43,7 @@ models:
   - name: fct_mrr_totals_levelled
     description: '{{ doc("fct_mrr_totals_levelled") }}'
     columns:
-        - name: zuora_account_number
+        - name: billing_account_number
           description: '{{ doc("zuora_mrr_totals_col_account_number") }}'
           tests:
               - not_null
@@ -59,16 +59,16 @@ models:
           description: '{{ doc("zuora_mrr_totals_col_subscription_slug_for_counting") }}'
           tests:
               - not_null
-        - name: lineage
+        - name: subscription_lineage
         - name: mrr_month
           description: '{{ doc("zuora_mrr_totals_col_mrr_month") }}'
           tests:
               - not_null
-        - name: zuora_subscription_cohort_month
+        - name: subscription_cohort_month
           description: '{{ doc("zuora_mrr_totals_col_cohort_month") }}'
           tests:
               - not_null
-        - name: zuora_subscription_cohort_quarter
+        - name: subscription_cohort_quarter
           description: '{{ doc("zuora_mrr_totals_col_cohort_quarter") }}'
           tests:
               - not_null
@@ -76,18 +76,18 @@ models:
           description: '{{ doc("zuora_mrr_totals_col_mrr") }}'
           tests:
               - not_null
-        - name: months_since_zuora_subscription_cohort_start
+        - name: months_since_subscription_cohort_start
           description: '{{ doc("zuora_mrr_totals_col_months_since_cohort_start") }}'
           tests:
               - not_null
-        - name: quarters_since_zuora_subscription_cohort_start
+        - name: quarters_since_subscription_cohort_start
           description: '{{ doc("zuora_mrr_totals_col_quarters_since_cohort_start") }}'
           tests:
               - not_null
-        - name: zuora_account_id
+        - name: dim_billing_account_id
           tests:
               - not_null
-        - name: zuora_account_name
+        - name: dim_billing_account_name
           tests:
               - not_null
         - name: product_category
@@ -95,7 +95,7 @@ models:
               - not_null
         - name: unit_of_measure
         - name: quantity
-        - name: sfdc_account_id
+        - name: dim_crm_account_id
           tests:
               - not_null:
                   severity: warn
@@ -104,16 +104,16 @@ models:
           description: '{{ doc("sfdc_accounts_xf_col_ultimate_parent_account_id") }}'
         - name: ultimate_parent_account_name
           description: '{{ doc("sfdc_accounts_xf_col_ultimate_parent_account_name") }}'
-        - name: zuora_account_cohort_month
+        - name: billing_account_cohort_month
           tests:
               - not_null
-        - name: zuora_account_cohort_quarter
+        - name: billing_account_cohort_quarter
           tests:
               - not_null
-        - name: sfdc_account_cohort_month
+        - name: crm_account_cohort_month
           tests:
               - not_null
-        - name: sfdc_account_cohort_quarter
+        - name: crm_account_cohort_quarter
           tests:
               - not_null
         - name: parent_account_cohort_month
@@ -124,16 +124,16 @@ models:
           description: '{{ doc("fct_mrr_totals_levelled_col_parent_account_cohort_quarter") }}'
           tests:
               - not_null
-        - name: months_since_zuora_account_cohort_start
+        - name: months_since_billing_account_cohort_start
           tests:
               - not_null
-        - name: quarters_since_zuora_account_cohort_start
+        - name: quarters_since_billing_account_cohort_start
           tests:
               - not_null
-        - name: months_since_sfdc_account_cohort_start
+        - name: months_since_crm_account_cohort_start
           tests:
               - not_null
-        - name: quarters_since_sfdc_account_cohort_start
+        - name: quarters_since_crm_account_cohort_start
           tests:
               - not_null
         - name: months_since_parent_account_cohort_start
@@ -193,10 +193,10 @@ models:
   - name: fct_retention_reasons_for_retention
     description: '{{ doc("retention_reasons_for_retention") }}'
     columns:
-        - name: zuora_subscription_name
+        - name: subscription_name
           tests:
             - not_null
-        - name: zuora_subscription_id
+        - name: dim_subscription_id
           tests:
             - not_null
         - name: retention_month
@@ -232,10 +232,10 @@ models:
   - name: fct_retention_crm_account_
     description: '{{ doc("retention_sfdc_account_") }}'
     columns:
-        - name: sfdc_account_id
+        - name: dim_crm_account_id
           tests:
               - not_null
-        - name: sfdc_account_name
+        - name: crm_account_name
           tests:
               - not_null
         - name: salesforce_account_id
@@ -254,16 +254,16 @@ models:
         - name: gross_retention_mrr
           tests:
               - not_null
-        - name: sfdc_account_cohort_month
+        - name: crm_account_cohort_month
           tests:
               - not_null
-        - name: sfdc_account_cohort_quarter
+        - name: crm_account_cohort_quarter
           tests:
               - not_null
-        - name: months_since_sfdc_account_cohort_start
+        - name: months_since_crm_account_cohort_start
           tests:
               - not_null
-        - name: quarters_since_sfdc_account_cohort_start
+        - name: quarters_since_crm_account_cohort_start
           tests:
               - not_null
         - name: churn_type
@@ -280,10 +280,10 @@ models:
   - name: fct_retention_billing_subscription_
     description: '{{ doc("retention_zuora_subscription_") }}'
     columns:
-        - name: zuora_subscription_name
+        - name: subscription_name
           tests:
               - not_null
-        - name: zuora_subscription_id
+        - name: dim_subscription_id
           tests:
               - not_null
         - name: salesforce_account_id
@@ -302,16 +302,16 @@ models:
         - name: gross_retention_mrr
           tests:
               - not_null
-        - name: zuora_subscription_cohort_month
+        - name: subscription_cohort_month
           tests:
               - not_null
-        - name: zuora_subscription_cohort_quarter
+        - name: subscription_cohort_quarter
           tests:
               - not_null
-        - name: months_since_zuora_subscription_cohort_start
+        - name: months_since_subscription_cohort_start
           tests:
               - not_null
-        - name: quarters_since_zuora_subscription_cohort_start
+        - name: quarters_since_subscription_cohort_start
           tests:
               - not_null
         - name: churn_type
