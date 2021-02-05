@@ -39,7 +39,7 @@ WITH dates AS (
            rate_plan.product_category                                       AS product_category,
            rate_plan.delivery                                               AS delivery,
            billing_account.billing_account_name                             AS billing_account_name,
-           billing_account.account_number                                   AS billing_account_number,
+           billing_account.billing_account_number                           AS billing_account_number,
            crm_account.crm_account_name                                     AS crm_account_name,
            crm_account.ultimate_parent_account_id                           AS ultimate_parent_account_id,
            crm_account.ultimate_parent_account_name                         AS ultimate_parent_account_name,
@@ -47,6 +47,8 @@ WITH dates AS (
            subscription.subscription_name_slugify                           AS subscription_name_slugify,
            subscription.oldest_subscription_in_cohort                       AS oldest_subscription_in_cohort,
            subscription.lineage                                             AS subscription_lineage,
+           subscription.cohort_month                                        AS subscription_cohort_month,
+           subscription.cohort_quarter                                      AS subscription_cohort_quarter,
            min(subscription.cohort_month) OVER (
               PARTITION BY billing_account.dim_billing_account_id)          AS billing_account_cohort_month,
            min(subscription.cohort_quarter) OVER (
@@ -78,7 +80,9 @@ WITH dates AS (
       datediff(month, crm_account_cohort_month, dates.date_day)         AS months_since_crm_account_cohort_start,
       datediff(quarter, crm_account_cohort_quarter, dates.date_day)     AS quarters_since_crm_account_cohort_start,
       datediff(month, parent_account_cohort_month, dates.date_day)      AS months_since_parent_account_cohort_start,
-      datediff(quarter, parent_account_cohort_quarter, dates.date_day)  AS quarters_since_parent_account_cohort_start
+      datediff(quarter, parent_account_cohort_quarter, dates.date_day)  AS quarters_since_parent_account_cohort_start,
+      datediff(month, subscription_cohort_month, dates.date_day)        AS months_since_subscription_cohort_start,
+      datediff(quarter, subscription_cohort_quarter, dates.date_day)    AS quarters_since_subscription_cohort_start
     FROM joined
     JOIN dates ON dates.date_id = joined.dim_date_id
 

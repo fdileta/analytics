@@ -117,8 +117,8 @@ WITH raw_fct_mrr_totals_levelled AS (
 ), joined AS (
 
     SELECT
-        subscription_name              AS zuora_subscription_name,
-        oldest_subscription_in_cohort  AS zuora_subscription_id,
+        subscription_name              AS subscription_name,
+        oldest_subscription_in_cohort  AS dim_subscription_id,
         DATEADD('year', 1, mrr_month)  AS retention_month, --THIS IS THE RETENTION MONTH, NOT THE MRR MONTH!!
         retention_type,
         retention_reason,
@@ -164,7 +164,7 @@ WITH raw_fct_mrr_totals_levelled AS (
 
 SELECT
     joined.*,
-    RANK() OVER(PARTITION by zuora_subscription_id, retention_type
+    RANK() OVER(PARTITION by dim_subscription_id, retention_type
         ORDER BY retention_month ASC)   AS rank_retention_type_month
 FROM joined
 WHERE retention_month <= DATEADD(month, -1, CURRENT_DATE)

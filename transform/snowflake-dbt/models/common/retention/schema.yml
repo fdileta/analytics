@@ -60,7 +60,7 @@ models:
           tests:
               - not_null
         - name: subscription_lineage
-        - name: mrr_month
+        - name: dim_date_id
           description: '{{ doc("zuora_mrr_totals_col_mrr_month") }}'
           tests:
               - not_null
