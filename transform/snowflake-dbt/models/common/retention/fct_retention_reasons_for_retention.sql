@@ -140,8 +140,8 @@ WITH raw_fct_mrr_totals_levelled AS (
     UNION ALL
 
     SELECT 
-        subscription_name                                             AS zuora_subscription_name,
-        oldest_subscription_in_cohort                                 AS zuora_subscription_id,
+        subscription_name                                             AS subscription_name,
+        oldest_subscription_in_cohort                                 AS dim_subscription_id,
         DATEADD('year', 1, mrr_month)                                 AS retention_month, --THIS IS THE RETENTION MONTH, NOT THE MRR MONTH!!
         retention_type,
         retention_reason,

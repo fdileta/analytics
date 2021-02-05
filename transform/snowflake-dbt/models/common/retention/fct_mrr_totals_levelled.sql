@@ -39,6 +39,7 @@ WITH dates AS (
            rate_plan.product_category                                       AS product_category,
            rate_plan.delivery                                               AS delivery,
            billing_account.billing_account_name                             AS billing_account_name,
+           billing_account.account_number                                   AS billing_account_number,
            crm_account.crm_account_name                                     AS crm_account_name,
            crm_account.ultimate_parent_account_id                           AS ultimate_parent_account_id,
            crm_account.ultimate_parent_account_name                         AS ultimate_parent_account_name,

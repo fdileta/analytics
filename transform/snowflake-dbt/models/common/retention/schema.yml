@@ -87,7 +87,7 @@ models:
         - name: dim_billing_account_id
           tests:
               - not_null
-        - name: dim_billing_account_name
+        - name: billing_account_name
           tests:
               - not_null
         - name: product_category
