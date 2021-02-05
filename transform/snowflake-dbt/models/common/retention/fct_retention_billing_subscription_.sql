@@ -4,7 +4,7 @@ with raw_fct_mrr_totals_levelled AS (
 
 ), fct_mrr_totals_levelled AS (
 
-      SELECT subscription_name, 
+      SELECT  subscription_name,
               subscription_name_slugify,
               dim_crm_account_id,
               oldest_subscription_in_cohort,

@@ -48,13 +48,13 @@ with fct_mrr_totals_levelled AS (
 
         SELECT finals.dim_crm_account_id,
                finals.dim_crm_account_id as salesforce_account_id,
-               sfdc_account_name,
+               crm_account_name,
                dateadd('year', 1, finals.original_mrr_month) AS retention_month, --THIS IS THE RETENTION MONTH, NOT THE MRR MONTH!!
                original_mrr,
                net_retention_mrr,
                gross_retention_mrr,
-               sfdc_account_cohort_month,
-               sfdc_account_cohort_quarter,
+               crm_account_cohort_month,
+               crm_account_cohort_quarter,
                datediff(month, sfdc_account_cohort_month, original_mrr_month) as months_since_sfdc_account_cohort_start,
                datediff(quarter, sfdc_account_cohort_quarter, original_mrr_month) as quarters_since_sfdc_account_cohort_start,
                {{ churn_type('original_mrr', 'net_retention_mrr') }}
