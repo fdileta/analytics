@@ -229,7 +229,7 @@ models:
         - name: rank_churn_type_month
           description: Ranks the months of the churn type by subscription with the first month of the churn type being ranked 1.
 
-  - name: fct_retention_sfdc_account_
+  - name: fct_retention_crm_account_
     description: '{{ doc("retention_sfdc_account_") }}'
     columns:
         - name: sfdc_account_id
@@ -277,7 +277,7 @@ models:
               - accepted_values:
                       values: ['5K to 50K', 'Under 5K', '50K to 100K','100K to 500K', '500K to 1M','1M and above']
 
-  - name: fct_retention_zuora_subscription_
+  - name: fct_retention_billing_subscription_
     description: '{{ doc("retention_zuora_subscription_") }}'
     columns:
         - name: zuora_subscription_name
