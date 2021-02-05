@@ -55,8 +55,8 @@ with fct_mrr_totals_levelled AS (
                gross_retention_mrr,
                crm_account_cohort_month,
                crm_account_cohort_quarter,
-               datediff(month, sfdc_account_cohort_month, original_mrr_month) as months_since_sfdc_account_cohort_start,
-               datediff(quarter, sfdc_account_cohort_quarter, original_mrr_month) as quarters_since_sfdc_account_cohort_start,
+               datediff(month, crm_account_cohort_month, original_mrr_month) as months_since_sfdc_account_cohort_start,
+               datediff(quarter, crm_account_cohort_quarter, original_mrr_month) as quarters_since_sfdc_account_cohort_start,
                {{ churn_type('original_mrr', 'net_retention_mrr') }}
         FROM finals
         LEFT JOIN fct_mrr_totals_levelled

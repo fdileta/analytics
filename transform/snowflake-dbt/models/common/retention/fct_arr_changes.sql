@@ -78,10 +78,10 @@ WITH fct_mrr_totals_levelled AS (
 
     SELECT
       next_month_arr_month                                                 AS arr_month,
-      datediff(month, sfdc_account_cohort_month, next_month_arr_month)     AS months_since_sfdc_account_cohort_start,
-      datediff(quarter, sfdc_account_cohort_quarter, next_month_arr_month) AS quarters_since_sfdc_account_cohort_start,
+      datediff(month, crm_account_cohort_month, next_month_arr_month)     AS months_since_sfdc_account_cohort_start,
+      datediff(quarter, crm_account_cohort_quarter, next_month_arr_month) AS quarters_since_sfdc_account_cohort_start,
       ultimate_parent_account_name,
-      sfdc_account_name,
+      crm_account_name,
       dim_crm_account_id,
       NULL                                                                 AS product_category,
       previous_month_product_category,
