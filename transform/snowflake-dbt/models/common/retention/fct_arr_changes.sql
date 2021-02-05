@@ -218,10 +218,10 @@ WITH fct_mrr_totals_levelled AS (
     SELECT
       {{ dbt_utils.surrogate_key(['type_of_arr_change.arr_month', 'type_of_arr_change.dim_crm_account_id']) }} AS primary_key,
       type_of_arr_change.arr_month,
-      type_of_arr_change.months_since_sfdc_account_cohort_start,
-      type_of_arr_change.quarters_since_sfdc_account_cohort_start,
+      type_of_arr_change.months_since_crm_account_cohort_start,
+      type_of_arr_change.quarters_since_crm_account_cohort_start,
       type_of_arr_change.ultimate_parent_account_name,
-      type_of_arr_change.sfdc_account_name,
+      type_of_arr_change.crm_account_name,
       type_of_arr_change.dim_crm_account_id,
       account_info.account_segment,
       account_info.account_industry,
