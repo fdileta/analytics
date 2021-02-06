@@ -152,7 +152,7 @@ models:
         - name: parent_account_name
           tests:
               - not_null
-        - name: salesforce_account_id
+        - name: crm_account_id
           description: 'Used only for joining to SFDC in Looker'
           tests:
               - not_null

@@ -10,10 +10,10 @@ with raw_fct_mrr_totals_levelled AS (
               oldest_subscription_in_cohort,
               subscription_lineage,
               to_date(cast(dim_date_id as varchar), 'YYYYMMDD')     AS  mrr_month,
-              billing_account_cohort_month,
-              billing_account_cohort_quarter,
-              months_since_billing_account_cohort_start,
-              quarters_since_billing_account_cohort_start,
+              subscription_cohort_month,
+              subscription_cohort_quarter,
+              months_since_subscription_cohort_start,
+              quarters_since_subscription_cohort_start,
               sum(mrr) as mrr
       FROM raw_fct_mrr_totals_levelled
       {{ dbt_utils.group_by(n=10) }}
@@ -66,17 +66,17 @@ with raw_fct_mrr_totals_levelled AS (
 
 ), joined as (
 
-      SELECT finals.subscription_name             AS zuora_subscription_name,
-             finals.oldest_subscription_in_cohort AS zuora_subscription_id,
-             mapping.dim_crm_account_id              AS salesforce_account_id,
+      SELECT finals.subscription_name             AS subscription_name,
+             finals.oldest_subscription_in_cohort AS dim_subscription_id,
+             mapping.dim_crm_account_id           AS crm_account_id,
              dateadd('year', 1, finals.mrr_month) AS retention_month, --THIS IS THE RETENTION MONTH, NOT THE MRR MONTH!!
              finals.mrr                           AS original_mrr,
              finals.net_retention_mrr,
              finals.gross_retention_mrr,
-             finals.billing_account_cohort_month,
-             finals.billing_account_cohort_quarter,
-             finals.months_since_billing_account_cohort_start,
-             finals.quarters_since_billing_account_cohort_start,
+             finals.subscription_cohort_month,
+             finals.subscription_cohort_quarter,
+             finals.months_since_subscription_cohort_start,
+             finals.quarters_since_subscription_cohort_start,
              {{ churn_type('original_mrr', 'net_retention_mrr') }}
       FROM finals
       LEFT JOIN mapping
@@ -88,5 +88,5 @@ SELECT joined.*,
         current_arr_segmentation_all_levels.arr_segmentation
 FROM joined
 LEFT JOIN current_arr_segmentation_all_levels
-ON joined.zuora_subscription_id = current_arr_segmentation_all_levels.id
+ON joined.dim_subscription_id = current_arr_segmentation_all_levels.id
 WHERE retention_month <= dateadd(month, -1, CURRENT_DATE)
