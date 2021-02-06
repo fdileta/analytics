@@ -152,8 +152,8 @@ models:
         - name: parent_account_name
           tests:
               - not_null
-        - name: crm_account_id
-          description: 'Used only for joining to SFDC in Looker'
+        - name: dim_crm_account_id
+          description: 'Used only for joining to SFDC in Periscope'
           tests:
               - not_null
         - name: retention_month
@@ -238,10 +238,6 @@ models:
         - name: crm_account_name
           tests:
               - not_null
-        - name: salesforce_account_id
-          description: 'Used only for joining to SFDC in Looker'
-          tests:
-              - not_null
         - name: retention_month
           tests:
               - not_null
@@ -286,8 +282,8 @@ models:
         - name: dim_subscription_id
           tests:
               - not_null
-        - name: salesforce_account_id
-          description: 'Used only for joining to SFDC in Looker'
+        - name: dim_crm_account_id
+          description: 'Used only for joining to SFDC in Periscope'
           tests:
               - not_null
         - name: retention_month
