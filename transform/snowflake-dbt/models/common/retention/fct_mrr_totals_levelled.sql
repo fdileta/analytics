@@ -18,6 +18,10 @@ WITH dates AS (
 
     SELECT * FROM {{ ref('dim_crm_account') }}
 
+), product_detail AS (
+
+    SELECT * FROM {{ ref('dim_product_detail') }}
+
 ), rate_plan AS (
 
     -- need to move this into a dim
@@ -62,15 +66,18 @@ WITH dates AS (
            min(subscription.cohort_quarter) OVER (
               PARTITION BY crm_account.ultimate_parent_account_id)          AS parent_account_cohort_quarter
     FROM mrr_totals
-    LEFT JOIN billing_account
-    ON billing_account.dim_billing_account_id = mrr_totals.dim_billing_account_id
-    LEFT JOIN crm_account
-    ON crm_account.crm_account_id = billing_account.dim_crm_account_id
-    LEFT JOIN subscription
+    JOIN subscription
     ON subscription.dim_subscription_id = mrr_totals.dim_subscription_id
-    LEFT JOIN rate_plan
+    JOIN product_detail
+    ON product_detail.dim_product_detail_id = mrr_totals.dim_product_detail_id
+    JOIN billing_account
+    ON billing_account.dim_billing_account_id = mrr_totals.dim_billing_account_id
+    JOIN crm_account
+    ON crm_account.crm_account_id = billing_account.dim_crm_account_id
+    JOIN rate_plan
     ON rate_plan.subscription_id = mrr_totals.dim_subscription_id
-    -- AND rate_plan.product_id = mrr_totals.dim_product_detail_id
+    AND rate_plan.product_rate_plan_id = product_detail.product_rate_plan_id
+    WHERE mrr_totals.dim_billing_account_id NOT IN (SELECT DISTINCT account_id FROM prod.legacy.zuora_excluded_accounts)
 
 ), final_table AS (
 
