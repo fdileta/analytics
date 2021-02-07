@@ -24,8 +24,7 @@ WITH dates AS (
 
 ), rate_plan AS (
 
-    -- need to move this into a dim
-    SELECT * FROM {{ ref('zuora_rate_plan') }}
+    SELECT * FROM {{ ref('dim_rate_plan') }}
 
 ), joined AS (
 
@@ -70,9 +69,9 @@ WITH dates AS (
     ON subscription.dim_subscription_id = mrr_totals.dim_subscription_id
     JOIN product_detail
     ON product_detail.dim_product_detail_id = mrr_totals.dim_product_detail_id
-    JOIN billing_account
+    LEFT JOIN billing_account
     ON billing_account.dim_billing_account_id = mrr_totals.dim_billing_account_id
-    JOIN crm_account
+    LEFT JOIN crm_account
     ON crm_account.crm_account_id = billing_account.dim_crm_account_id
     JOIN rate_plan
     ON rate_plan.subscription_id = mrr_totals.dim_subscription_id
@@ -93,8 +92,7 @@ WITH dates AS (
       datediff(quarter, subscription_cohort_quarter, dates.date_day)    AS quarters_since_subscription_cohort_start
     FROM joined
     JOIN dates ON dates.date_id = joined.dim_date_id
-    --WHERE billing_account_cohort_month IS NOT NULL
-    --AND oldest_subscription_in_cohort IS NOT NULL
+
 )
 
 {{ dbt_audit(
