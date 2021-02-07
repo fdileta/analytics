@@ -78,6 +78,7 @@ WITH dates AS (
     ON rate_plan.subscription_id = mrr_totals.dim_subscription_id
     AND rate_plan.product_rate_plan_id = product_detail.product_rate_plan_id
     WHERE mrr_totals.dim_billing_account_id NOT IN (SELECT DISTINCT account_id FROM prod.legacy.zuora_excluded_accounts)
+    AND mrr_totals.mrr > 0
 
 ), final_table AS (
 
@@ -92,7 +93,8 @@ WITH dates AS (
       datediff(quarter, subscription_cohort_quarter, dates.date_day)    AS quarters_since_subscription_cohort_start
     FROM joined
     JOIN dates ON dates.date_id = joined.dim_date_id
-
+    --WHERE billing_account_cohort_month IS NOT NULL
+    --AND oldest_subscription_in_cohort IS NOT NULL
 )
 
 {{ dbt_audit(
