@@ -4,7 +4,8 @@ with raw_fct_mrr_totals_levelled AS (
 
 ), fct_mrr_totals_levelled AS (
 
-      SELECT  subscription_name,
+      SELECT  dim_subscription_id,
+              subscription_name,
               subscription_name_slugify,
               dim_crm_account_id,
               oldest_subscription_in_cohort,
@@ -16,7 +17,7 @@ with raw_fct_mrr_totals_levelled AS (
               quarters_since_subscription_cohort_start,
               sum(mrr) as mrr
       FROM raw_fct_mrr_totals_levelled
-      {{ dbt_utils.group_by(n=10) }}
+      {{ dbt_utils.group_by(n=11) }}
 
 ), current_arr_segmentation_all_levels AS (
 
@@ -25,9 +26,9 @@ with raw_fct_mrr_totals_levelled AS (
 
 ), mapping AS (
       
-       SELECT  subscription_name, dim_crm_account_id
+       SELECT DISTINCT  subscription_name, dim_crm_account_id
        FROM fct_mrr_totals_levelled
-       {{ dbt_utils.group_by(n=2) }}
+
 
 ), list AS ( --get all the subscription + their lineage + the month we're looking for MRR for (12 month in the future)
 
@@ -66,7 +67,8 @@ with raw_fct_mrr_totals_levelled AS (
 
 ), joined as (
 
-      SELECT finals.subscription_name             AS subscription_name,
+      SELECT finals.dim_subscription_id
+             finals.subscription_name             AS subscription_name,
              finals.oldest_subscription_in_cohort AS dim_subscription_id,
              mapping.dim_crm_account_id           AS dim_crm_account_id,
              dateadd('year', 1, finals.mrr_month) AS retention_month, --THIS IS THE RETENTION MONTH, NOT THE MRR MONTH!!
