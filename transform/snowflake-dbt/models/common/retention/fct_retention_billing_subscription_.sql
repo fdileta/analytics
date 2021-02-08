@@ -67,9 +67,9 @@ with raw_fct_mrr_totals_levelled AS (
 
 ), joined as (
 
-      SELECT finals.dim_subscription_id
+      SELECT finals.dim_subscription_id           as dim_subscription_id,
              finals.subscription_name             AS subscription_name,
-             finals.oldest_subscription_in_cohort AS dim_subscription_id,
+             finals.oldest_subscription_in_cohort AS oldest_subscription_name_slugify,
              mapping.dim_crm_account_id           AS dim_crm_account_id,
              dateadd('year', 1, finals.mrr_month) AS retention_month, --THIS IS THE RETENTION MONTH, NOT THE MRR MONTH!!
              finals.mrr                           AS original_mrr,
