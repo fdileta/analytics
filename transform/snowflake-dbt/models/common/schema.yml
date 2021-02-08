@@ -727,17 +727,7 @@ models:
           - not_null
           - accepted_values:
                   values: ['Sales-Assisted', 'Self-Service']
-      - name: lineage
-        description: "All the subscriptions subsquent to the primary subscription, separated by commas."
-      - name: cohort_month
-        tests:
-         - not_null
-      - name: cohort_quarter
-        tests:
-          - not_null
-      - name: cohort_year
-        tests:
-          - not_null
+
   - name: dim_subscriptions_snapshots
     description: Daily snapshot of subscriptions starting from 2020-03-01. Fiel
     columns:
@@ -747,48 +737,6 @@ models:
           - not_null
           - unique
         tags: ["tdf", "arr"]
-
-  - name: dim_rate_plan
-    description: Rate plan information provided by Zuora
-    columns:
-      - name: dim_rate_plan_id
-        description: Dimension primary key
-        tests:
-          - not_null
-          - unique
-        tags: [ "tdf", "common" ]
-      - name: dim_subscription_id
-        description: Subscription foreign key
-        tests:
-          - not_null
-        tags: [ "tdf", "common" ]
-      - name: product_rate_plan_id
-        tags: [ "tdf", "common" ]
-      - name: product_id
-        description: Relates to the product_id in Dim_product_detail
-        tags: [ "tdf", "common" ]
-      - name: amendement_type
-        tags: [ "tdf", "common" ]
-      - name: rate_plan_name
-        tags: [ "tdf", "common" ]
-      - name: product_category
-        description: Mapped field based off rate_plan_name
-        tags: [ "tdf", "common" ]
-      - name: delivery
-        description: Mapped field based off rate_plan_name and product_category
-        tags: [ "tdf", "common" ]
-      - name: amendement_id
-        tags: [ "tdf", "common" ]
-      - name: is_deleted
-        tags: [ "tdf", "common" ]
-      - name: created_by_id
-        tags: [ "tdf", "common" ]
-      - name: created_date
-        tags: [ "tdf", "common" ]
-      - name: updated_by_id
-        tags: [ "tdf", "common" ]
-      - name: updated_date
-        tags: [ "tdf", "common" ]
 
   - name: fct_campaign
     description: '{{ doc("fct_campaign") }}'
