@@ -26,7 +26,8 @@
     THEN 'Trueup'
   WHEN LTRIM(LOWER( {{rate_plan_name}} )) LIKE 'githost%'
     THEN 'GitHost'
-  WHEN LOWER( {{rate_plan_name}} ) LIKE '%quick start with ha%'
+  WHEN LOWER( {{rate_plan_name}} ) LIKE '%quick start
+with ha%'
     THEN 'Support'
   WHEN TRIM( {{rate_plan_name}} ) IN (
                                       'GitLab Service Package'
@@ -65,5 +66,5 @@
                                     )
     THEN 'Other'
   ELSE 'Not Applicable'
-  END
+END
 {% endmacro %}
