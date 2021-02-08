@@ -10,16 +10,16 @@ WITH source AS (
       subscription_id                               AS dim_subscription_id,
       product_rate_plan_id                          AS product_rate_plan_id,
       product_id                                    AS product_id,
-      created_by_id                                 AS created_by_id,
       amendement_type                               AS amendement_type,
       rate_plan_name                                AS rate_plan_name,
       {{ map_product_category('rate_plan_name')}}   AS product_category,
       {{ map_delivery('product_category')}}         AS delivery,
       amendement_id                                 AS amendement_id,
       is_deleted                                    AS is_deleted,
-      updated_by                                    AS updated_by,
+      created_by_id                                 AS created_by_id,
+      created_date                                  AS created_date,
       updated_by_id                                 AS updated_by_id,
-      created_by                                    AS created_by
+      updated_date                                  AS updated_date
     FROM source
 
 )
