@@ -69,3 +69,20 @@ models:
       - name: hire_location_factor
       - name: greenhouse_candidate_id
 
+  - name: employee_locality
+    description: Combines bamboohr locality information (the city, state/province, or georegion) to the yaml files with this data to figure out the location factor for an employee on a given day starting 2020.03.24
+    columns:
+      - name: employee_number
+      - name: employee_id
+      - name: original_locality
+      - name: bamboo_locality
+        description: original_locality cleaned
+      - name: comma_count
+      - name: state_or_province
+      - name: country
+      - name: geozone
+      - name: updated_at
+      - name: yaml_location_factor
+      - name: geozone_location_factor
+      - name: location_factor
+        description: Uses the yaml_location_factor prior to 2021, and geozone yaml file going forward
