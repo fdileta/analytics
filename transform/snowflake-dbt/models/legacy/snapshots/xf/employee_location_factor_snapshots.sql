@@ -63,15 +63,16 @@ WITH source AS (
       location_factor                                               AS location_factor,
       LEAD(location_factor) OVER 
           (PARTITION BY bamboo_employee_number ORDER BY valid_from) AS next_location_factor,
-      valid_from,
-      COALESCE(valid_to, {{max_date_in_analysis}})                  AS valid_to
+      valid_from
     FROM unioned
 
-), deduplicated AS (
+), location_factor_changes AS (
 
-    SELECT *
+    SELECT *,
+      ROW_NUMBER() OVER (PARTITION BY bamboo_employee_number, locality,next_location_factor  ORDER BY valid_from)       AS initial_row_number_change,
+      ROW_NUMBER() OVER (PARTITION BY bamboo_employee_number, locality, next_location_factor ORDER BY valid_from DESC)  AS row_number_change_desc 
+      --using to identify last change event
     FROM intermediate
-    QUALIFY ROW_NUMBER() OVER (PARTITION BY bamboo_employee_number, locality, location_factor, next_location_factor ORDER BY valid_from) =1
 
 ), final AS (
 
@@ -79,13 +80,13 @@ WITH source AS (
       bamboo_employee_number,
       locality,
       location_factor,
-      valid_from                                                            AS valid_from,
+      valid_from,
       COALESCE( 
         LEAD(DATEADD(day,-1,valid_from)) 
             OVER (PARTITION BY bamboo_employee_number ORDER BY valid_from),
-            {{max_date_in_analysis}})                                      AS valid_to
-    FROM deduplicated
-    GROUP BY 1, 2, 3, 4
+            date_trunc('week', dateadd(week, 3, CURRENT_DATE())))                                      AS valid_to
+    FROM location_factor_changes
+    WHERE initial_row_number_change = 1 or row_number_change_desc=1
 
 )
 

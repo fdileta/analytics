@@ -88,6 +88,6 @@
 )
 
 SELECT *,
-  IFF(updated_at <='2020-12-30', yaml_location_factor, geozone_location_factor) AS location_factor
+  IFF(updated_at <='2020-12-31', yaml_location_factor, geozone_location_factor) AS location_factor
   ---prior 2021 we were using the location factor yaml file, and 2021 going forward we moved to using geo-zones
 FROM final
