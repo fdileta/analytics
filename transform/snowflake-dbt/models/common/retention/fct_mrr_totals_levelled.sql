@@ -22,9 +22,9 @@ WITH dates AS (
 
     SELECT * FROM {{ ref('dim_product_detail') }}
 
-), rate_plan AS (
+), map_product_tier AS (
 
-    SELECT * FROM {{ ref('dim_rate_plan') }}
+    SELECT * FROM {{ ref('map_product_tier') }}
 
 ), joined AS (
 
@@ -39,8 +39,8 @@ WITH dates AS (
            mrr_totals.arr                                                   AS arr,
            mrr_totals.quantity                                              AS quantity,
            mrr_totals.unit_of_measure                                       AS unit_of_measure,
-           rate_plan.product_category                                       AS product_category,
-           rate_plan.delivery                                               AS delivery,
+           map_product_tier.product_delivery_type                           AS product_category,
+           map_product_tier.product_tier                                    AS delivery,
            billing_account.billing_account_name                             AS billing_account_name,
            billing_account.billing_account_number                           AS billing_account_number,
            crm_account.crm_account_name                                     AS crm_account_name,
@@ -73,9 +73,8 @@ WITH dates AS (
     ON billing_account.dim_billing_account_id = mrr_totals.dim_billing_account_id
     JOIN crm_account
     ON billing_account.dim_crm_account_id = crm_account.crm_account_id
-    JOIN rate_plan
-    ON rate_plan.subscription_id = mrr_totals.dim_subscription_id
-    AND rate_plan.product_rate_plan_id = product_detail.product_rate_plan_id
+    JOIN map_product_tier
+    ON map_product_tier.product_rate_plan_id = product_detail.product_rate_plan_id
     WHERE mrr_totals.dim_billing_account_id NOT IN (SELECT DISTINCT account_id FROM prod.legacy.zuora_excluded_accounts)
     AND mrr_totals.mrr > 0
 
