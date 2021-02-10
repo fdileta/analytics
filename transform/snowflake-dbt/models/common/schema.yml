@@ -727,7 +727,17 @@ models:
           - not_null
           - accepted_values:
                   values: ['Sales-Assisted', 'Self-Service']
-
+      - name: lineage
+        description: "All the subscriptions subsquent to the primary subscription, separated by commas."
+      - name: cohort_month
+        tests:
+         - not_null
+      - name: cohort_quarter
+        tests:
+          - not_null
+      - name: cohort_year
+        tests:
+          - not_null
   - name: dim_subscriptions_snapshots
     description: Daily snapshot of subscriptions starting from 2020-03-01. Fiel
     columns:
@@ -1058,12 +1068,32 @@ models:
         tests:
           - not_null
           - unique
+        tags: ["tdf", "common", "mrr"]
       - name: dim_date_id
         description: The identifier of date month in dim_date
+      - name: dim_billing_account_id
+        description: join key for dim_billing_account
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_billing_account')
+              field: dim_billing_account_id
+        tags: ["tdf", "common", "mrr"]
+      - name: dim_crm_account_id
+        description: join key for dim_crm_account
+        tests:
+          - relationships:
+              to: ref('dim_crm_account')
+              field: crm_account_id
+        tags: ["tdf", "common", "mrr"]
       - name: dim_subscription_id
         description: The identifier of subscription in dim_subscription table
         tests:
           - not_null
+          - relationships:
+              to: ref('dim_subscription')
+              field: dim_subscription_id
+        tags: ["tdf", "common", "mrr"]
       - name: dim_product_detail_id
         description: The identifier of product details in dim_product_detail
         tests:
