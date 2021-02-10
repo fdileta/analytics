@@ -3,10 +3,10 @@ WITH fct_mrr_totals_levelled AS (
     SELECT *
     FROM {{ ref('fct_mrr_totals_levelled') }}
 
-), sfdc_accounts_xf AS (
+), dim_crm_account AS (
 
     SELECT *
-    FROM {{ ref('sfdc_accounts_xf') }}
+    FROM {{ ref('dim_crm_account') }}
 
 ), monthly_arr AS (--Create a base data set of ARR and Customer Attributes to be used for the model
 
@@ -193,24 +193,12 @@ WITH fct_mrr_totals_levelled AS (
     SELECT DISTINCT
       type_of_arr_change.arr_month,
       type_of_arr_change.dim_crm_account_id,
-      CASE
-        WHEN sfdc_accounts_xf.account_segment = 'Unknown'
-        THEN 'SMB'
-        ELSE sfdc_accounts_xf.account_segment
-      END                                        AS account_segment,
-   	  CASE
-        WHEN sfdc_accounts_xf.df_industry IS NULL
-        THEN 'Unknown'
-        ELSE sfdc_accounts_xf.df_industry
-      END                                        AS account_industry,
-      CASE
-        WHEN sfdc_accounts_xf.tsp_account_employees IS NULL
-        THEN '0'
-        ELSE sfdc_accounts_xf.tsp_account_employees
-      END                                        AS account_employee_count
+      dim_crm_account.ultimate_parent_account_segment  AS account_segment,
+   	  dim_crm_account.crm_account_industry             AS account_industry,
+      dim_crm_account.crm_account_employees            AS account_employee_count
     FROM type_of_arr_change
-    LEFT JOIN sfdc_accounts_xf
-      ON type_of_arr_change.dim_crm_account_id = sfdc_accounts_xf.account_id
+    LEFT JOIN dim_crm_account
+      ON type_of_arr_change.dim_crm_account_id = dim_crm_account.crm_account_id
     ORDER BY 1,4,5
 
 ), final AS (

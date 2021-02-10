@@ -1,7 +1,7 @@
 version: 2
 
 models:
-  - name: fct_arr_changes
+  - name: fct_crm_account_arr_changes_monthly
     columns:
         - name: primary_key
           tests:

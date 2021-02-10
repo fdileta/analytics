@@ -71,6 +71,11 @@ WITH map_merged_crm_accounts AS (
     sfdc_account.health_score,
     sfdc_account.health_number,
     sfdc_account.health_score_color,
+    CASE
+        WHEN sfdc_account.tsp_account_employees IS NULL
+        THEN '0'
+        ELSE sfdc_account.tsp_account_employees
+     END                                          AS crm_account_employees,
     ultimate_parent_account.account_id            AS ultimate_parent_account_id,
     ultimate_parent_account.account_name          AS ultimate_parent_account_name,
     {{ sales_segment_cleaning('sfdc_account.ultimate_parent_sales_segment') }}
@@ -82,6 +87,7 @@ WITH map_merged_crm_accounts AS (
     ultimate_parent_account.tsp_region            AS ultimate_parent_tsp_region,
     ultimate_parent_account.tsp_sub_region        AS ultimate_parent_tsp_sub_region,
     ultimate_parent_account.tsp_area              AS ultimate_parent_tsp_area,
+
     ultimate_parent_account.gtm_strategy          AS ultimate_parent_gtm_strategy,
     CASE
       WHEN LOWER(ultimate_parent_account.gtm_strategy) IN ('account centric', 'account based - net new', 'account based - expand') THEN 'Focus Account'
