@@ -90,11 +90,13 @@ WITH dim_billing_account AS (
       dim_crm_account.ultimate_parent_territory,
 
       --subscription info
+      dim_subscriptions_snapshots.subscription_id,  -- adding the subscription ID
       dim_subscriptions_snapshots.subscription_name,
       dim_subscriptions_snapshots.subscription_status,
       dim_subscriptions_snapshots.subscription_sales_type,
 
       --product info
+      dim_product_detail.dim_product_detail_id                                         as dim_product_detail_id, -- adding product ID as it is helpful for joins
       dim_product_detail.product_tier_name                                             AS product_category,
       dim_product_detail.product_delivery_type                                         AS delivery,
       dim_product_detail.service_type,
