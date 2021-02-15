@@ -18,7 +18,6 @@ WITH sfdc_opportunity AS (
       sfdc_opportunity.owner_id                         AS dim_crm_sales_rep_id,
 
       -- logistical information
-      sfdc_opportunity.business_type,
       sfdc_opportunity.generated_source,
       sfdc_opportunity.lead_source,
       sfdc_opportunity.merged_opportunity_id,
@@ -29,6 +28,9 @@ WITH sfdc_opportunity AS (
       sfdc_opportunity.sales_path,
       sfdc_opportunity.sales_type,
       sfdc_opportunity.source_buckets,
+      sfdc_opportunity.opportunity_sales_development_representative,
+      sfdc_opportunity.opportunity_business_development_representative,
+      sfdc_opportunity.opportunity_development_representative,
       sfdc_opportunity.stage_name,
       sfdc_opportunity_stage.is_active                  AS stage_is_active,
       sfdc_opportunity_stage.is_closed                  AS stage_is_closed,
@@ -53,7 +55,6 @@ WITH sfdc_opportunity AS (
       sfdc_opportunity.is_swing_deal,
       sfdc_opportunity.is_edu_oss,
       sfdc_opportunity_stage.is_won                     AS is_won,
-      sfdc_opportunity.nrv,
       sfdc_opportunity.probability,
       sfdc_opportunity.reason_for_loss,
       sfdc_opportunity.reason_for_loss_details,
@@ -66,6 +67,10 @@ WITH sfdc_opportunity AS (
       sfdc_opportunity.partner_initiated_opportunity,
       sfdc_opportunity.user_segment,
       sfdc_opportunity.order_type_stamped               AS order_type,
+      sfdc_opportunity.opportunity_health,
+      sfdc_opportunity.risk_type,
+      sfdc_opportunity.risk_reasons,
+      sfdc_opportunity.tam_notes,
 
       -- ************************************
       -- channel reporting
@@ -87,5 +92,5 @@ WITH sfdc_opportunity AS (
     created_by="@iweeks",
     updated_by="@iweeks",
     created_date="2020-11-20",
-    updated_date="2020-11-20"
+    updated_date="2020-02-05"
 ) }}

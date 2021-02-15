@@ -10,6 +10,7 @@ data,dbt built-in
 datasiren,Relates to datasiren models
 dbt,Relates to dbt-generated data-sets
 discourse,Relates to Discourse data
+gainsight,Relates to Customer Product Usage data
 geo,Relates to geo data
 gitlab_dotcom,Relates to GitLab.com Database
 gitlab_ops,Relates to GitLab ops database
@@ -26,6 +27,7 @@ opportunity, Relates to customer opportunity data.
 poc,Proof of concept
 product,For large product analytics data
 purchase_channel, Related to identifying types of purchase channel data
+sales_funnel, related to Lead to Cash funnel
 sales_territory, Related to sales territory mappings
 schema,dbt built-in
 sfdc,Relates to Salesforce dotcom

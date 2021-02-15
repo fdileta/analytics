@@ -150,7 +150,8 @@ WITH RECURSIVE employee_directory AS (
             job_role.job_grade)                                             AS job_grade,
        COALESCE(sheetload_engineering_speciality.speciality, job_role.jobtitle_speciality) AS jobtitle_speciality,
       ---to capture speciality for engineering prior to 2020.09.30 we are using sheetload, and capturing from bamboohr afterwards
-      location_factor.location_factor, 
+      location_factor.location_factor                                       AS location_factor,
+      location_factor.locality, 
       IFF(employee_directory.hire_date = date_actual OR 
           rehire_date = date_actual, True, False)                           AS is_hire_date,
       IFF(employment_status = 'Terminated', True, False)                    AS is_termination_date,
@@ -167,6 +168,7 @@ WITH RECURSIVE employee_directory AS (
                 OR LEFT(department_info.job_title,9) = 'Principal')
             AND COALESCE(job_role.job_grade, job_info_mapping_historical.job_grade) IN ('8','9','9.5','10') 
           THEN 'Staff'
+        WHEN department_info.job_title ILIKE '%Fellow%' THEN 'Staff'
         WHEN COALESCE(job_role.job_grade, job_info_mapping_historical.job_grade) IN ('11','12','14','15','CXO')
           THEN 'Senior Leadership'
         WHEN COALESCE(job_role.job_grade, job_info_mapping_historical.job_grade) LIKE '%C%'

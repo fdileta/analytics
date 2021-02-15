@@ -51,7 +51,7 @@ docker-compose.yml  @tayloramurphy  @m_walker   @paul_armstrong
 
 /transform/snowflake-dbt/analysis/                  @tayloramurphy  @jjstark        @kathleentam
 /transform/snowflake-dbt/docs/                      @tayloramurphy  @jjstark        @kathleentam
-/transform/snowflake-dbt/macros/                    @tayloramurphy  @jjstark        @kathleentam
+/transform/snowflake-dbt/macros/                    @tayloramurphy  @jjstark        @kathleentam    @paul_armstrong
 
 /transform/snowflake-dbt/models/bamboohr/           @pluthra        @kathleentam    @tayloramurphy 
 /transform/snowflake-dbt/models/covid19/            @tayloramurphy  @jjstark        @kathleentam
@@ -118,6 +118,8 @@ docker-compose.yml  @tayloramurphy  @m_walker   @paul_armstrong
 
 /transform/snowflake-dbt/models/sources/zuora       @iweeks     @tayloramurphy      @paul_armstrong      @jeanpeguero
 /transform/snowflake-dbt/models/legacy/zuora        @iweeks     @tayloramurphy      @paul_armstrong      @jeanpeguero
+
+/transform/snowflake-dbt/models/workspaces/workspace_sales  @nfiguera @mvilain
 
 # ======
 # dbt data file Overwrites
