@@ -91,6 +91,14 @@ WITH source AS (
       number_of_open_opportunities__c            AS count_open_opportunities,
       using_ce__c                                AS count_using_ce,
 
+      --first order available calculation fields
+      first_order_available_c                    AS first_order_available,
+      oldest_open_opp_close_date__c              AS oldest_open_opp_close_date,
+      oldest_won_opp_close_date__c               AS oldest_won_opp_close_date,
+      latest_open_renewal_close_date__c          AS latest_open_renewal_close_date,
+      latest_closed_lost_renewal_close_date__c   AS latest_closed_lost_renewal_close_date,
+
+
       --account based marketing fields
       abm_tier__c                                AS abm_tier,
       gtm_strategy__c                            AS gtm_strategy,

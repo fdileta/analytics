@@ -121,6 +121,7 @@ WITH source AS (
         risk_type__c                                AS risk_type,
         risk_reasons__c                             AS risk_reasons,
         tam_notes__c                                AS tam_notes,
+        new_logo_eligible__c                        AS new_logo_eligible,
 
       -- ************************************
       -- sales segmentation deprecated fields - 2020-09-03
