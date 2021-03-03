@@ -92,7 +92,7 @@ WITH source AS (
       using_ce__c                                AS count_using_ce,
 
       --first order available calculation fields
-      first_order_available_c                    AS first_order_available,
+      first_order_available__c                   AS first_order_available,
       oldest_open_opp_close_date__c              AS oldest_open_opp_close_date,
       oldest_won_opp_close_date__c               AS oldest_won_opp_close_date,
       latest_open_renewal_close_date__c          AS latest_open_renewal_close_date,
