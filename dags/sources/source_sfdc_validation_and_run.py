@@ -162,4 +162,4 @@ model_test = KubernetesPodOperator(
     dag=dag,
 )
 
-freshness >> test >> snapshot >> model_run >> model_test
+freshness >> test >> model_run >> snapshot >> model_test
