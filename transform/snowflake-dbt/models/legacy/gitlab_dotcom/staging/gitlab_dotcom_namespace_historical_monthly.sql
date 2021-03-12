@@ -22,6 +22,7 @@ WITH date_details AS (
       namespace_snapshots_daily.visibility_level,
       namespace_snapshots_daily.shared_runners_minutes_limit,
       namespace_snapshots_daily.extra_shared_runners_minutes_limit,
+      namespace_snapshots_daily.shared_runners_enabled,
       namespace_snapshots_daily.repository_size_limit
     FROM namespace_snapshots_daily
     INNER JOIN date_details
