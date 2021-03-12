@@ -149,6 +149,8 @@ WITH first_contact  AS (
       user_area_stamped                                         AS sales_area_name_stamped,
       primary_solution_architect,
       product_details,
+      products_purchased,
+      product_category,
       dr_partner_deal_type,
       dr_partner_engagement,
       partner_account,
