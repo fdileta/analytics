@@ -4,7 +4,6 @@ WITH namespace_lineage_monthly_all AS (
     SELECT
       snapshot_month,
       namespace_id,
-      parent_id,
       ultimate_parent_id
     FROM {{ ref('gitlab_dotcom_namespace_lineage_historical_monthly') }}
     WHERE snapshot_month >= '2020-07-01'
@@ -16,7 +15,6 @@ WITH namespace_lineage_monthly_all AS (
     SELECT
       DATE_TRUNC('month', CURRENT_DATE)                             AS snapshot_month,
       namespace_id,
-      parent_id,
       ultimate_parent_id
     FROM {{ ref('gitlab_dotcom_namespace_lineage_prep') }}
 
@@ -26,9 +24,8 @@ WITH namespace_lineage_monthly_all AS (
     SELECT
       snapshot_month,
       namespace_id,
-      parent_id,
       shared_runners_minutes_limit,
-      extra_shared_runners_minutes_limit
+      extra_shared_runners_minutes_limit,
       shared_runners_enabled
     FROM {{ ref('gitlab_dotcom_namespace_historical_monthly') }}
     WHERE snapshot_month >= '2020-07-01'
@@ -40,7 +37,6 @@ WITH namespace_lineage_monthly_all AS (
     SELECT 
       DATE_TRUNC('month', CURRENT_DATE)                             AS snapshot_month,
       namespace_id,
-      parent_id,
       shared_runners_minutes_limit,
       extra_shared_runners_minutes_limit,
       shared_runners_enabled
@@ -133,8 +129,6 @@ WITH namespace_lineage_monthly_all AS (
       snapshot_month,
       dim_namespace_id,
       ultimate_parent_namespace_id,
-      namespace_type,
-      visibility_level, 
       limit,
       total_minutes_used                                            AS shared_runners_minutes_used_overall,  
       status,
