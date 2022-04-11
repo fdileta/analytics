@@ -8,7 +8,8 @@
         )
     }}
     
-    SELECT * 
+    SELECT 
+        * 
     FROM {{ source('zuora', 'invoice') }}
     
 {% endsnapshot %}
