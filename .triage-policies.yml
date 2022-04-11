@@ -8,8 +8,8 @@ resource_rules:
           conditions:
             state: opened
             forbidden_labels: 
-              - workflow::1 - triage
-              - workflow::2 - validation
+             
+ - workflow::2 - validation
               - workflow::3 - scheduling
               - workflow::4 - scheduled
               - workflow::5 - development
